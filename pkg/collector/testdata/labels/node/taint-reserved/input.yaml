@@ -1,0 +1,52 @@
+node:
+  apiVersion: v1
+  kind: Node
+  metadata:
+    name: test-node-1
+    labels:
+      nd-l: node-label-value-1
+    annotations:
+      nd-a: node-annotation-value-1
+  spec:
+    taints:
+    - effect: NodeNoSchedule
+      key: reserved
+      value: special-purpose
+spec:
+  extensions:
+    nodeLabels:
+    - name: node_annotation
+      annotation: nd-a
+    - name: node_label
+      label: nd-l
+    nodeTaints:
+    - name: out_of_service
+      value: true
+      negativeValue: false
+      keys:
+      - operator: NotIn
+        values: [ reserved ]
+      effects:
+      - operator: In
+        values: [ NodeNoSchedule, NodeNoExecute ]
+    - name: reserved
+      keys:
+      - operator: In
+        values: [ reserved ]
+      effects:
+      - operator: In
+        values: [ NodeNoSchedule ]
+  aggregations:
+  - sources:
+      type: "node"
+    levels:
+    - mask:
+        name: "node"
+        builtIn:
+          exported_node: true
+          node_unschedulable: true
+        extensions:
+          node_label: true
+          node_annotation: true
+          reserved: true
+          out_of_service: true

@@ -1,0 +1,108 @@
+responses:
+  test-node-1:
+    "node": {
+      "aggregatedMetrics": [
+        {
+          "aggregationLevel": "",
+          "cpuCoresNanoSec": [
+            2000,
+            2000,
+            3000,
+            4000,
+            4000
+          ],
+          "memoryBytes": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "aggregationLevel": "kubelet",
+          "cpuCoresNanoSec": [
+            2000,
+            2000,
+            3000,
+            4000,
+            4000
+          ],
+          "memoryBytes": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "aggregationLevel": "kubelet/kubepods",
+          "cpuCoresNanoSec": [
+            1000,
+            1000,
+            1000,
+            1000,
+            2000
+          ],
+          "memoryBytes": [
+            150,
+            300,
+            600,
+            800,
+            1000
+          ]
+        },
+        {
+          "aggregationLevel": "kubelet/kubepods/guaranteed",
+          "cpuCoresNanoSec": [
+            200,
+            500,
+            1000,
+            2000,
+            10000
+          ],
+          "memoryBytes": [
+            100,
+            100,
+            150,
+            170,
+            300
+          ]
+        },
+        {
+          "aggregationLevel": "system.slice",
+          "cpuCoresNanoSec": [
+            2000,
+            2000,
+            3000,
+            3000,
+            4000
+          ],
+          "memoryBytes": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "aggregationLevel": "system.slice/kubelet.service",
+          "cpuCoresNanoSec": [
+            1000,
+            1000,
+            1000,
+            1000,
+            2000
+          ],
+          "memoryBytes": [
+            150,
+            300,
+            600,
+            800,
+            1000
+          ]
+        }
+      ]
+    }

@@ -1,0 +1,31 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+clusterScopedMetrics:
+  annotatedCollectionSources:
+  - name: vendable
+    version: v1
+    group: rbac.authorization.k8s.io
+    kind: ClusterRole
+    annotation: vendable.capacity
+  - name: broken
+    version: v1
+    group: rbac.authorization.k8s.io
+    kind: DoesNotExist
+    annotation: not-going-to-work    
+aggregations:
+- sources:
+    type: "cluster_scoped"
+    cluster_scoped:
+    - "vendable"
+  levels:
+  - mask:
+      name: "cluster"
+      builtIn:
+        priority_class: true
+  - mask:
+      name: "total"

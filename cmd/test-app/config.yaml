@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app-1
+  labels:
+    app: test-app-1
+spec:
+  selector:
+    matchLabels:
+      app: test-app-1
+  template:
+    metadata:
+      labels:
+        app: test-app-1
+    spec:
+      containers:
+      - image: usage-metrics-collector-test-app:v0.1.0
+        name: test-app
+        args:
+        - "--cpu-go-routines=1"
+        - "--cpu-sleep-sec-frequency=1"
+        - "--cpu-sleep-sec=1"
+        - "memory-byte-buffer-count=10"
+        - "memory-byte-buffer-size=10000"
+        - "memory-sleep-sec=2.0"
+        resources:
+          requests:
+            cpu: 0.1
+            memory: 10M
+          limits:
+            cpu: 0.1
+            memory: 10M
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app-2
+  labels:
+    app: test-app-2
+spec:
+  selector:
+    matchLabels:
+      app: test-app-2
+  template:
+    metadata:
+      labels:
+        app: test-app-2
+    spec:
+      containers:
+      - image: usage-metrics-collector-test-app:v0.1.0
+        name: test-app
+        args:
+        - "--cpu-go-routines=10"
+        - "--cpu-sleep-sec-frequency=10"
+        - "--cpu-sleep-sec=0.1"
+        - "memory-go-routines=30"
+        - "memory-sleep-sec=60.0"
+        - "memory-byte-buffer-size=10000"
+        resources:
+          requests:
+            cpu: 0.1
+            memory: 10Mi
+          limits:
+            cpu: 0.1
+            memory: 10Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 0.1
+            memory: 1Mi
+          limits:
+            cpu: 0.1
+            memory: 1Mi

@@ -1,0 +1,18 @@
+# HELP kube_usage_pv_sum_pv_capacity_storage_bytes kube_usage_pv_sum_pv_capacity_storage_bytes
+# TYPE kube_usage_pv_sum_pv_capacity_storage_bytes gauge
+kube_usage_pv_sum_pv_capacity_storage_bytes{exported_node="test-node-1",exported_pv="test-pv-1",exported_pvc="test-pvc-1",phase="Bound",storage_class="local-storage"} 9.4489280512e+11
+kube_usage_pv_sum_pv_capacity_storage_bytes{exported_node="test-node-1",exported_pv="test-pv-2",exported_pvc="undefined",phase="Available",storage_class="local-storage"} 9.4489280512e+11
+# HELP kube_usage_workload_sum_pvc_capacity_storage_bytes kube_usage_workload_sum_pvc_capacity_storage_bytes
+# TYPE kube_usage_workload_sum_pvc_capacity_storage_bytes gauge
+kube_usage_workload_sum_pvc_capacity_storage_bytes{app="",exported_namespace="test-namespace-1",exported_node="",exported_pod="undefined",exported_pv="test-pv-1",exported_pvc="test-pvc-1",phase="Bound",priority_class="",storage_class="local-storage",workload_api_group="",workload_api_version="",workload_kind="",workload_name=""} 3.4359738368e+10
+kube_usage_workload_sum_pvc_capacity_storage_bytes{app="",exported_namespace="test-namespace-2",exported_node="",exported_pod="undefined",exported_pv="test-pv-2",exported_pvc="test-pvc-1-missing",phase="Bound",priority_class="",storage_class="local-storage",workload_api_group="",workload_api_version="",workload_kind="",workload_name=""} 3.4359738368e+10
+# HELP kube_usage_workload_sum_pvc_requests_allocated_storage_bytes kube_usage_workload_sum_pvc_requests_allocated_storage_bytes
+# TYPE kube_usage_workload_sum_pvc_requests_allocated_storage_bytes gauge
+kube_usage_workload_sum_pvc_requests_allocated_storage_bytes{app="",exported_namespace="test-namespace-1",exported_node="",exported_pod="undefined",exported_pv="test-pv-1",exported_pvc="test-pvc-1",phase="Bound",priority_class="",storage_class="local-storage",workload_api_group="",workload_api_version="",workload_kind="",workload_name=""} 3.4359738368e+10
+kube_usage_workload_sum_pvc_requests_allocated_storage_bytes{app="",exported_namespace="test-namespace-2",exported_node="",exported_pod="undefined",exported_pv="test-pv-2",exported_pvc="test-pvc-1-missing",phase="Bound",priority_class="",storage_class="local-storage",workload_api_group="",workload_api_version="",workload_kind="",workload_name=""} 3.4359738368e+10
+# HELP metrics_prometheus_collector_cgroup_usage_result The number of containers missing usage information
+# TYPE metrics_prometheus_collector_cgroup_usage_result gauge
+metrics_prometheus_collector_cgroup_usage_result{exported_node="test-node-1",found="false",reason="unknown",sampler_phase="",sampler_pod="test-pod-1-deployment-2"} 1
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 2

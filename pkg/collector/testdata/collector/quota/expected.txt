@@ -1,0 +1,431 @@
+# HELP kube_usage_cluster_sum_limits_quota_hard_cpu_cores kube_usage_cluster_sum_limits_quota_hard_cpu_cores
+# TYPE kube_usage_cluster_sum_limits_quota_hard_cpu_cores gauge
+kube_usage_cluster_sum_limits_quota_hard_cpu_cores{priority_class="p1",storage_class=""} 20
+kube_usage_cluster_sum_limits_quota_hard_cpu_cores{priority_class="p2",storage_class=""} 40
+# HELP kube_usage_cluster_sum_limits_quota_hard_memory_bytes kube_usage_cluster_sum_limits_quota_hard_memory_bytes
+# TYPE kube_usage_cluster_sum_limits_quota_hard_memory_bytes gauge
+kube_usage_cluster_sum_limits_quota_hard_memory_bytes{priority_class="p1",storage_class=""} 2e+10
+kube_usage_cluster_sum_limits_quota_hard_memory_bytes{priority_class="p2",storage_class=""} 6e+10
+# HELP kube_usage_cluster_sum_limits_quota_hard_minus_used_cpu_cores kube_usage_cluster_sum_limits_quota_hard_minus_used_cpu_cores
+# TYPE kube_usage_cluster_sum_limits_quota_hard_minus_used_cpu_cores gauge
+kube_usage_cluster_sum_limits_quota_hard_minus_used_cpu_cores{priority_class="p1",storage_class=""} 8
+kube_usage_cluster_sum_limits_quota_hard_minus_used_cpu_cores{priority_class="p2",storage_class=""} 0
+# HELP kube_usage_cluster_sum_limits_quota_hard_minus_used_memory_bytes kube_usage_cluster_sum_limits_quota_hard_minus_used_memory_bytes
+# TYPE kube_usage_cluster_sum_limits_quota_hard_minus_used_memory_bytes gauge
+kube_usage_cluster_sum_limits_quota_hard_minus_used_memory_bytes{priority_class="p1",storage_class=""} 8e+09
+kube_usage_cluster_sum_limits_quota_hard_minus_used_memory_bytes{priority_class="p2",storage_class=""} 4.8e+10
+# HELP kube_usage_cluster_sum_limits_quota_used_cpu_cores kube_usage_cluster_sum_limits_quota_used_cpu_cores
+# TYPE kube_usage_cluster_sum_limits_quota_used_cpu_cores gauge
+kube_usage_cluster_sum_limits_quota_used_cpu_cores{priority_class="p1",storage_class=""} 12
+kube_usage_cluster_sum_limits_quota_used_cpu_cores{priority_class="p2",storage_class=""} 40
+# HELP kube_usage_cluster_sum_limits_quota_used_memory_bytes kube_usage_cluster_sum_limits_quota_used_memory_bytes
+# TYPE kube_usage_cluster_sum_limits_quota_used_memory_bytes gauge
+kube_usage_cluster_sum_limits_quota_used_memory_bytes{priority_class="p1",storage_class=""} 1.2e+10
+kube_usage_cluster_sum_limits_quota_used_memory_bytes{priority_class="p2",storage_class=""} 1.2e+10
+# HELP kube_usage_cluster_sum_pvc_requests_quota_hard_items kube_usage_cluster_sum_pvc_requests_quota_hard_items
+# TYPE kube_usage_cluster_sum_pvc_requests_quota_hard_items gauge
+kube_usage_cluster_sum_pvc_requests_quota_hard_items{priority_class="",storage_class="local-storage"} 10
+# HELP kube_usage_cluster_sum_pvc_requests_quota_hard_storage_bytes kube_usage_cluster_sum_pvc_requests_quota_hard_storage_bytes
+# TYPE kube_usage_cluster_sum_pvc_requests_quota_hard_storage_bytes gauge
+kube_usage_cluster_sum_pvc_requests_quota_hard_storage_bytes{priority_class="",storage_class="remote-storage"} 3.4359738368e+10
+# HELP kube_usage_cluster_sum_pvc_requests_quota_used_items kube_usage_cluster_sum_pvc_requests_quota_used_items
+# TYPE kube_usage_cluster_sum_pvc_requests_quota_used_items gauge
+kube_usage_cluster_sum_pvc_requests_quota_used_items{priority_class="",storage_class="local-storage"} 0
+# HELP kube_usage_cluster_sum_pvc_requests_quota_used_storage_bytes kube_usage_cluster_sum_pvc_requests_quota_used_storage_bytes
+# TYPE kube_usage_cluster_sum_pvc_requests_quota_used_storage_bytes gauge
+kube_usage_cluster_sum_pvc_requests_quota_used_storage_bytes{priority_class="",storage_class="remote-storage"} 0
+# HELP kube_usage_cluster_sum_requests_quota_hard_cpu_cores kube_usage_cluster_sum_requests_quota_hard_cpu_cores
+# TYPE kube_usage_cluster_sum_requests_quota_hard_cpu_cores gauge
+kube_usage_cluster_sum_requests_quota_hard_cpu_cores{priority_class="p1",storage_class=""} 20
+kube_usage_cluster_sum_requests_quota_hard_cpu_cores{priority_class="p2",storage_class=""} 80
+# HELP kube_usage_cluster_sum_requests_quota_hard_memory_bytes kube_usage_cluster_sum_requests_quota_hard_memory_bytes
+# TYPE kube_usage_cluster_sum_requests_quota_hard_memory_bytes gauge
+kube_usage_cluster_sum_requests_quota_hard_memory_bytes{priority_class="p1",storage_class=""} 2e+10
+kube_usage_cluster_sum_requests_quota_hard_memory_bytes{priority_class="p2",storage_class=""} 1.2e+11
+# HELP kube_usage_cluster_sum_requests_quota_hard_minus_used_cpu_cores kube_usage_cluster_sum_requests_quota_hard_minus_used_cpu_cores
+# TYPE kube_usage_cluster_sum_requests_quota_hard_minus_used_cpu_cores gauge
+kube_usage_cluster_sum_requests_quota_hard_minus_used_cpu_cores{priority_class="p1",storage_class=""} 8
+kube_usage_cluster_sum_requests_quota_hard_minus_used_cpu_cores{priority_class="p2",storage_class=""} 60
+# HELP kube_usage_cluster_sum_requests_quota_hard_minus_used_memory_bytes kube_usage_cluster_sum_requests_quota_hard_minus_used_memory_bytes
+# TYPE kube_usage_cluster_sum_requests_quota_hard_minus_used_memory_bytes gauge
+kube_usage_cluster_sum_requests_quota_hard_minus_used_memory_bytes{priority_class="p1",storage_class=""} 8e+09
+kube_usage_cluster_sum_requests_quota_hard_minus_used_memory_bytes{priority_class="p2",storage_class=""} 9.6e+10
+# HELP kube_usage_cluster_sum_requests_quota_used_cpu_cores kube_usage_cluster_sum_requests_quota_used_cpu_cores
+# TYPE kube_usage_cluster_sum_requests_quota_used_cpu_cores gauge
+kube_usage_cluster_sum_requests_quota_used_cpu_cores{priority_class="p1",storage_class=""} 12
+kube_usage_cluster_sum_requests_quota_used_cpu_cores{priority_class="p2",storage_class=""} 20
+# HELP kube_usage_cluster_sum_requests_quota_used_memory_bytes kube_usage_cluster_sum_requests_quota_used_memory_bytes
+# TYPE kube_usage_cluster_sum_requests_quota_used_memory_bytes gauge
+kube_usage_cluster_sum_requests_quota_used_memory_bytes{priority_class="p1",storage_class=""} 1.2e+10
+kube_usage_cluster_sum_requests_quota_used_memory_bytes{priority_class="p2",storage_class=""} 2.4e+10
+# HELP kube_usage_custom_sum_limits_quota_hard_cpu_cores kube_usage_custom_sum_limits_quota_hard_cpu_cores
+# TYPE kube_usage_custom_sum_limits_quota_hard_cpu_cores gauge
+kube_usage_custom_sum_limits_quota_hard_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 10
+kube_usage_custom_sum_limits_quota_hard_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 20
+kube_usage_custom_sum_limits_quota_hard_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 10
+kube_usage_custom_sum_limits_quota_hard_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 20
+# HELP kube_usage_custom_sum_limits_quota_hard_memory_bytes kube_usage_custom_sum_limits_quota_hard_memory_bytes
+# TYPE kube_usage_custom_sum_limits_quota_hard_memory_bytes gauge
+kube_usage_custom_sum_limits_quota_hard_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 1e+10
+kube_usage_custom_sum_limits_quota_hard_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+10
+kube_usage_custom_sum_limits_quota_hard_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 1e+10
+kube_usage_custom_sum_limits_quota_hard_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+10
+# HELP kube_usage_custom_sum_limits_quota_hard_minus_used_cpu_cores kube_usage_custom_sum_limits_quota_hard_minus_used_cpu_cores
+# TYPE kube_usage_custom_sum_limits_quota_hard_minus_used_cpu_cores gauge
+kube_usage_custom_sum_limits_quota_hard_minus_used_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 4
+kube_usage_custom_sum_limits_quota_hard_minus_used_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 0
+kube_usage_custom_sum_limits_quota_hard_minus_used_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 4
+kube_usage_custom_sum_limits_quota_hard_minus_used_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 0
+# HELP kube_usage_custom_sum_limits_quota_hard_minus_used_memory_bytes kube_usage_custom_sum_limits_quota_hard_minus_used_memory_bytes
+# TYPE kube_usage_custom_sum_limits_quota_hard_minus_used_memory_bytes gauge
+kube_usage_custom_sum_limits_quota_hard_minus_used_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 4e+09
+kube_usage_custom_sum_limits_quota_hard_minus_used_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 2.4e+10
+kube_usage_custom_sum_limits_quota_hard_minus_used_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 4e+09
+kube_usage_custom_sum_limits_quota_hard_minus_used_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 2.4e+10
+# HELP kube_usage_custom_sum_limits_quota_used_cpu_cores kube_usage_custom_sum_limits_quota_used_cpu_cores
+# TYPE kube_usage_custom_sum_limits_quota_used_cpu_cores gauge
+kube_usage_custom_sum_limits_quota_used_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 6
+kube_usage_custom_sum_limits_quota_used_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 20
+kube_usage_custom_sum_limits_quota_used_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 6
+kube_usage_custom_sum_limits_quota_used_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 20
+# HELP kube_usage_custom_sum_limits_quota_used_memory_bytes kube_usage_custom_sum_limits_quota_used_memory_bytes
+# TYPE kube_usage_custom_sum_limits_quota_used_memory_bytes gauge
+kube_usage_custom_sum_limits_quota_used_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 6e+09
+kube_usage_custom_sum_limits_quota_used_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 6e+09
+kube_usage_custom_sum_limits_quota_used_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 6e+09
+kube_usage_custom_sum_limits_quota_used_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 6e+09
+# HELP kube_usage_custom_sum_pvc_requests_quota_hard_items kube_usage_custom_sum_pvc_requests_quota_hard_items
+# TYPE kube_usage_custom_sum_pvc_requests_quota_hard_items gauge
+kube_usage_custom_sum_pvc_requests_quota_hard_items{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",storage_class="local-storage"} 10
+# HELP kube_usage_custom_sum_pvc_requests_quota_hard_storage_bytes kube_usage_custom_sum_pvc_requests_quota_hard_storage_bytes
+# TYPE kube_usage_custom_sum_pvc_requests_quota_hard_storage_bytes gauge
+kube_usage_custom_sum_pvc_requests_quota_hard_storage_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",storage_class="remote-storage"} 3.4359738368e+10
+# HELP kube_usage_custom_sum_pvc_requests_quota_used_items kube_usage_custom_sum_pvc_requests_quota_used_items
+# TYPE kube_usage_custom_sum_pvc_requests_quota_used_items gauge
+kube_usage_custom_sum_pvc_requests_quota_used_items{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",storage_class="local-storage"} 0
+# HELP kube_usage_custom_sum_pvc_requests_quota_used_storage_bytes kube_usage_custom_sum_pvc_requests_quota_used_storage_bytes
+# TYPE kube_usage_custom_sum_pvc_requests_quota_used_storage_bytes gauge
+kube_usage_custom_sum_pvc_requests_quota_used_storage_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",storage_class="remote-storage"} 0
+# HELP kube_usage_custom_sum_requests_quota_hard_cpu_cores kube_usage_custom_sum_requests_quota_hard_cpu_cores
+# TYPE kube_usage_custom_sum_requests_quota_hard_cpu_cores gauge
+kube_usage_custom_sum_requests_quota_hard_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 10
+kube_usage_custom_sum_requests_quota_hard_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 40
+kube_usage_custom_sum_requests_quota_hard_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 10
+kube_usage_custom_sum_requests_quota_hard_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 40
+# HELP kube_usage_custom_sum_requests_quota_hard_memory_bytes kube_usage_custom_sum_requests_quota_hard_memory_bytes
+# TYPE kube_usage_custom_sum_requests_quota_hard_memory_bytes gauge
+kube_usage_custom_sum_requests_quota_hard_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 1e+10
+kube_usage_custom_sum_requests_quota_hard_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 6e+10
+kube_usage_custom_sum_requests_quota_hard_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 1e+10
+kube_usage_custom_sum_requests_quota_hard_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 6e+10
+# HELP kube_usage_custom_sum_requests_quota_hard_minus_used_cpu_cores kube_usage_custom_sum_requests_quota_hard_minus_used_cpu_cores
+# TYPE kube_usage_custom_sum_requests_quota_hard_minus_used_cpu_cores gauge
+kube_usage_custom_sum_requests_quota_hard_minus_used_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 4
+kube_usage_custom_sum_requests_quota_hard_minus_used_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 30
+kube_usage_custom_sum_requests_quota_hard_minus_used_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 4
+kube_usage_custom_sum_requests_quota_hard_minus_used_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 30
+# HELP kube_usage_custom_sum_requests_quota_hard_minus_used_memory_bytes kube_usage_custom_sum_requests_quota_hard_minus_used_memory_bytes
+# TYPE kube_usage_custom_sum_requests_quota_hard_minus_used_memory_bytes gauge
+kube_usage_custom_sum_requests_quota_hard_minus_used_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 4e+09
+kube_usage_custom_sum_requests_quota_hard_minus_used_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 4.8e+10
+kube_usage_custom_sum_requests_quota_hard_minus_used_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 4e+09
+kube_usage_custom_sum_requests_quota_hard_minus_used_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 4.8e+10
+# HELP kube_usage_custom_sum_requests_quota_used_cpu_cores kube_usage_custom_sum_requests_quota_used_cpu_cores
+# TYPE kube_usage_custom_sum_requests_quota_used_cpu_cores gauge
+kube_usage_custom_sum_requests_quota_used_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 6
+kube_usage_custom_sum_requests_quota_used_cpu_cores{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+kube_usage_custom_sum_requests_quota_used_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 6
+kube_usage_custom_sum_requests_quota_used_cpu_cores{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+# HELP kube_usage_custom_sum_requests_quota_used_memory_bytes kube_usage_custom_sum_requests_quota_used_memory_bytes
+# TYPE kube_usage_custom_sum_requests_quota_used_memory_bytes gauge
+kube_usage_custom_sum_requests_quota_used_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 6e+09
+kube_usage_custom_sum_requests_quota_used_memory_bytes{namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.2e+10
+kube_usage_custom_sum_requests_quota_used_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 6e+09
+kube_usage_custom_sum_requests_quota_used_memory_bytes{namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.2e+10
+# HELP kube_usage_namespace_sum_limits_quota_hard_cpu_cores kube_usage_namespace_sum_limits_quota_hard_cpu_cores
+# TYPE kube_usage_namespace_sum_limits_quota_hard_cpu_cores gauge
+kube_usage_namespace_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5
+kube_usage_namespace_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+kube_usage_namespace_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5
+kube_usage_namespace_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+kube_usage_namespace_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5
+kube_usage_namespace_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+kube_usage_namespace_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5
+kube_usage_namespace_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+# HELP kube_usage_namespace_sum_limits_quota_hard_memory_bytes kube_usage_namespace_sum_limits_quota_hard_memory_bytes
+# TYPE kube_usage_namespace_sum_limits_quota_hard_memory_bytes gauge
+kube_usage_namespace_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5e+09
+kube_usage_namespace_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.5e+10
+kube_usage_namespace_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5e+09
+kube_usage_namespace_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.5e+10
+kube_usage_namespace_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5e+09
+kube_usage_namespace_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.5e+10
+kube_usage_namespace_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5e+09
+kube_usage_namespace_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.5e+10
+# HELP kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores
+# TYPE kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores gauge
+kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2
+kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 0
+kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2
+kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 0
+kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2
+kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 0
+kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2
+kube_usage_namespace_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 0
+# HELP kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes
+# TYPE kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes gauge
+kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2e+09
+kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.2e+10
+kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2e+09
+kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.2e+10
+kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2e+09
+kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.2e+10
+kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2e+09
+kube_usage_namespace_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 1.2e+10
+# HELP kube_usage_namespace_sum_limits_quota_used_cpu_cores kube_usage_namespace_sum_limits_quota_used_cpu_cores
+# TYPE kube_usage_namespace_sum_limits_quota_used_cpu_cores gauge
+kube_usage_namespace_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3
+kube_usage_namespace_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+kube_usage_namespace_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3
+kube_usage_namespace_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+kube_usage_namespace_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3
+kube_usage_namespace_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+kube_usage_namespace_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3
+kube_usage_namespace_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 10
+# HELP kube_usage_namespace_sum_limits_quota_used_memory_bytes kube_usage_namespace_sum_limits_quota_used_memory_bytes
+# TYPE kube_usage_namespace_sum_limits_quota_used_memory_bytes gauge
+kube_usage_namespace_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3e+09
+kube_usage_namespace_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+09
+kube_usage_namespace_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3e+09
+kube_usage_namespace_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+09
+kube_usage_namespace_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3e+09
+kube_usage_namespace_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+09
+kube_usage_namespace_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3e+09
+kube_usage_namespace_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+09
+# HELP kube_usage_namespace_sum_pvc_requests_quota_hard_items kube_usage_namespace_sum_pvc_requests_quota_hard_items
+# TYPE kube_usage_namespace_sum_pvc_requests_quota_hard_items gauge
+kube_usage_namespace_sum_pvc_requests_quota_hard_items{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",storage_class="local-storage"} 10
+# HELP kube_usage_namespace_sum_pvc_requests_quota_hard_storage_bytes kube_usage_namespace_sum_pvc_requests_quota_hard_storage_bytes
+# TYPE kube_usage_namespace_sum_pvc_requests_quota_hard_storage_bytes gauge
+kube_usage_namespace_sum_pvc_requests_quota_hard_storage_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",storage_class="remote-storage"} 3.4359738368e+10
+# HELP kube_usage_namespace_sum_pvc_requests_quota_used_items kube_usage_namespace_sum_pvc_requests_quota_used_items
+# TYPE kube_usage_namespace_sum_pvc_requests_quota_used_items gauge
+kube_usage_namespace_sum_pvc_requests_quota_used_items{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",storage_class="local-storage"} 0
+# HELP kube_usage_namespace_sum_pvc_requests_quota_used_storage_bytes kube_usage_namespace_sum_pvc_requests_quota_used_storage_bytes
+# TYPE kube_usage_namespace_sum_pvc_requests_quota_used_storage_bytes gauge
+kube_usage_namespace_sum_pvc_requests_quota_used_storage_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",storage_class="remote-storage"} 0
+# HELP kube_usage_namespace_sum_requests_quota_hard_cpu_cores kube_usage_namespace_sum_requests_quota_hard_cpu_cores
+# TYPE kube_usage_namespace_sum_requests_quota_hard_cpu_cores gauge
+kube_usage_namespace_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5
+kube_usage_namespace_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 20
+kube_usage_namespace_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5
+kube_usage_namespace_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 20
+kube_usage_namespace_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5
+kube_usage_namespace_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 20
+kube_usage_namespace_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5
+kube_usage_namespace_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 20
+# HELP kube_usage_namespace_sum_requests_quota_hard_memory_bytes kube_usage_namespace_sum_requests_quota_hard_memory_bytes
+# TYPE kube_usage_namespace_sum_requests_quota_hard_memory_bytes gauge
+kube_usage_namespace_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5e+09
+kube_usage_namespace_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+10
+kube_usage_namespace_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5e+09
+kube_usage_namespace_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+10
+kube_usage_namespace_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5e+09
+kube_usage_namespace_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+10
+kube_usage_namespace_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 5e+09
+kube_usage_namespace_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 3e+10
+# HELP kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores
+# TYPE kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores gauge
+kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2
+kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 15
+kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2
+kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 15
+kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2
+kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 15
+kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2
+kube_usage_namespace_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 15
+# HELP kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes
+# TYPE kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes gauge
+kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2e+09
+kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 2.4e+10
+kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2e+09
+kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 2.4e+10
+kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2e+09
+kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 2.4e+10
+kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 2e+09
+kube_usage_namespace_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 2.4e+10
+# HELP kube_usage_namespace_sum_requests_quota_used_cpu_cores kube_usage_namespace_sum_requests_quota_used_cpu_cores
+# TYPE kube_usage_namespace_sum_requests_quota_used_cpu_cores gauge
+kube_usage_namespace_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3
+kube_usage_namespace_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 5
+kube_usage_namespace_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3
+kube_usage_namespace_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 5
+kube_usage_namespace_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3
+kube_usage_namespace_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 5
+kube_usage_namespace_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3
+kube_usage_namespace_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 5
+# HELP kube_usage_namespace_sum_requests_quota_used_memory_bytes kube_usage_namespace_sum_requests_quota_used_memory_bytes
+# TYPE kube_usage_namespace_sum_requests_quota_used_memory_bytes gauge
+kube_usage_namespace_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3e+09
+kube_usage_namespace_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 6e+09
+kube_usage_namespace_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3e+09
+kube_usage_namespace_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 6e+09
+kube_usage_namespace_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3e+09
+kube_usage_namespace_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 6e+09
+kube_usage_namespace_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",storage_class=""} 3e+09
+kube_usage_namespace_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",storage_class=""} 6e+09
+# HELP kube_usage_quota_sum_limits_quota_hard_cpu_cores kube_usage_quota_sum_limits_quota_hard_cpu_cores
+# TYPE kube_usage_quota_sum_limits_quota_hard_cpu_cores gauge
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 10
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 10
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 10
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 10
+# HELP kube_usage_quota_sum_limits_quota_hard_memory_bytes kube_usage_quota_sum_limits_quota_hard_memory_bytes
+# TYPE kube_usage_quota_sum_limits_quota_hard_memory_bytes gauge
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5e+09
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 1.5e+10
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5e+09
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 1.5e+10
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5e+09
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 1.5e+10
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5e+09
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 1.5e+10
+# HELP kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores
+# TYPE kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores gauge
+kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2
+kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 0
+kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2
+kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 0
+kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2
+kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 0
+kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2
+kube_usage_quota_sum_limits_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 0
+# HELP kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes
+# TYPE kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes gauge
+kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2e+09
+kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 1.2e+10
+kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2e+09
+kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 1.2e+10
+kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2e+09
+kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 1.2e+10
+kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2e+09
+kube_usage_quota_sum_limits_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 1.2e+10
+# HELP kube_usage_quota_sum_limits_quota_used_cpu_cores kube_usage_quota_sum_limits_quota_used_cpu_cores
+# TYPE kube_usage_quota_sum_limits_quota_used_cpu_cores gauge
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 10
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 10
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 10
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 10
+# HELP kube_usage_quota_sum_limits_quota_used_memory_bytes kube_usage_quota_sum_limits_quota_used_memory_bytes
+# TYPE kube_usage_quota_sum_limits_quota_used_memory_bytes gauge
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3e+09
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 3e+09
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3e+09
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 3e+09
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3e+09
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 3e+09
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3e+09
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 3e+09
+# HELP kube_usage_quota_sum_pvc_requests_quota_hard_items kube_usage_quota_sum_pvc_requests_quota_hard_items
+# TYPE kube_usage_quota_sum_pvc_requests_quota_hard_items gauge
+kube_usage_quota_sum_pvc_requests_quota_hard_items{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",quota_name="p3-name",storage_class="local-storage"} 10
+# HELP kube_usage_quota_sum_pvc_requests_quota_hard_storage_bytes kube_usage_quota_sum_pvc_requests_quota_hard_storage_bytes
+# TYPE kube_usage_quota_sum_pvc_requests_quota_hard_storage_bytes gauge
+kube_usage_quota_sum_pvc_requests_quota_hard_storage_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",quota_name="p3-name",storage_class="remote-storage"} 3.4359738368e+10
+# HELP kube_usage_quota_sum_pvc_requests_quota_used_items kube_usage_quota_sum_pvc_requests_quota_used_items
+# TYPE kube_usage_quota_sum_pvc_requests_quota_used_items gauge
+kube_usage_quota_sum_pvc_requests_quota_used_items{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",quota_name="p3-name",storage_class="local-storage"} 0
+# HELP kube_usage_quota_sum_pvc_requests_quota_used_storage_bytes kube_usage_quota_sum_pvc_requests_quota_used_storage_bytes
+# TYPE kube_usage_quota_sum_pvc_requests_quota_used_storage_bytes gauge
+kube_usage_quota_sum_pvc_requests_quota_used_storage_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="",quota_name="p3-name",storage_class="remote-storage"} 0
+# HELP kube_usage_quota_sum_requests_quota_hard_cpu_cores kube_usage_quota_sum_requests_quota_hard_cpu_cores
+# TYPE kube_usage_quota_sum_requests_quota_hard_cpu_cores gauge
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 20
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 20
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 20
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 20
+# HELP kube_usage_quota_sum_requests_quota_hard_memory_bytes kube_usage_quota_sum_requests_quota_hard_memory_bytes
+# TYPE kube_usage_quota_sum_requests_quota_hard_memory_bytes gauge
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5e+09
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 3e+10
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5e+09
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 3e+10
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5e+09
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 3e+10
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 5e+09
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 3e+10
+# HELP kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores
+# TYPE kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores gauge
+kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2
+kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 15
+kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2
+kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 15
+kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2
+kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 15
+kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2
+kube_usage_quota_sum_requests_quota_hard_minus_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 15
+# HELP kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes
+# TYPE kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes gauge
+kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2e+09
+kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 2.4e+10
+kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2e+09
+kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 2.4e+10
+kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2e+09
+kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 2.4e+10
+kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 2e+09
+kube_usage_quota_sum_requests_quota_hard_minus_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 2.4e+10
+# HELP kube_usage_quota_sum_requests_quota_used_cpu_cores kube_usage_quota_sum_requests_quota_used_cpu_cores
+# TYPE kube_usage_quota_sum_requests_quota_used_cpu_cores gauge
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 5
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 5
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 5
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 5
+# HELP kube_usage_quota_sum_requests_quota_used_memory_bytes kube_usage_quota_sum_requests_quota_used_memory_bytes
+# TYPE kube_usage_quota_sum_requests_quota_used_memory_bytes gauge
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3e+09
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-1",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 6e+09
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3e+09
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-2",namespace_annotation="namespace-annotation-1",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 6e+09
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3e+09
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-3",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 6e+09
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p1",quota_name="p1-name",storage_class=""} 3e+09
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test-namespace-4",namespace_annotation="namespace-annotation-2",namespace_label="namespace-label-1",priority_class="p2",quota_name="p2-name",storage_class=""} 6e+09
+# HELP kube_usage_safe_sum_requests_quota_hard_cpu_cores kube_usage_safe_sum_requests_quota_hard_cpu_cores
+# TYPE kube_usage_safe_sum_requests_quota_hard_cpu_cores gauge
+kube_usage_safe_sum_requests_quota_hard_cpu_cores{priority_class="p1",provisioner_type=""} 5
+kube_usage_safe_sum_requests_quota_hard_cpu_cores{priority_class="p1",provisioner_type="random-user"} 5
+kube_usage_safe_sum_requests_quota_hard_cpu_cores{priority_class="p1",provisioner_type="safe-user"} 5
+kube_usage_safe_sum_requests_quota_hard_cpu_cores{priority_class="p1",provisioner_type="system-user"} 5
+kube_usage_safe_sum_requests_quota_hard_cpu_cores{priority_class="p2",provisioner_type=""} 20
+kube_usage_safe_sum_requests_quota_hard_cpu_cores{priority_class="p2",provisioner_type="random-user"} 20
+kube_usage_safe_sum_requests_quota_hard_cpu_cores{priority_class="p2",provisioner_type="safe-user"} 20
+kube_usage_safe_sum_requests_quota_hard_cpu_cores{priority_class="p2",provisioner_type="system-user"} 20
+# HELP kube_usage_safe_sum_requests_quota_hard_memory_bytes kube_usage_safe_sum_requests_quota_hard_memory_bytes
+# TYPE kube_usage_safe_sum_requests_quota_hard_memory_bytes gauge
+kube_usage_safe_sum_requests_quota_hard_memory_bytes{priority_class="p1",provisioner_type=""} 5e+09
+kube_usage_safe_sum_requests_quota_hard_memory_bytes{priority_class="p1",provisioner_type="random-user"} 5e+09
+kube_usage_safe_sum_requests_quota_hard_memory_bytes{priority_class="p1",provisioner_type="safe-user"} 5e+09
+kube_usage_safe_sum_requests_quota_hard_memory_bytes{priority_class="p1",provisioner_type="system-user"} 5e+09
+kube_usage_safe_sum_requests_quota_hard_memory_bytes{priority_class="p2",provisioner_type=""} 3e+10
+kube_usage_safe_sum_requests_quota_hard_memory_bytes{priority_class="p2",provisioner_type="random-user"} 3e+10
+kube_usage_safe_sum_requests_quota_hard_memory_bytes{priority_class="p2",provisioner_type="safe-user"} 3e+10
+kube_usage_safe_sum_requests_quota_hard_memory_bytes{priority_class="p2",provisioner_type="system-user"} 3e+10
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 0

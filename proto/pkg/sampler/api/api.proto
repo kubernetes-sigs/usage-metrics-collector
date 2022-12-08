@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package containerd.api;
+option go_package="./api";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "grpc/health/health.proto";
+
+service Metrics {
+  rpc ListMetrics (ListMetricsRequest) returns (ListMetricsResponse) {
+    option (google.api.http) = { get: "/v1/metrics" };
+  }
+}
+
+service Health {
+  rpc Check(grpc.health.v1.HealthCheckRequest) returns (grpc.health.v1.HealthCheckResponse) {
+    option (google.api.http) = { get: "/v1/healthz" };
+  }
+
+   rpc IsLeader(grpc.health.v1.HealthCheckRequest) returns (grpc.health.v1.HealthCheckResponse) {
+      option (google.api.http) = { get: "/v1/is-leader" };
+   }
+}
+
+message ListMetricsRequest  {}
+
+message ListMetricsResponse {
+  repeated ContainerMetrics containers=1;
+  NodeMetrics node=2;
+  string nodeName=3;
+  string podName=4;
+  google.protobuf.Timestamp timestamp = 5;
+  string reason = 6;
+}
+
+message ContainerMetrics {
+    string containerID =1;
+    string podUID=2;
+
+    repeated int64 cpuCoresNanoSec=3;
+    repeated int64 memoryBytes=4;
+    repeated int64 oomCount=5;
+    repeated int64 oomKillCount=6;
+    repeated int64 cpuThrottledNanoSec=7;
+    repeated float cpuPercentPeriodsThrottled=8;
+
+    string nodeName=9;
+}
+
+message NodeMetrics {
+    repeated NodeAggregatedMetrics aggregatedMetrics=1;
+}
+
+message NodeAggregatedMetrics {
+    string aggregationLevel=1;
+    repeated int64 cpuCoresNanoSec=2;
+    repeated int64 memoryBytes=3;
+}
+
+service MetricsCollector {
+   rpc PushMetrics (stream ListMetricsResponse) returns (stream ConfigurePush) {
+   }
+}
+
+message ConfigurePush {
+}

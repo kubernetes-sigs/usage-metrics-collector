@@ -1,0 +1,2 @@
+Build info version: dev, commit: none, date: unknown
+collector config specifies 103 extension labels which exceed the max (100) unable to read collector config: exit status 1

@@ -1,0 +1,358 @@
+prefix: "kube_usage"
+builtIn:
+  useQuotaNameForPriorityClass: true
+extensions:
+  podLabels:
+  # this annotation should be kept when we mask the objects
+  - name: ip_class
+    annotation: example.com/ip-class
+  - name: test_1
+    annotation: test-1 # should be dropped
+  - name: test_2
+    annotation: test-2
+  namespaceLabels:
+  - name: test_3
+    annotation: test-3 # should be dropped
+  - name: test_4
+    annotation: test-4
+  - name: test_5
+    annotation: test-5
+  - name: test_6
+    annotation: test-6
+  - name: test_7
+    annotation: test-7
+  - name: test_8
+    annotation: test-8
+  - name: test_9
+    annotation: test-9
+  - name: test_10
+    annotation: test-10
+  - name: test_11
+    annotation: test-11
+  - name: test_12
+    annotation: test-12
+  - name: test_13
+    annotation: test-13
+  - name: test_14
+    annotation: test-14
+  - name: test_15
+    annotation: test-15
+  - name: test_16
+    annotation: test-16
+  - name: test_17
+    annotation: test-17
+  - name: test_18
+    annotation: test-18
+  - name: test_19
+    annotation: test-19
+  - name: test_20
+    annotation: test-20
+  - name: test_21
+    annotation: test-21
+  - name: test_22
+    annotation: test-22
+  - name: test_23
+    annotation: test-23
+  - name: test_24
+    annotation: test-24
+  - name: test_25
+    annotation: test-25
+  - name: test_26
+    annotation: test-26
+  - name: test_27
+    annotation: test-27
+  - name: test_28
+    annotation: test-28
+  - name: test_29
+    annotation: test-29
+  - name: test_30
+    annotation: test-30
+  - name: test_31
+    annotation: test-31
+  - name: test_32
+    annotation: test-32
+  - name: test_33
+    annotation: test-33
+  - name: test_34
+    annotation: test-34
+  - name: test_35
+    annotation: test-35
+  - name: test_36
+    annotation: test-36
+  - name: test_37
+    annotation: test-37
+  - name: test_38
+    annotation: test-38
+  - name: test_39
+    annotation: test-39
+  - name: test_40
+    annotation: test-40
+  - name: test_41
+    annotation: test-41
+  - name: test_42
+    annotation: test-42
+  - name: test_43
+    annotation: test-43
+  - name: test_44
+    annotation: test-44
+  - name: test_45
+    annotation: test-45
+  - name: test_46
+    annotation: test-46
+  - name: test_47
+    annotation: test-47
+  - name: test_48
+    annotation: test-48
+  - name: test_49
+    annotation: test-49
+  - name: test_50
+    annotation: test-50
+  - name: test_51
+    annotation: test-51
+  - name: test_52
+    annotation: test-52
+  - name: test_53
+    annotation: test-53
+  - name: test_54
+    annotation: test-54
+  - name: test_55
+    annotation: test-55
+  - name: test_56
+    annotation: test-56
+  - name: test_57
+    annotation: test-57
+  - name: test_58
+    annotation: test-58
+  - name: test_59
+    annotation: test-59
+  - name: test_60
+    annotation: test-60
+  - name: test_61
+    annotation: test-61
+  - name: test_62
+    annotation: test-62
+  - name: test_63
+    annotation: test-63
+  - name: test_64
+    annotation: test-64
+  - name: test_65
+    annotation: test-65
+  - name: test_66
+    annotation: test-66
+  - name: test_67
+    annotation: test-67
+  - name: test_68
+    annotation: test-68
+  - name: test_69
+    annotation: test-69
+  - name: test_70
+    annotation: test-70
+  - name: test_71
+    annotation: test-71
+  - name: test_72
+    annotation: test-72
+  - name: test_73
+    annotation: test-73
+  - name: test_74
+    annotation: test-74
+  - name: test_75
+    annotation: test-75
+  - name: test_76
+    annotation: test-76
+  - name: test_77
+    annotation: test-77
+  - name: test_78
+    annotation: test-78
+  - name: test_79
+    annotation: test-79
+  - name: test_80
+    annotation: test-80
+  - name: test_81
+    annotation: test-81
+  - name: test_82
+    annotation: test-82
+  - name: test_83
+    annotation: test-83
+  - name: test_84
+    annotation: test-84
+  - name: test_85
+    annotation: test-85
+  - name: test_86
+    annotation: test-86
+  - name: test_87
+    annotation: test-87
+  - name: test_88
+    annotation: test-88
+  - name: test_89
+    annotation: test-89
+  - name: test_90
+    annotation: test-90
+  - name: test_91
+    annotation: test-91
+  - name: test_92
+    annotation: test-92
+  - name: test_93
+    annotation: test-93
+  - name: test_94
+    annotation: test-94
+  - name: test_95
+    annotation: test-95
+  - name: test_96
+    annotation: test-96
+  - name: test_97
+    annotation: test-97
+  - name: test_98
+    annotation: test-98
+  - name: test_99
+    annotation: test-99
+  - name: test_100
+    annotation: test-100
+  - name: test_61
+    annotation: test-61
+  - name: test_62
+    annotation: test-62
+resources:
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+  "items": "items"
+preComputeMetrics:
+  enabled: true
+cacheOptions:
+  unsafeDisableDeepCopy: true
+  dropAnnotations:
+  - test-1
+  - test-3
+aggregations:
+- sources:
+    type: "container"
+    container:
+    - "requests_allocated"
+    - "limits_allocated"
+  levels:
+  - mask:
+      name: "container"
+      builtIn:
+        exported_container: true
+        exported_pod: true
+        exported_namespace: true
+        exported_node: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+        scheduled: true
+        level: true
+      extensions:
+        ip_class: true
+        test_1: true
+        test_2: true
+        test_3: true
+        test_4: true
+  - mask:
+      name: "workload"
+      builtIn:
+        exported_namespace: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+        level: true
+  - mask:
+      name: "app"
+      builtIn:
+        exported_namespace: true
+        app: true
+        priority_class: true
+        level: true
+  - mask:
+      name: "namespace"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+        level: true
+  - mask:
+      name: "cluster"
+      builtIn:
+        priority_class: true
+        level: true
+- sources:
+    type: "pod"
+    pod:
+    - "pod"
+  levels:
+  - mask:
+      name: "pod"
+      builtIn:
+        exported_pod: true
+        exported_namespace: true
+        exported_node: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+        scheduled: true
+        level: true
+  - mask:
+      name: "cluster_scheduled"
+      builtIn:
+        priority_class: true
+        scheduled: true
+        level: true
+- sources:
+    type: "quota"
+    quota:
+    - "quota"
+    - "requests_quota_hard"
+    - "requests_quota_used"
+    - "limits_quota_hard"
+    - "limits_quota_used"
+  levels:
+  - mask:
+      name: "quota"
+      builtIn:
+        priority_class: true
+        exported_namespace: true
+        level: true
+  - mask:
+      name: "quota_cluster"
+      builtIn:
+        priority_class: true
+        level: true
+- sources:
+    type: "quota"
+    quota:
+    - "limits_quota_proposed"
+    - "requests_quota_proposed"
+  levels:
+  - mask:
+      name: "namespace"
+      builtIn:
+        priority_class: true
+        exported_namespace: true
+        allocation_strategy: true
+- sources:
+    type: "node"
+    node:
+    - "node"
+    - "node_capacity"
+    - "node_allocatable"
+    - "node_requests"
+    - "node_limits"
+  levels:
+  - mask:
+      name: "node"
+      builtIn:
+        node_unschedulable: true
+        exported_node: true
+        level: true
+  - mask:
+      name: "node_cluster"
+      builtIn:
+        node_unschedulable: true
+        level: true

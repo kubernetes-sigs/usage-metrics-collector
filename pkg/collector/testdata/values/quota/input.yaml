@@ -1,0 +1,39 @@
+quota:
+  apiVersion: v1
+  kind: ResourceQuota
+  status:
+    hard:
+      limits.cpu: "500"
+      limits.memory: 300G
+      requests.cpu: "250"
+      requests.memory: 150G
+      local-storage.storageclass.storage.k8s.io/persistentvolumeclaims: "0"
+      remote-storage.storageclass.storage.k8s.io/requests.storage: 32Gi
+    used:
+      limits.cpu: "200"
+      limits.memory: 200G
+      requests.cpu: "100"
+      requests.memory: 100G
+      local-storage.storageclass.storage.k8s.io/persistentvolumeclaims: "0"
+      remote-storage.storageclass.storage.k8s.io/requests.storage: 0
+resourceQuotaDescriptor:
+  apiVersion: quotamanagement.usagemetricscollector.sigs.k8s.io/v1alpha1
+  kind: ResourceQuotaDescriptor
+  spec:
+    allocationStrategy:
+      allocationStrategyType: "Constant"
+      constant:
+        constantAllocated: true
+    targetAllocationsPolicy:
+      limitsTargetPercent:
+        "cpu": 68
+        "memory": 69
+      requestsTargetPercent:
+        "cpu": 70
+        "memory": 71
+  status:
+    proposedQuota:
+      "limits.cpu": "294"
+      "limits.memory": "290G"
+      "requests.cpu": "143"
+      "requests.memory": "141G"

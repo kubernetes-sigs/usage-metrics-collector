@@ -1,0 +1,6 @@
+allocation_strategy: Constant
+exported_namespace: test-namespace-1
+namespace_annotation: namespace-annotation-ext
+namespace_label: namespace-labels-ext
+priority_class: p1
+quota_name: p1

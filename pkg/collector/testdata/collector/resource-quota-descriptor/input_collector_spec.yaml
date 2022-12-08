@@ -1,0 +1,21 @@
+prefix: "kube_usage"
+builtIn:
+  useQuotaNameForPriorityClass: true
+resources:
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+aggregations:
+- sources:
+    type: "quota"
+    quota:
+    - "limits_quota_proposed"
+    - "requests_quota_proposed"
+    - "limits_quota_hard_minus_proposed"
+    - "requests_quota_hard_minus_proposed"
+  levels:
+  - mask:
+      name: "namespace"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+        allocation_strategy: true

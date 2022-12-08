@@ -1,0 +1,7 @@
+# HELP kube_usage_namespace_extension_metric_sum_namespace_items kube_usage_namespace_extension_metric_sum_namespace_items
+# TYPE kube_usage_namespace_extension_metric_sum_namespace_items gauge
+kube_usage_namespace_extension_metric_sum_namespace_items{exported_namespace="test-namespace-1",namespace_extention="abc,def"} 1
+kube_usage_namespace_extension_metric_sum_namespace_items{exported_namespace="test-namespace-2",namespace_extention="xyz"} 1
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 0

@@ -1,0 +1,145 @@
+# HELP kube_usage_app_sum_limits_allocated_cpu_cores kube_usage_app_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_app_sum_limits_allocated_cpu_cores gauge
+kube_usage_app_sum_limits_allocated_cpu_cores{app="",exported_namespace="test",level="app",priority_class="p1"} 0.6
+kube_usage_app_sum_limits_allocated_cpu_cores{app="foo",exported_namespace="test",level="app",priority_class="p1"} 0.6
+# HELP kube_usage_app_sum_limits_allocated_memory_bytes kube_usage_app_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_app_sum_limits_allocated_memory_bytes gauge
+kube_usage_app_sum_limits_allocated_memory_bytes{app="",exported_namespace="test",level="app",priority_class="p1"} 1.4680064e+08
+kube_usage_app_sum_limits_allocated_memory_bytes{app="foo",exported_namespace="test",level="app",priority_class="p1"} 1.4680064e+08
+# HELP kube_usage_app_sum_requests_allocated_cpu_cores kube_usage_app_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_app_sum_requests_allocated_cpu_cores gauge
+kube_usage_app_sum_requests_allocated_cpu_cores{app="",exported_namespace="test",level="app",priority_class="p1"} 0.3
+kube_usage_app_sum_requests_allocated_cpu_cores{app="foo",exported_namespace="test",level="app",priority_class="p1"} 0.3
+# HELP kube_usage_app_sum_requests_allocated_memory_bytes kube_usage_app_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_app_sum_requests_allocated_memory_bytes gauge
+kube_usage_app_sum_requests_allocated_memory_bytes{app="",exported_namespace="test",level="app",priority_class="p1"} 7.340032e+07
+kube_usage_app_sum_requests_allocated_memory_bytes{app="foo",exported_namespace="test",level="app",priority_class="p1"} 7.340032e+07
+# HELP kube_usage_cluster_scheduled_sum_pod_items kube_usage_cluster_scheduled_sum_pod_items
+# TYPE kube_usage_cluster_scheduled_sum_pod_items gauge
+kube_usage_cluster_scheduled_sum_pod_items{level="cluster_scheduled",priority_class="p1",scheduled="true"} 2
+# HELP kube_usage_cluster_sum_limits_allocated_cpu_cores kube_usage_cluster_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_cluster_sum_limits_allocated_cpu_cores gauge
+kube_usage_cluster_sum_limits_allocated_cpu_cores{level="cluster",priority_class="p1"} 1.2
+# HELP kube_usage_cluster_sum_limits_allocated_memory_bytes kube_usage_cluster_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_cluster_sum_limits_allocated_memory_bytes gauge
+kube_usage_cluster_sum_limits_allocated_memory_bytes{level="cluster",priority_class="p1"} 2.9360128e+08
+# HELP kube_usage_cluster_sum_requests_allocated_cpu_cores kube_usage_cluster_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_cluster_sum_requests_allocated_cpu_cores gauge
+kube_usage_cluster_sum_requests_allocated_cpu_cores{level="cluster",priority_class="p1"} 0.6
+# HELP kube_usage_cluster_sum_requests_allocated_memory_bytes kube_usage_cluster_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_cluster_sum_requests_allocated_memory_bytes gauge
+kube_usage_cluster_sum_requests_allocated_memory_bytes{level="cluster",priority_class="p1"} 1.4680064e+08
+# HELP kube_usage_container_sum_limits_allocated_cpu_cores kube_usage_container_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_container_sum_limits_allocated_cpu_cores gauge
+kube_usage_container_sum_limits_allocated_cpu_cores{app="",exported_container="log-aggregator",exported_namespace="test",exported_node="node-1",exported_pod="test-container",ip_class="cluster-routable",level="container",priority_class="p1",scheduled="true",test_1="",test_2="b",test_3="",test_4="d",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 0.6
+kube_usage_container_sum_limits_allocated_cpu_cores{app="foo",exported_container="log-aggregator",exported_namespace="test",exported_node="node-1",exported_pod="test-container-2",ip_class="cluster-routable",level="container",priority_class="p1",scheduled="true",test_1="",test_2="b",test_3="",test_4="d",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 0.6
+# HELP kube_usage_container_sum_limits_allocated_memory_bytes kube_usage_container_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_container_sum_limits_allocated_memory_bytes gauge
+kube_usage_container_sum_limits_allocated_memory_bytes{app="",exported_container="log-aggregator",exported_namespace="test",exported_node="node-1",exported_pod="test-container",ip_class="cluster-routable",level="container",priority_class="p1",scheduled="true",test_1="",test_2="b",test_3="",test_4="d",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 1.4680064e+08
+kube_usage_container_sum_limits_allocated_memory_bytes{app="foo",exported_container="log-aggregator",exported_namespace="test",exported_node="node-1",exported_pod="test-container-2",ip_class="cluster-routable",level="container",priority_class="p1",scheduled="true",test_1="",test_2="b",test_3="",test_4="d",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 1.4680064e+08
+# HELP kube_usage_container_sum_requests_allocated_cpu_cores kube_usage_container_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_container_sum_requests_allocated_cpu_cores gauge
+kube_usage_container_sum_requests_allocated_cpu_cores{app="",exported_container="log-aggregator",exported_namespace="test",exported_node="node-1",exported_pod="test-container",ip_class="cluster-routable",level="container",priority_class="p1",scheduled="true",test_1="",test_2="b",test_3="",test_4="d",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 0.3
+kube_usage_container_sum_requests_allocated_cpu_cores{app="foo",exported_container="log-aggregator",exported_namespace="test",exported_node="node-1",exported_pod="test-container-2",ip_class="cluster-routable",level="container",priority_class="p1",scheduled="true",test_1="",test_2="b",test_3="",test_4="d",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 0.3
+# HELP kube_usage_container_sum_requests_allocated_memory_bytes kube_usage_container_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_container_sum_requests_allocated_memory_bytes gauge
+kube_usage_container_sum_requests_allocated_memory_bytes{app="",exported_container="log-aggregator",exported_namespace="test",exported_node="node-1",exported_pod="test-container",ip_class="cluster-routable",level="container",priority_class="p1",scheduled="true",test_1="",test_2="b",test_3="",test_4="d",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 7.340032e+07
+kube_usage_container_sum_requests_allocated_memory_bytes{app="foo",exported_container="log-aggregator",exported_namespace="test",exported_node="node-1",exported_pod="test-container-2",ip_class="cluster-routable",level="container",priority_class="p1",scheduled="true",test_1="",test_2="b",test_3="",test_4="d",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 7.340032e+07
+# HELP kube_usage_namespace_sum_limits_allocated_cpu_cores kube_usage_namespace_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_namespace_sum_limits_allocated_cpu_cores gauge
+kube_usage_namespace_sum_limits_allocated_cpu_cores{exported_namespace="test",level="namespace",priority_class="p1"} 1.2
+# HELP kube_usage_namespace_sum_limits_allocated_memory_bytes kube_usage_namespace_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_namespace_sum_limits_allocated_memory_bytes gauge
+kube_usage_namespace_sum_limits_allocated_memory_bytes{exported_namespace="test",level="namespace",priority_class="p1"} 2.9360128e+08
+# HELP kube_usage_namespace_sum_limits_quota_proposed_cpu_cores kube_usage_namespace_sum_limits_quota_proposed_cpu_cores
+# TYPE kube_usage_namespace_sum_limits_quota_proposed_cpu_cores gauge
+kube_usage_namespace_sum_limits_quota_proposed_cpu_cores{allocation_strategy="Constant",exported_namespace="test",priority_class="p1"} 4.7
+# HELP kube_usage_namespace_sum_limits_quota_proposed_memory_bytes kube_usage_namespace_sum_limits_quota_proposed_memory_bytes
+# TYPE kube_usage_namespace_sum_limits_quota_proposed_memory_bytes gauge
+kube_usage_namespace_sum_limits_quota_proposed_memory_bytes{allocation_strategy="Constant",exported_namespace="test",priority_class="p1"} 7.7309411328e+09
+# HELP kube_usage_namespace_sum_requests_allocated_cpu_cores kube_usage_namespace_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_namespace_sum_requests_allocated_cpu_cores gauge
+kube_usage_namespace_sum_requests_allocated_cpu_cores{exported_namespace="test",level="namespace",priority_class="p1"} 0.6
+# HELP kube_usage_namespace_sum_requests_allocated_memory_bytes kube_usage_namespace_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_namespace_sum_requests_allocated_memory_bytes gauge
+kube_usage_namespace_sum_requests_allocated_memory_bytes{exported_namespace="test",level="namespace",priority_class="p1"} 1.4680064e+08
+# HELP kube_usage_namespace_sum_requests_quota_proposed_cpu_cores kube_usage_namespace_sum_requests_quota_proposed_cpu_cores
+# TYPE kube_usage_namespace_sum_requests_quota_proposed_cpu_cores gauge
+kube_usage_namespace_sum_requests_quota_proposed_cpu_cores{allocation_strategy="Constant",exported_namespace="test",priority_class="p1"} 4.3
+# HELP kube_usage_namespace_sum_requests_quota_proposed_memory_bytes kube_usage_namespace_sum_requests_quota_proposed_memory_bytes
+# TYPE kube_usage_namespace_sum_requests_quota_proposed_memory_bytes gauge
+kube_usage_namespace_sum_requests_quota_proposed_memory_bytes{allocation_strategy="Constant",exported_namespace="test",priority_class="p1"} 4.5097156608e+09
+# HELP kube_usage_pod_sum_pod_items kube_usage_pod_sum_pod_items
+# TYPE kube_usage_pod_sum_pod_items gauge
+kube_usage_pod_sum_pod_items{app="",exported_namespace="test",exported_node="node-1",exported_pod="test-container",level="pod",priority_class="p1",scheduled="true",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 1
+kube_usage_pod_sum_pod_items{app="foo",exported_namespace="test",exported_node="node-1",exported_pod="test-container-2",level="pod",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 1
+# HELP kube_usage_quota_cluster_sum_limits_quota_hard_cpu_cores kube_usage_quota_cluster_sum_limits_quota_hard_cpu_cores
+# TYPE kube_usage_quota_cluster_sum_limits_quota_hard_cpu_cores gauge
+kube_usage_quota_cluster_sum_limits_quota_hard_cpu_cores{level="quota_cluster",priority_class="p1"} 5
+# HELP kube_usage_quota_cluster_sum_limits_quota_hard_memory_bytes kube_usage_quota_cluster_sum_limits_quota_hard_memory_bytes
+# TYPE kube_usage_quota_cluster_sum_limits_quota_hard_memory_bytes gauge
+kube_usage_quota_cluster_sum_limits_quota_hard_memory_bytes{level="quota_cluster",priority_class="p1"} 5.36870912e+09
+# HELP kube_usage_quota_cluster_sum_limits_quota_used_cpu_cores kube_usage_quota_cluster_sum_limits_quota_used_cpu_cores
+# TYPE kube_usage_quota_cluster_sum_limits_quota_used_cpu_cores gauge
+kube_usage_quota_cluster_sum_limits_quota_used_cpu_cores{level="quota_cluster",priority_class="p1"} 4.2
+# HELP kube_usage_quota_cluster_sum_limits_quota_used_memory_bytes kube_usage_quota_cluster_sum_limits_quota_used_memory_bytes
+# TYPE kube_usage_quota_cluster_sum_limits_quota_used_memory_bytes gauge
+kube_usage_quota_cluster_sum_limits_quota_used_memory_bytes{level="quota_cluster",priority_class="p1"} 3.514826752e+09
+# HELP kube_usage_quota_cluster_sum_quota_items kube_usage_quota_cluster_sum_quota_items
+# TYPE kube_usage_quota_cluster_sum_quota_items gauge
+kube_usage_quota_cluster_sum_quota_items{level="quota_cluster",priority_class="p1"} 1
+# HELP kube_usage_quota_cluster_sum_requests_quota_hard_cpu_cores kube_usage_quota_cluster_sum_requests_quota_hard_cpu_cores
+# TYPE kube_usage_quota_cluster_sum_requests_quota_hard_cpu_cores gauge
+kube_usage_quota_cluster_sum_requests_quota_hard_cpu_cores{level="quota_cluster",priority_class="p1"} 5
+# HELP kube_usage_quota_cluster_sum_requests_quota_hard_memory_bytes kube_usage_quota_cluster_sum_requests_quota_hard_memory_bytes
+# TYPE kube_usage_quota_cluster_sum_requests_quota_hard_memory_bytes gauge
+kube_usage_quota_cluster_sum_requests_quota_hard_memory_bytes{level="quota_cluster",priority_class="p1"} 5.36870912e+09
+# HELP kube_usage_quota_cluster_sum_requests_quota_used_cpu_cores kube_usage_quota_cluster_sum_requests_quota_used_cpu_cores
+# TYPE kube_usage_quota_cluster_sum_requests_quota_used_cpu_cores gauge
+kube_usage_quota_cluster_sum_requests_quota_used_cpu_cores{level="quota_cluster",priority_class="p1"} 3.6
+# HELP kube_usage_quota_cluster_sum_requests_quota_used_memory_bytes kube_usage_quota_cluster_sum_requests_quota_used_memory_bytes
+# TYPE kube_usage_quota_cluster_sum_requests_quota_used_memory_bytes gauge
+kube_usage_quota_cluster_sum_requests_quota_used_memory_bytes{level="quota_cluster",priority_class="p1"} 3.368026112e+09
+# HELP kube_usage_quota_sum_limits_quota_hard_cpu_cores kube_usage_quota_sum_limits_quota_hard_cpu_cores
+# TYPE kube_usage_quota_sum_limits_quota_hard_cpu_cores gauge
+kube_usage_quota_sum_limits_quota_hard_cpu_cores{exported_namespace="test",level="quota",priority_class="p1"} 5
+# HELP kube_usage_quota_sum_limits_quota_hard_memory_bytes kube_usage_quota_sum_limits_quota_hard_memory_bytes
+# TYPE kube_usage_quota_sum_limits_quota_hard_memory_bytes gauge
+kube_usage_quota_sum_limits_quota_hard_memory_bytes{exported_namespace="test",level="quota",priority_class="p1"} 5.36870912e+09
+# HELP kube_usage_quota_sum_limits_quota_used_cpu_cores kube_usage_quota_sum_limits_quota_used_cpu_cores
+# TYPE kube_usage_quota_sum_limits_quota_used_cpu_cores gauge
+kube_usage_quota_sum_limits_quota_used_cpu_cores{exported_namespace="test",level="quota",priority_class="p1"} 4.2
+# HELP kube_usage_quota_sum_limits_quota_used_memory_bytes kube_usage_quota_sum_limits_quota_used_memory_bytes
+# TYPE kube_usage_quota_sum_limits_quota_used_memory_bytes gauge
+kube_usage_quota_sum_limits_quota_used_memory_bytes{exported_namespace="test",level="quota",priority_class="p1"} 3.514826752e+09
+# HELP kube_usage_quota_sum_quota_items kube_usage_quota_sum_quota_items
+# TYPE kube_usage_quota_sum_quota_items gauge
+kube_usage_quota_sum_quota_items{exported_namespace="test",level="quota",priority_class="p1"} 1
+# HELP kube_usage_quota_sum_requests_quota_hard_cpu_cores kube_usage_quota_sum_requests_quota_hard_cpu_cores
+# TYPE kube_usage_quota_sum_requests_quota_hard_cpu_cores gauge
+kube_usage_quota_sum_requests_quota_hard_cpu_cores{exported_namespace="test",level="quota",priority_class="p1"} 5
+# HELP kube_usage_quota_sum_requests_quota_hard_memory_bytes kube_usage_quota_sum_requests_quota_hard_memory_bytes
+# TYPE kube_usage_quota_sum_requests_quota_hard_memory_bytes gauge
+kube_usage_quota_sum_requests_quota_hard_memory_bytes{exported_namespace="test",level="quota",priority_class="p1"} 5.36870912e+09
+# HELP kube_usage_quota_sum_requests_quota_used_cpu_cores kube_usage_quota_sum_requests_quota_used_cpu_cores
+# TYPE kube_usage_quota_sum_requests_quota_used_cpu_cores gauge
+kube_usage_quota_sum_requests_quota_used_cpu_cores{exported_namespace="test",level="quota",priority_class="p1"} 3.6
+# HELP kube_usage_quota_sum_requests_quota_used_memory_bytes kube_usage_quota_sum_requests_quota_used_memory_bytes
+# TYPE kube_usage_quota_sum_requests_quota_used_memory_bytes gauge
+kube_usage_quota_sum_requests_quota_used_memory_bytes{exported_namespace="test",level="quota",priority_class="p1"} 3.368026112e+09
+# HELP kube_usage_workload_sum_limits_allocated_cpu_cores kube_usage_workload_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_workload_sum_limits_allocated_cpu_cores gauge
+kube_usage_workload_sum_limits_allocated_cpu_cores{app="",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 0.6
+kube_usage_workload_sum_limits_allocated_cpu_cores{app="foo",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 0.6
+# HELP kube_usage_workload_sum_limits_allocated_memory_bytes kube_usage_workload_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_workload_sum_limits_allocated_memory_bytes gauge
+kube_usage_workload_sum_limits_allocated_memory_bytes{app="",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 1.4680064e+08
+kube_usage_workload_sum_limits_allocated_memory_bytes{app="foo",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 1.4680064e+08
+# HELP kube_usage_workload_sum_requests_allocated_cpu_cores kube_usage_workload_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_workload_sum_requests_allocated_cpu_cores gauge
+kube_usage_workload_sum_requests_allocated_cpu_cores{app="",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 0.3
+kube_usage_workload_sum_requests_allocated_cpu_cores{app="foo",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 0.3
+# HELP kube_usage_workload_sum_requests_allocated_memory_bytes kube_usage_workload_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_workload_sum_requests_allocated_memory_bytes gauge
+kube_usage_workload_sum_requests_allocated_memory_bytes{app="",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 7.340032e+07
+kube_usage_workload_sum_requests_allocated_memory_bytes{app="foo",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 7.340032e+07

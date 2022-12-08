@@ -1,0 +1,29 @@
+pods:
+  - apiVersion: v1
+    kind: Pod
+    metadata:
+      namespace: namespace-1
+      name: pod-1
+      uid: 12345
+    spec:
+      containers:
+        - name: container-1
+          resources:
+            requests:
+              memory: "10M"
+              cpu: "1"
+              extensionResource: "50"
+            limits:
+              memory: "20M"
+              cpu: "2"
+              extensionResource: "100"
+    status:
+      containerStatuses:
+      - containerID: containerd://abcde
+responses:
+  node-1:
+    containers:
+    - containerID: abcde
+      podUID: 12345
+      CPUCoresNanoSec: [1000000000, 2000000000, 3000000000, 4000000000]
+      MemoryBytes: [12000000, 18000000, 22000000, 26000000]

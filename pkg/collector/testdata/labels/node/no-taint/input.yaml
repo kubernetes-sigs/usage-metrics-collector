@@ -1,0 +1,33 @@
+node:
+  apiVersion: v1
+  kind: Node
+  metadata:
+    name: test-node-1
+    labels:
+      nd-l: node-label-value-1
+    annotations:
+      nd-a: node-annotation-value-1
+  spec:
+    taints:
+    - effect: NoSchedule
+      key: test-key
+      value: test-value
+spec:
+  extensions:
+    nodeLabels:
+    - name: node_annotation
+      annotation: nd-a
+    - name: node_label
+      label: nd-l
+  aggregations:
+  - sources:
+      type: "node"
+    levels:
+    - mask:
+        name: "node"
+        builtIn:
+          exported_node: true
+          node_unschedulable: true
+        extensions:
+          node_label: true
+          node_annotation: true

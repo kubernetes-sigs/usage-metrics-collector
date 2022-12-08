@@ -1,0 +1,40 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "cpu": "cpu_cores"
+utilizationServer:
+  samplerPodLabels: {"app": "app-1"}
+  samplerNamespaceName: "test-namespace-1"
+aggregations: # aggregate metrics and export them
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "utilization"
+  levels:
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        workload_name: true
+        workload_kind: true
+    operation: "hist"
+    histogramBuckets:
+      cpu_cores: [0.5, 1, 1.5, 2, 3, 4, 5, 6]
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "requests_allocated_minus_utilization"
+  levels:
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        workload_name: true
+        workload_kind: true
+    operation: "hist"
+    histogramBuckets:
+      cpu_cores: [-3, -2, -1, -0.5, 0.5, 1, 1.5, 2, 3, 4, 5, 6]

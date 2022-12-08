@@ -1,0 +1,53 @@
+buffer:
+  pollsPerMinute: 60
+  size: 900
+checkCreatedPodFrequencyDuration: 6s
+containerdAddress: /run/containerd/containerd.sock
+containerdNamespace: default
+exitOnConfigChange: false
+pbPort: 8080
+pushAddress: ""
+pushFrequencyDuration: 1m
+reader:
+  cgroupVersion: v1
+  containerCacheSyncIntervalSeconds: 1
+  containerPrefix:
+  - cri-containerd-
+  containerReplacements:
+    _: '-'
+  containerSuffix:
+  - .slice
+  - .scope
+  cpuPaths:
+  - sys/fs/cgroup/cpu,cpuacct
+  - sys/fs/cgroup/cpuacct
+  - sys/fs/cgroup/cpu
+  maxCPUCoresNanoSec: 512000000000
+  maxCPUCoresSampleValue: 512
+  memoryPaths:
+  - sys/fs/cgroup/memory
+  minCPUCoresNanoSec: 0
+  minCPUCoresSampleValue: 0
+  nodeAggregationLevelGlobs:
+  - kubelet/kubepods
+  - kubelet/kubepods/besteffort
+  - kubelet/kubepods/burstable
+  - kubelet/kubepods/guaranteed
+  parents:
+  - kubelet-kubepods-besteffort.slice
+  - kubelet-kubepods-burstable.slice
+  - kubelet-kubepods.slice
+  - kubelet.slice
+  podPrefix:
+  - kubelet-kubepods-burstable-pod
+  - kubelet-kubepods-besteffort-pod
+  - kubelet-kubepods-pod
+  - pod
+  podReplacements:
+    _: '-'
+  podSuffix:
+  - .slice
+  - .scope
+restPort: 8090
+sendPushMetricsRetryCount: 0
+useContainerMonitor: false

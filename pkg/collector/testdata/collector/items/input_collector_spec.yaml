@@ -1,0 +1,91 @@
+prefix: "kube_usage"
+resources:
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+  "items": "items"
+  "schedule_time": "schedule_time_seconds"
+  "schedule_wait_time": "schedule_wait_time_seconds"
+extensions:
+  podLabels:
+  - name: pod_annotation
+    annotation: p-a
+  - name: pod_label
+    label: p-l
+  namespaceLabels:
+  - name: namespace_annotation
+    annotation: n-a
+  - name: namespace_label
+    label: n-l
+  nodeLabels:
+  - name: node_annotation
+    annotation: nd-a
+  - name: node_label
+    label: nd-l
+aggregations:
+- sources:
+    type: "pod"
+    pod:
+    - "pod"
+  levels:
+  - mask:
+      name: "pod_ext"
+      builtIn:
+        exported_pod: true
+        exported_namespace: true
+        priority_class: true
+      extensions:
+        pod_label: true
+        pod_annotation: true
+        namespace_label: true
+        namespace_annotation: true
+        node_label: true
+        node_annotation: true
+  - mask:
+      name: "pod_namespace_ext"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+      extensions:
+        pod_label: true
+        pod_annotation: true
+  - mask:
+      name: "pod_cluster_ext"
+      builtIn:
+        priority_class: true
+      extensions:
+        pod_label: true
+        pod_annotation: true
+- sources:
+    type: "quota"
+    quota:
+    - "quota"
+  levels:
+  - mask:
+      name: "quota_ext"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+      extensions:
+        namespace_label: true
+        namespace_annotation: true
+  - mask:
+      name: "quota_cluster_ext"
+      builtIn:
+        priority_class: true
+- sources:
+    type: "node"
+    node:
+    - "node"
+  levels:
+  - mask:
+      name: "node_ext"
+      builtIn:
+        exported_node: true
+        node_unschedulable: true
+      extensions:
+        node_label: true
+        node_annotation: true
+  - mask:
+      name: "node_cluster_ext"
+      builtIn:
+        node_unschedulable: true
