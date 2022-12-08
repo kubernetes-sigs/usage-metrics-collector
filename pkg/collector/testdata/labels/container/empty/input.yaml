@@ -1,0 +1,28 @@
+pod: {}
+spec:
+  aggregations:
+  - sources:
+      type: "container"
+    levels:
+    - mask:
+        name: "container"
+        builtIn:
+          exported_container: true
+          exported_pod: true
+          exported_namespace: true
+          exported_node: true
+          workload_name: true
+          workload_kind: true
+          workload_api_group: true
+          workload_api_version: true
+          app: true
+          priority_class: true
+          scheduled: true
+        extensions:
+          pod_label: true
+          pod_label_2: true
+          pod_annotation: true
+          namespace_label: true
+          namespace_annotation: true
+          node_label: true
+          node_annotation: true

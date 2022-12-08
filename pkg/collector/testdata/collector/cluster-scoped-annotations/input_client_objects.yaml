@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    vendable.capacity: |
+      [ 
+        { labels: { priority_class: p1}, values: {cpu: "10", memory: "10Gi" }},
+        { labels: { priority_class: p2}, values: {cpu: "10", memory: "10Gi" }},
+      ]
+  creationTimestamp: "2021-12-17T20:39:48Z"
+  generation: 138073
+  name: name-1
+  resourceVersion: "1284947170"
+  uid: c80514cf-41c7-4ec4-b392-1139f3a7aac0

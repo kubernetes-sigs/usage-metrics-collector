@@ -1,0 +1,86 @@
+pod:
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: test-pod-1
+    namespace: test-namespace-1
+    annotations:
+      p-a: pod-annotation-ext
+    labels:
+      app: app-1
+      p-l: pod-labels-ext
+      p-l-2: pod-labels-ext-2
+  spec:
+    nodeName: test-node-1
+    priorityClassName: p1
+container:
+  name: app
+node:
+  apiVersion: v1
+  kind: Node
+  metadata:
+    name: test-node-1
+    labels:
+      nd-l: node-label-value-1
+    annotations:
+      nd-a: node-annotation-value-1
+namespace:
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: test-namespace-1
+    annotations:
+      n-a: namespace-annotation-ext
+    labels:
+      n-l: namespace-labels-ext
+workload:
+  name: deployment-1
+  kind: Deployment
+  apiGroup: apps
+  apiVersion: v1
+spec:
+  extensions:
+    podLabels:
+    - name: pod_annotation
+      annotation: p-a
+    - name: pod_label
+      label: p-l
+    - name: pod_label_2
+      label: p-l-2
+    namespaceLabels:
+    - name: namespace_annotation
+      annotation: n-a
+    - name: namespace_label
+      label: n-l
+    nodeLabels:
+    - name: node_annotation
+      annotation: nd-a
+    - name: node_label
+      label: nd-l
+  aggregations:
+  - sources:
+      type: "container"
+    levels:
+    - mask:
+        name: "container"
+        builtIn:
+          exported_container: true
+          exported_pod: true
+          exported_namespace: true
+          exported_node: true
+          node_unschedulable: true
+          workload_name: true
+          workload_kind: true
+          workload_api_group: true
+          workload_api_version: true
+          app: true
+          priority_class: true
+          scheduled: true
+        extensions:
+          pod_label: true
+          pod_label_2: true
+          pod_annotation: true
+          namespace_label: true
+          namespace_annotation: true
+          node_label: true
+          node_annotation: true

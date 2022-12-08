@@ -1,0 +1,6 @@
+exported_node: test-node-1
+node_annotation: node-annotation-value-1
+node_label: node-label-value-1
+node_unschedulable: "false"
+out_of_service: "true"
+reserved: ""

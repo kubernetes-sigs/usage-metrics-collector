@@ -1,0 +1,156 @@
+{
+ "type": "cgroup",
+ "items": [
+  {
+   "labels": {
+    "cgroup": ".",
+    "exported_node": "test-node-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "false"
+   },
+   "values": [
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      2000,
+      2000,
+      3000,
+      4000,
+      4000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "cgroup": "kubelet",
+    "exported_node": "test-node-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "false"
+   },
+   "values": [
+    {
+     "source": "root_utilization",
+     "resourceType": "cpu",
+     "values": [
+      2000,
+      2000,
+      3000,
+      4000,
+      4000
+     ]
+    },
+    {
+     "source": "root_utilization",
+     "resourceType": "memory",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "cgroup": "kubepods",
+    "exported_node": "test-node-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "false"
+   }
+  },
+  {
+   "labels": {
+    "cgroup": "guaranteed",
+    "exported_node": "test-node-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "false"
+   }
+  },
+  {
+   "labels": {
+    "cgroup": "system.slice",
+    "exported_node": "test-node-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "false"
+   },
+   "values": [
+    {
+     "source": "root_utilization",
+     "resourceType": "cpu",
+     "values": [
+      2000,
+      2000,
+      3000,
+      3000,
+      4000
+     ]
+    },
+    {
+     "source": "root_utilization",
+     "resourceType": "memory",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "cgroup": "kubelet.service",
+    "exported_node": "test-node-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "false"
+   },
+   "values": [
+    {
+     "source": "system_utilization",
+     "resourceType": "cpu",
+     "values": [
+      1000,
+      1000,
+      1000,
+      1000,
+      2000
+     ]
+    },
+    {
+     "source": "system_utilization",
+     "resourceType": "memory",
+     "values": [
+      150,
+      300,
+      600,
+      800,
+      1000
+     ]
+    }
+   ]
+  }
+ ],
+ "clusterName": "unit-test"
+}

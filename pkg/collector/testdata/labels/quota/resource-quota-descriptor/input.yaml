@@ -1,0 +1,56 @@
+namespace:
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: test-namespace-1
+    annotations:
+      n-a: namespace-annotation-ext
+    labels:
+      n-l: namespace-labels-ext
+quota:
+  apiVersion: v1
+  kind: ResourceQuota
+  metadata:
+    namespace: test-namespace-1
+    name: p1
+resourceQuotaDescriptor:
+  apiVersion: quotamanagement.usagemetricscollector.sigs.k8s.io/v1alpha1
+  kind: ResourceQuotaDescriptor
+  metadata:
+    namespace: test-namespace-1
+    name: test-quota-1
+  spec:
+    allocationStrategy:
+      allocationStrategyType: "Constant"
+      constant:
+        constantAllocated: true
+    targetAllocationsPolicy:
+      limitsTargetPercent:
+        "cpu": 8
+        "memory": 9
+      requestsTargetPercent:
+        "cpu": 10
+        "memory": 11
+spec:
+  builtIn:
+    useQuotaNameForPriorityClass: true
+  extensions:
+    namespaceLabels:
+    - name: namespace_annotation
+      annotation: n-a
+    - name: namespace_label
+      label: n-l
+  aggregations:
+  - sources:
+      type: "quota"
+    levels:
+    - mask:
+        name: "quota"
+        builtIn:
+          exported_namespace: true
+          priority_class: true
+          quota_name: true
+          allocation_strategy: true
+        extensions:
+          namespace_label: true
+          namespace_annotation: true

@@ -1,0 +1,304 @@
+{
+ "type": "quota",
+ "items": [
+  {
+   "labels": {
+    "exported_namespace": "test-namespace-1",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "quota_name": "p1-name",
+    "storage_class": ""
+   },
+   "values": [
+    {
+     "source": "limits_quota_hard",
+     "resourceType": "cpu",
+     "values": [
+      5
+     ]
+    },
+    {
+     "source": "limits_quota_hard",
+     "resourceType": "memory",
+     "values": [
+      5000000000
+     ]
+    },
+    {
+     "source": "limits_quota_hard_minus_used",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "limits_quota_hard_minus_used",
+     "resourceType": "memory",
+     "values": [
+      2000000000
+     ]
+    },
+    {
+     "source": "limits_quota_used",
+     "resourceType": "cpu",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "limits_quota_used",
+     "resourceType": "memory",
+     "values": [
+      3000000000
+     ]
+    },
+    {
+     "source": "requests_quota_hard",
+     "resourceType": "cpu",
+     "values": [
+      5
+     ]
+    },
+    {
+     "source": "requests_quota_hard",
+     "resourceType": "memory",
+     "values": [
+      5000000000
+     ]
+    },
+    {
+     "source": "requests_quota_hard_minus_used",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "requests_quota_hard_minus_used",
+     "resourceType": "memory",
+     "values": [
+      2000000000
+     ]
+    },
+    {
+     "source": "requests_quota_used",
+     "resourceType": "cpu",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "requests_quota_used",
+     "resourceType": "memory",
+     "values": [
+      3000000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "exported_namespace": "test-namespace-1",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p2",
+    "quota_name": "p2-name",
+    "storage_class": ""
+   },
+   "values": [
+    {
+     "source": "limits_quota_hard",
+     "resourceType": "cpu",
+     "values": [
+      10
+     ]
+    },
+    {
+     "source": "limits_quota_hard",
+     "resourceType": "memory",
+     "values": [
+      15000000000
+     ]
+    },
+    {
+     "source": "limits_quota_hard_minus_used",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "limits_quota_hard_minus_used",
+     "resourceType": "memory",
+     "values": [
+      12000000000
+     ]
+    },
+    {
+     "source": "limits_quota_used",
+     "resourceType": "cpu",
+     "values": [
+      10
+     ]
+    },
+    {
+     "source": "limits_quota_used",
+     "resourceType": "memory",
+     "values": [
+      3000000000
+     ]
+    },
+    {
+     "source": "requests_quota_hard",
+     "resourceType": "cpu",
+     "values": [
+      20
+     ]
+    },
+    {
+     "source": "requests_quota_hard",
+     "resourceType": "memory",
+     "values": [
+      30000000000
+     ]
+    },
+    {
+     "source": "requests_quota_hard_minus_used",
+     "resourceType": "cpu",
+     "values": [
+      15
+     ]
+    },
+    {
+     "source": "requests_quota_hard_minus_used",
+     "resourceType": "memory",
+     "values": [
+      24000000000
+     ]
+    },
+    {
+     "source": "requests_quota_used",
+     "resourceType": "cpu",
+     "values": [
+      5
+     ]
+    },
+    {
+     "source": "requests_quota_used",
+     "resourceType": "memory",
+     "values": [
+      6000000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "exported_namespace": "test-namespace-1",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "",
+    "quota_name": "p3-name",
+    "storage_class": ""
+   }
+  },
+  {
+   "labels": {
+    "exported_namespace": "test-namespace-2",
+    "ns_annotation": "namespace-annotation-2",
+    "ns_label": "namespace-label-2",
+    "priority_class": "p1",
+    "quota_name": "p1-name",
+    "storage_class": ""
+   },
+   "values": [
+    {
+     "source": "limits_quota_hard",
+     "resourceType": "cpu",
+     "values": [
+      5
+     ]
+    },
+    {
+     "source": "limits_quota_hard",
+     "resourceType": "memory",
+     "values": [
+      5000000000
+     ]
+    },
+    {
+     "source": "limits_quota_hard_minus_used",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "limits_quota_hard_minus_used",
+     "resourceType": "memory",
+     "values": [
+      2000000000
+     ]
+    },
+    {
+     "source": "limits_quota_used",
+     "resourceType": "cpu",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "limits_quota_used",
+     "resourceType": "memory",
+     "values": [
+      3000000000
+     ]
+    },
+    {
+     "source": "requests_quota_hard",
+     "resourceType": "cpu",
+     "values": [
+      5
+     ]
+    },
+    {
+     "source": "requests_quota_hard",
+     "resourceType": "memory",
+     "values": [
+      5000000000
+     ]
+    },
+    {
+     "source": "requests_quota_hard_minus_used",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "requests_quota_hard_minus_used",
+     "resourceType": "memory",
+     "values": [
+      2000000000
+     ]
+    },
+    {
+     "source": "requests_quota_used",
+     "resourceType": "cpu",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "requests_quota_used",
+     "resourceType": "memory",
+     "values": [
+      3000000000
+     ]
+    }
+   ]
+  }
+ ],
+ "clusterName": "unit-test"
+}

@@ -1,0 +1,4 @@
+name: test-pod
+kind: pod
+apiGroup: core
+apiVersion: v1

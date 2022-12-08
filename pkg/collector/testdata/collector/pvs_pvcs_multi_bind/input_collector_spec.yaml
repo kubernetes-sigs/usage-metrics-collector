@@ -1,0 +1,43 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "storage": "storage_bytes"
+aggregations: # aggregate metrics and export them
+- sources: # use these sources (see the API documentation for sources)
+    type: "pvc" # use pvc sources
+    pvc:
+    - "pvc_requests_allocated"
+    - "pvc_limits_allocated"
+    - "pvc_capacity"
+  levels:
+  - mask:
+      name: "workload" # base level -- no aggregations
+      builtIn:
+        exported_pod: true
+        exported_namespace: true
+        exported_node: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+        exported_pvc: true
+        exported_pv: true
+        storage_class: true
+        phase: true
+- sources: # use these sources (see the API documentation for sources)
+    type: "pv" # use pv sources
+    pv:
+    - "pv_capacity"
+  levels:
+  - mask:
+      name: "pv" # base level -- no aggregations
+      builtIn:
+        exported_node: true
+        exported_pvc: true
+        exported_pv: true
+        storage_class: true
+        phase: true

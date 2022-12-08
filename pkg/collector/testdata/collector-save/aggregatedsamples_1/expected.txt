@@ -1,0 +1,1768 @@
+{
+ "items": [
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        12
+       ]
+      }
+     ],
+     "level": "app",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_app_sum_limits_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        600000000
+       ]
+      }
+     ],
+     "level": "app",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_app_sum_limits_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        6
+       ]
+      }
+     ],
+     "level": "app",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_app_sum_requests_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        300000000
+       ]
+      }
+     ],
+     "level": "app",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_app_sum_requests_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        18
+       ]
+      }
+     ],
+     "level": "app",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_app_sum_utilization_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        146750000
+       ]
+      }
+     ],
+     "level": "app",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_app_sum_utilization_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        2
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        2
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        2
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        2
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        1
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        1
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        1
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        1
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_container_avg_limits_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        100000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        100000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        100000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        100000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        50000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        50000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        50000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        50000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_container_avg_limits_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        1
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        1
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        1
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        1
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        0.5
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        0.5
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        0.5
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        0.5
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_container_avg_requests_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        50000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        50000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        50000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        50000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        25000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        25000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        25000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        25000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_container_avg_requests_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        2
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        1.25
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        2.5
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        2.5
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        2.75
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        2
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        2.5
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        2.5
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_container_avg_utilization_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        19500000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        9750000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        19500000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "app",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        19500000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        20000000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-1",
+      "exported_pod": "test-pod-1-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        19500000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-1",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        19500000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_container": "log-aggregator",
+      "exported_namespace": "test-namespace-1",
+      "exported_node": "test-node-2",
+      "exported_pod": "test-pod-2-deployment-2",
+      "priority_class": "p1",
+      "scheduled": "true",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        19500000
+       ]
+      }
+     ],
+     "level": "container",
+     "operation": "avg"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_container_avg_utilization_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        6
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        6
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_workload_sum_limits_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        300000000
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        300000000
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_workload_sum_limits_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        3
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        3
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_workload_sum_requests_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        150000000
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        150000000
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_workload_sum_requests_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        9.75
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        8.25
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_workload_sum_utilization_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        78500000
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    },
+    {
+     "labels": {
+      "app": "app-1",
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1",
+      "workload_api_group": "apps",
+      "workload_api_version": "v1",
+      "workload_kind": "deployment",
+      "workload_name": "test-deployment-2"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        68250000
+       ]
+      }
+     ],
+     "level": "workload",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_1",
+   "metricName": "kube_usage_workload_sum_utilization_memory_bytes",
+   "clusterName": "unit-test"
+  }
+ ]
+}

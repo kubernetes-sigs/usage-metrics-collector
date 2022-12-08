@@ -1,0 +1,11 @@
+# This file contains all available configuration options
+# with their default values (in comments).
+
+# Options for analysis running.
+run:
+  # The default concurrency value is the number of available CPU.
+  concurrency: 4
+
+  # Timeout for analysis, e.g. 30s, 5m.
+  # Default: 1m
+  timeout: 5m

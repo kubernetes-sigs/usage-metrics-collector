@@ -1,0 +1,77 @@
+limits_quota_hard:
+  level: namespace
+  resourceList:
+    cpu: "500"
+    memory: 300G
+  source: limits_quota_hard
+limits_quota_hard_minus_proposed:
+  level: namespace
+  resourceList:
+    cpu: "206"
+    memory: 10G
+  source: requests_quota_hard_minus_proposed
+limits_quota_hard_minus_used:
+  level: namespace
+  resourceList:
+    cpu: "300"
+    memory: 100G
+  source: limits_quota_hard
+limits_quota_proposed:
+  level: namespace
+  resourceList:
+    cpu: "294"
+    memory: 290G
+  source: limits_quota_proposed
+limits_quota_used:
+  level: namespace
+  resourceList:
+    cpu: "200"
+    memory: 200G
+  source: limits_quota_used
+pvc_requests_quota_hard:
+  level: namespace
+  resourceList:
+    local-storage.storageclass.storage.k8s.io/persistentvolumeclaims: "0"
+    remote-storage.storageclass.storage.k8s.io/requests.storage: 32Gi
+  source: pvc_requests_quota_hard
+pvc_requests_quota_used:
+  level: namespace
+  resourceList:
+    local-storage.storageclass.storage.k8s.io/persistentvolumeclaims: "0"
+    remote-storage.storageclass.storage.k8s.io/requests.storage: "0"
+  source: pvc_requests_quota_used
+quota:
+  level: namespace
+  resourceList:
+    items: "1"
+  source: quota
+requests_quota_hard:
+  level: namespace
+  resourceList:
+    cpu: "250"
+    memory: 150G
+  source: requests_quota_hard
+requests_quota_hard_minus_proposed:
+  level: namespace
+  resourceList:
+    cpu: "107"
+    memory: 9G
+  source: limits_quota_hard_minus_proposed
+requests_quota_hard_minus_used:
+  level: namespace
+  resourceList:
+    cpu: "150"
+    memory: 50G
+  source: requests_quota_hard
+requests_quota_proposed:
+  level: namespace
+  resourceList:
+    cpu: "143"
+    memory: 141G
+  source: requests_quota_proposed
+requests_quota_used:
+  level: namespace
+  resourceList:
+    cpu: "100"
+    memory: 100G
+  source: requests_quota_used

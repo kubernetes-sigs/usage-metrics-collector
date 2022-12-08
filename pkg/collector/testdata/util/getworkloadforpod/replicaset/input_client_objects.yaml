@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod
+  namespace: test-namespace
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: ReplicaSet
+      name: test-replicaset
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: test-replicaset
+  namespace: test-namespace
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace

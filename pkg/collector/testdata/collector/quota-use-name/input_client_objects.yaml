@@ -1,0 +1,219 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-1
+  annotations:
+    n-a: namespace-annotation-1
+  labels:
+    n-l: namespace-label-1
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p1
+  namespace: test-namespace-1
+spec:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+status:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+  used:
+    "limits.cpu": "3"
+    "limits.memory": "3G"
+    "requests.cpu": "3"
+    "requests.memory": "3G"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p2
+  namespace: test-namespace-1
+spec:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+status:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+  used:
+    "limits.cpu": "10"
+    "limits.memory": "3G"
+    "requests.cpu": "5"
+    "requests.memory": "6G"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-2
+  annotations:
+    n-a: namespace-annotation-1
+  labels:
+    n-l: namespace-label-1
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p1
+  namespace: test-namespace-2
+spec:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+status:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+  used:
+    "limits.cpu": "3"
+    "limits.memory": "3G"
+    "requests.cpu": "3"
+    "requests.memory": "3G"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p2
+  namespace: test-namespace-2
+spec:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+status:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+  used:
+    "limits.cpu": "10"
+    "limits.memory": "3G"
+    "requests.cpu": "5"
+    "requests.memory": "6G"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-3
+  annotations:
+    n-a: namespace-annotation-2
+  labels:
+    n-l: namespace-label-1
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p1
+  namespace: test-namespace-3
+spec:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+status:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+  used:
+    "limits.cpu": "3"
+    "limits.memory": "3G"
+    "requests.cpu": "3"
+    "requests.memory": "3G"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p2
+  namespace: test-namespace-3
+spec:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+status:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+  used:
+    "limits.cpu": "10"
+    "limits.memory": "3G"
+    "requests.cpu": "5"
+    "requests.memory": "6G"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-4
+  annotations:
+    n-a: namespace-annotation-2
+  labels:
+    n-l: namespace-label-1
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p1
+  namespace: test-namespace-4
+spec:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+status:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+  used:
+    "limits.cpu": "3"
+    "limits.memory": "3G"
+    "requests.cpu": "3"
+    "requests.memory": "3G"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p2
+  namespace: test-namespace-4
+spec:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+status:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+  used:
+    "limits.cpu": "10"
+    "limits.memory": "3G"
+    "requests.cpu": "5"
+    "requests.memory": "6G" 

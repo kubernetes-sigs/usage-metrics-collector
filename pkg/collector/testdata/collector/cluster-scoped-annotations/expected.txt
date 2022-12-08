@@ -1,0 +1,25 @@
+# HELP kube_usage_cluster_sum_vendable_cpu_cores kube_usage_cluster_sum_vendable_cpu_cores
+# TYPE kube_usage_cluster_sum_vendable_cpu_cores gauge
+kube_usage_cluster_sum_vendable_cpu_cores{priority_class="p1"} 10
+kube_usage_cluster_sum_vendable_cpu_cores{priority_class="p2"} 10
+# HELP kube_usage_cluster_sum_vendable_memory_bytes kube_usage_cluster_sum_vendable_memory_bytes
+# TYPE kube_usage_cluster_sum_vendable_memory_bytes gauge
+kube_usage_cluster_sum_vendable_memory_bytes{priority_class="p1"} 1.073741824e+10
+kube_usage_cluster_sum_vendable_memory_bytes{priority_class="p2"} 1.073741824e+10
+# HELP kube_usage_total_sum_vendable_cpu_cores kube_usage_total_sum_vendable_cpu_cores
+# TYPE kube_usage_total_sum_vendable_cpu_cores gauge
+kube_usage_total_sum_vendable_cpu_cores 20
+# HELP kube_usage_total_sum_vendable_memory_bytes kube_usage_total_sum_vendable_memory_bytes
+# TYPE kube_usage_total_sum_vendable_memory_bytes gauge
+kube_usage_total_sum_vendable_memory_bytes 2.147483648e+10
+# HELP metrics_prometheus_collector_cluster_scoped_items The number of collection items discovered for each cluster-scoped metric source
+# TYPE metrics_prometheus_collector_cluster_scoped_items gauge
+metrics_prometheus_collector_cluster_scoped_items{name="broken",reason="objects not found"} 1
+metrics_prometheus_collector_cluster_scoped_items{name="vendable",reason=""} 1
+# HELP metrics_prometheus_collector_cluster_scoped_labeled_resources The number of labeledResources discovered for each item in a cluster-scoped metric source collection
+# TYPE metrics_prometheus_collector_cluster_scoped_labeled_resources gauge
+metrics_prometheus_collector_cluster_scoped_labeled_resources{name="vendable",reason="",resource_name="name-1"} 1
+# HELP metrics_prometheus_collector_cluster_scoped_list_result The number of list operations performed for cluster-scoped metric sources
+# TYPE metrics_prometheus_collector_cluster_scoped_list_result gauge
+metrics_prometheus_collector_cluster_scoped_list_result{name="broken",reason="no kind \"DoesNotExistList\" is registered for version \"rbac.authorization.k8s.io/v1\" in scheme \"pkg/runtime/scheme.go:100\""} 2
+metrics_prometheus_collector_cluster_scoped_list_result{name="vendable",reason=""} 2

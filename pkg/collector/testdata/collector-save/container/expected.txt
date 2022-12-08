@@ -1,0 +1,718 @@
+{
+ "type": "container",
+ "items": [
+  {
+   "labels": {
+    "app": "app-1",
+    "exported_container": "app",
+    "exported_namespace": "test-namespace-1",
+    "exported_node": "test-node-1",
+    "exported_pod": "test-pod-1-deployment-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "scheduled": "true",
+    "workload_api_group": "apps",
+    "workload_api_version": "v1",
+    "workload_kind": "deployment",
+    "workload_name": "test-deployment-1"
+   },
+   "values": [
+    {
+     "source": "limits_allocated",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "limits_allocated",
+     "resourceType": "memory",
+     "values": [
+      100000000
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "memory",
+     "values": [
+      50000000
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0,
+      -1,
+      -2,
+      -1
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "memory",
+     "values": [
+      38000000,
+      32000000,
+      28000000,
+      24000000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      1,
+      2,
+      3,
+      2
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      12000000,
+      18000000,
+      22000000,
+      26000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "app": "app-1",
+    "exported_container": "log-aggregator",
+    "exported_namespace": "test-namespace-1",
+    "exported_node": "test-node-1",
+    "exported_pod": "test-pod-1-deployment-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "scheduled": "true",
+    "workload_api_group": "apps",
+    "workload_api_version": "v1",
+    "workload_kind": "deployment",
+    "workload_name": "test-deployment-1"
+   },
+   "values": [
+    {
+     "source": "limits_allocated",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "limits_allocated",
+     "resourceType": "memory",
+     "values": [
+      50000000
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "cpu",
+     "values": [
+      0.5
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "memory",
+     "values": [
+      25000000
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "cpu",
+     "values": [
+      -1.5,
+      -2.5,
+      -3.5,
+      -1.5
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "memory",
+     "values": [
+      11000000,
+      5000000,
+      3000000,
+      1000000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      2,
+      3,
+      4,
+      2
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      14000000,
+      20000000,
+      22000000,
+      24000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "app": "app-1",
+    "exported_container": "app",
+    "exported_namespace": "test-namespace-1",
+    "exported_node": "test-node-1",
+    "exported_pod": "test-pod-1-deployment-2",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "scheduled": "true",
+    "workload_api_group": "apps",
+    "workload_api_version": "v1",
+    "workload_kind": "deployment",
+    "workload_name": "test-deployment-2"
+   },
+   "values": [
+    {
+     "source": "limits_allocated",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "limits_allocated",
+     "resourceType": "memory",
+     "values": [
+      100000000
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "memory",
+     "values": [
+      50000000
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0.5,
+      0,
+      -0.5,
+      -1
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "memory",
+     "values": [
+      44000000,
+      41000000,
+      39000000,
+      37000000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      0.5,
+      1,
+      1.5,
+      2
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      6000000,
+      9000000,
+      11000000,
+      13000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "app": "app-1",
+    "exported_container": "log-aggregator",
+    "exported_namespace": "test-namespace-1",
+    "exported_node": "test-node-1",
+    "exported_pod": "test-pod-1-deployment-2",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "scheduled": "true",
+    "workload_api_group": "apps",
+    "workload_api_version": "v1",
+    "workload_kind": "deployment",
+    "workload_name": "test-deployment-2"
+   },
+   "values": [
+    {
+     "source": "limits_allocated",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "limits_allocated",
+     "resourceType": "memory",
+     "values": [
+      50000000
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "cpu",
+     "values": [
+      0.5
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "memory",
+     "values": [
+      25000000
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "cpu",
+     "values": [
+      -0.5,
+      -1.5,
+      -2.5,
+      -1.5
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "memory",
+     "values": [
+      13000000,
+      7000000,
+      3000000,
+      -1000000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      1,
+      2,
+      3,
+      2
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      12000000,
+      18000000,
+      22000000,
+      26000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "app": "app-1",
+    "exported_container": "app",
+    "exported_namespace": "test-namespace-1",
+    "exported_node": "test-node-2",
+    "exported_pod": "test-pod-2-deployment-1",
+    "node_annotation": "node-annotation-value-2",
+    "node_label": "node-label-value-2",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "scheduled": "true",
+    "workload_api_group": "apps",
+    "workload_api_version": "v1",
+    "workload_kind": "deployment",
+    "workload_name": "test-deployment-1"
+   },
+   "values": [
+    {
+     "source": "limits_allocated",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "limits_allocated",
+     "resourceType": "memory",
+     "values": [
+      100000000
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "memory",
+     "values": [
+      50000000
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0,
+      -1,
+      -2,
+      -3
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "memory",
+     "values": [
+      38000000,
+      32000000,
+      28000000,
+      24000000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      1,
+      2,
+      3,
+      4
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      12000000,
+      18000000,
+      22000000,
+      26000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "app": "app-1",
+    "exported_container": "log-aggregator",
+    "exported_namespace": "test-namespace-1",
+    "exported_node": "test-node-2",
+    "exported_pod": "test-pod-2-deployment-1",
+    "node_annotation": "node-annotation-value-2",
+    "node_label": "node-label-value-2",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "scheduled": "true",
+    "workload_api_group": "apps",
+    "workload_api_version": "v1",
+    "workload_kind": "deployment",
+    "workload_name": "test-deployment-1"
+   },
+   "values": [
+    {
+     "source": "limits_allocated",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "limits_allocated",
+     "resourceType": "memory",
+     "values": [
+      50000000
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "cpu",
+     "values": [
+      0.5
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "memory",
+     "values": [
+      25000000
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "cpu",
+     "values": [
+      -0.5,
+      -1.5,
+      -2.5,
+      -3.5
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "memory",
+     "values": [
+      13000000,
+      7000000,
+      3000000,
+      -1000000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      1,
+      2,
+      3,
+      4
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      12000000,
+      18000000,
+      22000000,
+      26000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "app": "app-1",
+    "exported_container": "app",
+    "exported_namespace": "test-namespace-1",
+    "exported_node": "test-node-2",
+    "exported_pod": "test-pod-2-deployment-2",
+    "node_annotation": "node-annotation-value-2",
+    "node_label": "node-label-value-2",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "scheduled": "true",
+    "workload_api_group": "apps",
+    "workload_api_version": "v1",
+    "workload_kind": "deployment",
+    "workload_name": "test-deployment-2"
+   },
+   "values": [
+    {
+     "source": "limits_allocated",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "limits_allocated",
+     "resourceType": "memory",
+     "values": [
+      100000000
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "memory",
+     "values": [
+      50000000
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0,
+      -1,
+      -2,
+      -3
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "memory",
+     "values": [
+      38000000,
+      32000000,
+      28000000,
+      24000000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      1,
+      2,
+      3,
+      4
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      12000000,
+      18000000,
+      22000000,
+      26000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "app": "app-1",
+    "exported_container": "log-aggregator",
+    "exported_namespace": "test-namespace-1",
+    "exported_node": "test-node-2",
+    "exported_pod": "test-pod-2-deployment-2",
+    "node_annotation": "node-annotation-value-2",
+    "node_label": "node-label-value-2",
+    "ns_annotation": "namespace-annotation-1",
+    "ns_label": "namespace-label-1",
+    "priority_class": "p1",
+    "scheduled": "true",
+    "workload_api_group": "apps",
+    "workload_api_version": "v1",
+    "workload_kind": "deployment",
+    "workload_name": "test-deployment-2"
+   },
+   "values": [
+    {
+     "source": "limits_allocated",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "limits_allocated",
+     "resourceType": "memory",
+     "values": [
+      50000000
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "cpu",
+     "values": [
+      0.5
+     ]
+    },
+    {
+     "source": "requests_allocated",
+     "resourceType": "memory",
+     "values": [
+      25000000
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "cpu",
+     "values": [
+      -0.5,
+      -1.5,
+      -2.5,
+      -3.5
+     ]
+    },
+    {
+     "source": "requests_allocated_minus_utilization",
+     "resourceType": "memory",
+     "values": [
+      13000000,
+      7000000,
+      3000000,
+      -1000000
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "cpu",
+     "values": [
+      1,
+      2,
+      3,
+      4
+     ]
+    },
+    {
+     "source": "utilization",
+     "resourceType": "memory",
+     "values": [
+      12000000,
+      18000000,
+      22000000,
+      26000000
+     ]
+    }
+   ]
+  }
+ ],
+ "clusterName": "unit-test"
+}

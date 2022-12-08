@@ -1,0 +1,109 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "cpu": "cpu_cores"
+utilizationServer:
+  samplerPodLabels: {"app": "app-1"}
+  samplerNamespaceName: "test-namespace-1"
+aggregations: # aggregate metrics and export them
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "utilization"
+  levels:
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        workload_name: true
+        workload_kind: true
+    operation: "hist"
+    histogramBuckets:
+      cpu_cores: [0.5, 1, 1.5, 2, 3, 4, 5, 6]
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "utilization"
+  levels:
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        exported_pod: true
+        workload_name: true
+    noExport: true
+    operation: "p95"
+  - mask:
+      name: "workload_p95" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        workload_name: true
+    operation: "sum"
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "utilization"
+  levels:
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        exported_pod: true
+        workload_name: true
+    noExport: true
+    operation: "max"
+  - mask:
+      name: "workload_max" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        workload_name: true
+    operation: "sum"
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "utilization"
+  levels:
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        exported_pod: true
+        workload_name: true
+    noExport: true
+    operation: "avg"
+  - mask:
+      name: "workload_avg" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        workload_name: true
+    operation: "sum"
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "utilization"
+  levels:
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        exported_pod: true
+        workload_name: true
+    noExport: true
+    operation: "median"
+  - mask:
+      name: "workload_median" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        workload_name: true
+    operation: "sum"

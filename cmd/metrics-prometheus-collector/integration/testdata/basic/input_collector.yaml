@@ -1,0 +1,162 @@
+prefix: "kube_usage"
+builtIn:
+  useQuotaNameForPriorityClass: true
+extensions:
+  podLabels:
+  # this annotation should be kept when we mask the objects
+  - name: ip_class
+    annotation: example.com/ip-class
+  - name: test_1
+    annotation: test-1 # should be dropped
+  - name: test_2
+    annotation: test-2
+  namespaceLabels:
+  - name: test_3
+    annotation: test-3 # should be dropped
+  - name: test_4
+    annotation: test-4
+resources:
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+  "items": "items"
+preComputeMetrics:
+  enabled: true
+cacheOptions:
+  unsafeDisableDeepCopy: true
+  dropAnnotations:
+  - test-1
+  - test-3
+aggregations:
+- sources:
+    type: "container"
+    container:
+    - "requests_allocated"
+    - "limits_allocated"
+  levels:
+  - mask:
+      name: "container"
+      builtIn:
+        exported_container: true
+        exported_pod: true
+        exported_namespace: true
+        exported_node: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+        scheduled: true
+        level: true
+      extensions:
+        ip_class: true
+        test_1: true
+        test_2: true
+        test_3: true
+        test_4: true
+  - mask:
+      name: "workload"
+      builtIn:
+        exported_namespace: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+        level: true
+  - mask:
+      name: "app"
+      builtIn:
+        exported_namespace: true
+        app: true
+        priority_class: true
+        level: true
+  - mask:
+      name: "namespace"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+        level: true
+  - mask:
+      name: "cluster"
+      builtIn:
+        priority_class: true
+        level: true
+- sources:
+    type: "pod"
+    pod:
+    - "pod"
+  levels:
+  - mask:
+      name: "pod"
+      builtIn:
+        exported_pod: true
+        exported_namespace: true
+        exported_node: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+        scheduled: true
+        level: true
+  - mask:
+      name: "cluster_scheduled"
+      builtIn:
+        priority_class: true
+        scheduled: true
+        level: true
+- sources:
+    type: "quota"
+    quota:
+    - "quota"
+    - "requests_quota_hard"
+    - "requests_quota_used"
+    - "limits_quota_hard"
+    - "limits_quota_used"
+  levels:
+  - mask:
+      name: "quota"
+      builtIn:
+        priority_class: true
+        exported_namespace: true
+        level: true
+  - mask:
+      name: "quota_cluster"
+      builtIn:
+        priority_class: true
+        level: true
+- sources:
+    type: "quota"
+    quota:
+    - "limits_quota_proposed"
+    - "requests_quota_proposed"
+  levels:
+  - mask:
+      name: "namespace"
+      builtIn:
+        priority_class: true
+        exported_namespace: true
+        allocation_strategy: true
+- sources:
+    type: "node"
+    node:
+    - "node"
+    - "node_capacity"
+    - "node_allocatable"
+    - "node_requests"
+    - "node_limits"
+  levels:
+  - mask:
+      name: "node"
+      builtIn:
+        node_unschedulable: true
+        exported_node: true
+        level: true
+  - mask:
+      name: "node_cluster"
+      builtIn:
+        node_unschedulable: true
+        level: true

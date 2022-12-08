@@ -1,0 +1,37 @@
+node:
+  level: node
+  resourceList:
+    items: "1"
+  source: node
+node_allocatable:
+  level: node
+  resourceList:
+    cpu: "6"
+    extensionResource: "300"
+    memory: 60M
+  source: node_allocatable
+node_allocatable_minus_requests:
+  level: node
+  resourceList:
+    cpu: "2"
+    memory: 20M
+  source: node_allocatable_minus_requests
+node_capacity:
+  level: namespace
+  resourceList:
+    cpu: "8"
+    extensionResource: "400"
+    memory: 80M
+  source: node_capacity
+node_limits:
+  level: node
+  resourceList:
+    cpu: "8"
+    memory: 80M
+  source: node_limits
+node_requests:
+  level: node
+  resourceList:
+    cpu: "4"
+    memory: 40M
+  source: node_requests

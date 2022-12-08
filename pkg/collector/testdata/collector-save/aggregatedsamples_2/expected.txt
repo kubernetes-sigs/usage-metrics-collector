@@ -1,0 +1,298 @@
+{
+ "items": [
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        12
+       ]
+      }
+     ],
+     "level": "cluster",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_cluster_sum_limits_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        600000000
+       ]
+      }
+     ],
+     "level": "cluster",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_cluster_sum_limits_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        6
+       ]
+      }
+     ],
+     "level": "cluster",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_cluster_sum_requests_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        300000000
+       ]
+      }
+     ],
+     "level": "cluster",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_cluster_sum_requests_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        18
+       ]
+      }
+     ],
+     "level": "cluster",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_cluster_sum_utilization_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        146750000
+       ]
+      }
+     ],
+     "level": "cluster",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_cluster_sum_utilization_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "cpu",
+       "values": [
+        12
+       ]
+      }
+     ],
+     "level": "namespace",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_namespace_sum_limits_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "limits_allocated",
+       "resourceType": "memory",
+       "values": [
+        600000000
+       ]
+      }
+     ],
+     "level": "namespace",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_namespace_sum_limits_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "cpu",
+       "values": [
+        6
+       ]
+      }
+     ],
+     "level": "namespace",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_namespace_sum_requests_allocated_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "requests_allocated",
+       "resourceType": "memory",
+       "values": [
+        300000000
+       ]
+      }
+     ],
+     "level": "namespace",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_namespace_sum_requests_allocated_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        18
+       ]
+      }
+     ],
+     "level": "namespace",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_namespace_sum_utilization_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "container",
+   "items": [
+    {
+     "labels": {
+      "exported_namespace": "test-namespace-1",
+      "priority_class": "p1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        146750000
+       ]
+      }
+     ],
+     "level": "namespace",
+     "operation": "sum"
+    }
+   ],
+   "name": "usage_2",
+   "metricName": "kube_usage_namespace_sum_utilization_memory_bytes",
+   "clusterName": "unit-test"
+  }
+ ]
+}

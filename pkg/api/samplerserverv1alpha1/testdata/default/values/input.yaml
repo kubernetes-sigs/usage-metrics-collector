@@ -1,0 +1,38 @@
+buffer:
+  pollsPerMinute: 10
+  size: 500
+checkCreatedPodFrequencyDuration: 10s
+containerdAddress: /var/run/containerd/containerd.sock
+containerdNamespace: k8s.io
+pbPort: 7070
+pushAddress: "default.svg"
+pushFrequencyDuration: 2m
+reader:
+  cgroupVersion: v1
+  containerCacheSyncIntervalSeconds: 2
+  containerPrefix: []
+  containerReplacements:
+    '*': '-'
+  containerSuffix:
+  - .slice
+  - .scope
+  cpuPaths:
+  - sys/fs/cgroup/cpu,cpuacct
+  - sys/fs/cgroup/cpuacct
+  - sys/fs/cgroup/cpu
+  maxCPUCoresSampleValue: 60.5
+  memoryPaths:
+  - sys/fs/cgroup/memory
+  minCPUCoresSampleValue: -0.0000001
+  nodeAggregationLevelGlobs:
+  - kubelet/kubepods
+  parents:
+  - kubelet-kubepods-besteffort.slice
+  podPrefix:
+  - pod
+  podReplacements:
+    '*': '-'
+  podSuffix: []
+restPort: 6060
+sendPushMetricsRetryCount: 10
+useContainerMonitor: true

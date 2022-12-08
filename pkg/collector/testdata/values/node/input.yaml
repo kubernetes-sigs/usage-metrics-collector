@@ -1,0 +1,55 @@
+pods:
+  - apiVersion: v1
+    kind: Pod
+    spec:
+      containers:
+        - name: container-1
+          resources:
+            requests:
+              memory: "10M"
+              cpu: "1"
+              extensionResource: "50"
+            limits:
+              memory: "20M"
+              cpu: "2"
+              extensionResource: "100"
+  - apiVersion: v1
+    kind: Pod
+    spec:
+      containers:
+        - name: container-2
+          resources:
+            requests:
+              memory: "10M"
+              cpu: "1"
+              extensionResource: "50"
+            limits:
+              memory: "20M"
+              cpu: "2"
+              extensionResource: "100"
+  - apiVersion: v1
+    kind: Pod
+    spec:
+      containers:
+        - name: container-3
+          resources:
+            requests:
+              memory: "20M"
+              cpu: "2"
+              extensionResource: "50"
+            limits:
+              memory: "40M"
+              cpu: "4"
+              extensionResource: "100"
+node:
+  apiVersion: v1
+  kind: Node
+  status:
+    allocatable:
+      cpu: 6
+      memory: "60M"
+      extensionResource: "300"
+    capacity:
+      cpu: 8
+      memory: "80M"
+      extensionResource: "400"
