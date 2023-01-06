@@ -1,0 +1,8 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metrics-prometheus-collector
+rules:
+- apiGroups:  [ "", "apps", "batch", "quotamanagement.usagemetricscollector.sigs.k8s.io"]
+  resources: [ "*" ]
+  verbs: [ get, list, watch ]

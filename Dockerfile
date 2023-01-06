@@ -1,5 +1,4 @@
-
-FROM golang:1.19 AS builder
+FROM golang:1.19 AS build
 
 ARG VERSION
 
@@ -7,16 +6,13 @@ ARG VERSION
 ENV CGO_ENABLED=0
 ENV GOPATH=/go
 ENV GO111MODULE=on
-ENV GOBIN=/usr/local/bin/
 WORKDIR /workspace
 
-# Install non-go tools
-RUN apt update
-RUN apt install -y protobuf-compiler
+ARG GOOS=linux
+ARG GOARCH=amd64
 
-# Install go tools
-COPY tools/ ./tools
-RUN ./tools/install.sh
+ENV GOOS=$GOOS
+ENV GOARCH=$GOARCH
 
 # Install go dependencies
 COPY go.mod ./
@@ -25,14 +21,12 @@ RUN go mod download
 
 # Build and test code
 COPY . .
-ENV GOOS=linux
-ENV GOARCH=amd64
-RUN make build
+RUN make build-docker
 
 FROM alpine:3.14
 EXPOSE 8080
 EXPOSE 8090
 RUN apk --no-cache add curl # install for debugging -- not required to run
-COPY --from=builder /workspace/bin/metrics-node-sampler /bin/metrics-node-sampler
-COPY --from=builder /workspace/bin/metrics-prometheus-collector /bin/metrics-prometheus-collector
-COPY --from=builder /workspace/bin/container-monitor /bin/container-monitor
+COPY --from=build /workspace/bin/metrics-node-sampler /bin/metrics-node-sampler
+COPY --from=build /workspace/bin/metrics-prometheus-collector /bin/metrics-prometheus-collector
+COPY --from=build /workspace/bin/container-monitor /bin/container-monitor

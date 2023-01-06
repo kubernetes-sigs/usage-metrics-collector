@@ -1,0 +1,32 @@
+pushAddress: "metrics-prometheus-collector:9090" # push metrics to this service
+pushFrequencyDuration: "1m" # push metrics to the collector every minute
+buffer:
+    pollsPerMinute: 60 # sample every second
+    size: 300 # 5 minutes of samples
+reader:
+    maxCPUCoresSampleValue: 512 # drop samples with more than this many cpu
+    minCPUCoresSampleValue: 0 # drop samples with less than this many cpu
+    containerCacheSyncIntervalSeconds: 4 # periodically look for new containers
+    # look for cpu cgroups here
+    cpuPaths: [ 'sys/fs/cgroup/cpu', 'sys/fs/cgroup/cpuacct', 'sys/fs/cgroup/cpu,cpuacct' ]
+    # look for memory cgroups here
+    memoryPaths: [ 'sys/fs/cgroup/memory' ]
+    # collect metrics scoped to node cgroups
+    nodeAggregationLevelGlobs: [ "",  "*", "system.slice" ]
+    parents: # ignore pods metrics that don't have parent directories with these names
+    - 'kubelet-kubepods.slice'
+    - 'kubelet-kubepods-guaranteed.slice'
+    - 'kubelet-kubepods-besteffort.slice'
+    - 'kubelet-kubepods-burstable.slice'
+    containerPrefix: [ 'cri-containerd-' ]
+    containerReplacements: {} # none -- override default
+    containerSuffix: [ '.scope' ]
+    podPrefix:
+    - 'kubelet-kubepods-pod'
+    - 'kubelet-kubepods-guaranteed-pod'
+    - 'kubelet-kubepods-besteffort-pod'
+    - 'kubelet-kubepods-burstable-pod'
+    podReplacements:
+      "_": "-"
+    podSuffix: [ '.slice' ]
+exitOnConfigChange: true
