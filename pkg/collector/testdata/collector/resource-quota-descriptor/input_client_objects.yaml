@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-1
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p1
+  namespace: test-namespace-1
+spec:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "12Gi"
+    "requests.cpu": "5"
+    "requests.memory": "6Gi"
+status:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "12Gi"
+    "requests.cpu": "5"
+    "requests.memory": "6Gi"
+  used:
+    "limits.cpu": "5"
+    "limits.memory": "6Gi"
+    "requests.cpu": "3"
+    "requests.memory": "3Gi"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p2
+  namespace: test-namespace-1
+spec:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15Gi"
+    "requests.cpu": "20"
+    "requests.memory": "30Gi"
+status:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15Gi"
+    "requests.cpu": "20"
+    "requests.memory": "30Gi"
+  used:
+    "limits.cpu": "5"
+    "limits.memory": "3Gi"
+    "requests.cpu": "5"
+    "requests.memory": "6Gi"
+---
+apiVersion: quotamanagement.usagemetricscollector.sigs.k8s.io/v1alpha1
+kind: ResourceQuotaDescriptor
+metadata:
+  name: p1
+  namespace: test-namespace-1
+spec:
+  allocationStrategy:
+    allocationStrategyType: "Constant"
+    constant:
+      constantAllocated: true
+  targetAllocationsPolicy:
+    limitsTargetPercent:
+      "cpu": 68
+      "memory": 69
+    requestsTargetPercent:
+      "cpu": 70
+      "memory": 71
+status:
+  proposedQuota:
+    "limits.cpu": "7.3"
+    "limits.memory": "8.7Gi"
+    "requests.cpu": "4.3"
+    "requests.memory": "4.2Gi"
+---
+apiVersion: quotamanagement.usagemetricscollector.sigs.k8s.io/v1alpha1
+kind: ResourceQuotaDescriptor
+metadata:
+  name: p2
+  namespace: test-namespace-1
+spec:
+  allocationStrategy:
+    allocationStrategyType: "Constant"
+    constant:
+      constantAllocated: true
+  targetAllocationsPolicy:
+    limitsTargetPercent:
+      "cpu": 72
+      "memory": 73
+    requestsTargetPercent:
+      "cpu": 74
+      "memory": 75
+status:
+  proposedQuota:
+    "limits.cpu": "7"
+    "limits.memory": "4.1Gi"
+    "requests.cpu": "6.8"
+    "requests.memory": "7.9Gi"

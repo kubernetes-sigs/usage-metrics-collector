@@ -1,0 +1,42 @@
+limits_allocated:
+  level: container
+  resourceList:
+    cpu: "2"
+    extensionResource: "100"
+    memory: 20M
+  source: limits_allocated
+requests_allocated:
+  level: container
+  resourceList:
+    cpu: "1"
+    extensionResource: "50"
+    memory: 10M
+  source: requests_allocated
+requests_allocated_minus_utilization:
+  level: container
+  multiResourceList:
+    cpu:
+    - "0"
+    - "-1"
+    - "-2"
+    - "-3"
+    memory:
+    - -2M
+    - -8M
+    - -12M
+    - -16M
+  source: requests_allocated_minus_utilization
+utilization:
+  level: container
+  multiResourceList:
+    cpu:
+    - "1"
+    - "2"
+    - "3"
+    - "4"
+    memory:
+    - 12M
+    - 18M
+    - 22M
+    - 26M
+  source: utilization

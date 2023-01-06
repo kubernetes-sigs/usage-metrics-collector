@@ -1,0 +1,236 @@
+{
+ "items": [
+  {
+   "type": "cgroup",
+   "items": [
+    {
+     "labels": {
+      "cgroup": "kubelet",
+      "exported_node": "test-node-1",
+      "node_annotation": "node-annotation-value-1",
+      "node_label": "node-label-value-1"
+     },
+     "values": [
+      {
+       "source": "root_utilization",
+       "resourceType": "cpu",
+       "values": [
+        0.0000020000000000000003,
+        0.0000020000000000000003,
+        0.000003,
+        0.000004000000000000001,
+        0.000004000000000000001
+       ]
+      }
+     ],
+     "level": "node",
+     "operation": "hist"
+    },
+    {
+     "labels": {
+      "cgroup": "system.slice",
+      "exported_node": "test-node-1",
+      "node_annotation": "node-annotation-value-1",
+      "node_label": "node-label-value-1"
+     },
+     "values": [
+      {
+       "source": "root_utilization",
+       "resourceType": "cpu",
+       "values": [
+        0.0000020000000000000003,
+        0.0000020000000000000003,
+        0.000003,
+        0.000003,
+        0.000004000000000000001
+       ]
+      }
+     ],
+     "level": "node",
+     "operation": "hist"
+    }
+   ],
+   "name": "usage_0",
+   "metricName": "kube_usage_node_hist_root_utilization_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "cgroup",
+   "items": [
+    {
+     "labels": {
+      "cgroup": "kubelet",
+      "exported_node": "test-node-1",
+      "node_annotation": "node-annotation-value-1",
+      "node_label": "node-label-value-1"
+     },
+     "values": [
+      {
+       "source": "root_utilization",
+       "resourceType": "memory",
+       "values": [
+        0,
+        0,
+        0,
+        0,
+        0
+       ]
+      }
+     ],
+     "level": "node",
+     "operation": "hist"
+    },
+    {
+     "labels": {
+      "cgroup": "system.slice",
+      "exported_node": "test-node-1",
+      "node_annotation": "node-annotation-value-1",
+      "node_label": "node-label-value-1"
+     },
+     "values": [
+      {
+       "source": "root_utilization",
+       "resourceType": "memory",
+       "values": [
+        0,
+        0,
+        0,
+        0,
+        0
+       ]
+      }
+     ],
+     "level": "node",
+     "operation": "hist"
+    }
+   ],
+   "name": "usage_0",
+   "metricName": "kube_usage_node_hist_root_utilization_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "cgroup",
+   "items": [
+    {
+     "labels": {
+      "cgroup": "kubelet.service",
+      "exported_node": "test-node-1",
+      "node_annotation": "node-annotation-value-1",
+      "node_label": "node-label-value-1"
+     },
+     "values": [
+      {
+       "source": "system_utilization",
+       "resourceType": "cpu",
+       "values": [
+        0.0000010000000000000002,
+        0.0000010000000000000002,
+        0.0000010000000000000002,
+        0.0000010000000000000002,
+        0.0000020000000000000003
+       ]
+      }
+     ],
+     "level": "node",
+     "operation": "hist"
+    }
+   ],
+   "name": "usage_0",
+   "metricName": "kube_usage_node_hist_system_utilization_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "cgroup",
+   "items": [
+    {
+     "labels": {
+      "cgroup": "kubelet.service",
+      "exported_node": "test-node-1",
+      "node_annotation": "node-annotation-value-1",
+      "node_label": "node-label-value-1"
+     },
+     "values": [
+      {
+       "source": "system_utilization",
+       "resourceType": "memory",
+       "values": [
+        150,
+        300,
+        600,
+        800,
+        1000
+       ]
+      }
+     ],
+     "level": "node",
+     "operation": "hist"
+    }
+   ],
+   "name": "usage_0",
+   "metricName": "kube_usage_node_hist_system_utilization_memory_bytes",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "cgroup",
+   "items": [
+    {
+     "labels": {
+      "cgroup": ".",
+      "exported_node": "test-node-1",
+      "node_annotation": "node-annotation-value-1",
+      "node_label": "node-label-value-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "cpu",
+       "values": [
+        0.0000020000000000000003,
+        0.0000020000000000000003,
+        0.000003,
+        0.000004000000000000001,
+        0.000004000000000000001
+       ]
+      }
+     ],
+     "level": "node",
+     "operation": "hist"
+    }
+   ],
+   "name": "usage_0",
+   "metricName": "kube_usage_node_hist_utilization_cpu_cores",
+   "clusterName": "unit-test"
+  },
+  {
+   "type": "cgroup",
+   "items": [
+    {
+     "labels": {
+      "cgroup": ".",
+      "exported_node": "test-node-1",
+      "node_annotation": "node-annotation-value-1",
+      "node_label": "node-label-value-1"
+     },
+     "values": [
+      {
+       "source": "utilization",
+       "resourceType": "memory",
+       "values": [
+        0,
+        0,
+        0,
+        0,
+        0
+       ]
+      }
+     ],
+     "level": "node",
+     "operation": "hist"
+    }
+   ],
+   "name": "usage_0",
+   "metricName": "kube_usage_node_hist_utilization_memory_bytes",
+   "clusterName": "unit-test"
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+name: test-deployment
+kind: deployment
+apiGroup: apps
+apiVersion: v1

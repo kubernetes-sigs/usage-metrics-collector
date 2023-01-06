@@ -1,0 +1,42 @@
+prefix: "kube_usage"
+builtIn:
+  useQuotaNameForPriorityClass: true
+resources:
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+extensions:
+  namespaceLabels:
+  - name: namespace_annotation
+    annotation: n-a
+  - name: namespace_label
+    label: n-l
+aggregations:
+- sources:
+    type: "quota"
+    quota:
+    - "requests_quota_hard"
+    - "requests_quota_used"
+    - "limits_quota_hard"
+    - "limits_quota_used"
+    - "requests_quota_hard_minus_used"
+    - "limits_quota_hard_minus_used"
+  levels:
+  - mask:
+      name: "namespace"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+      extensions:
+        namespace_annotation: true
+        namespace_label: true
+  - mask:
+      name: "custom"
+      builtIn:
+        priority_class: true
+      extensions:
+        namespace_annotation: true
+        namespace_label: true
+  - mask:
+      name: "cluster"
+      builtIn:
+        priority_class: true

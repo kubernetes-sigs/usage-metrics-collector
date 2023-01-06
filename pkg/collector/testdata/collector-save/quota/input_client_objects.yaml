@@ -1,0 +1,413 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-1-deployment-1
+  namespace: test-namespace-1
+  labels:
+    app: app-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: ReplicaSet
+      name: test-replicasset-1-deployment-1
+  uid: test-pod-1-deployment-1
+spec:
+  nodeName: test-node-1
+  priorityClassName: p1
+  containers:
+    - name: app
+      image: images.example/app:v4
+      resources:
+        requests:
+          memory: "50M"
+          cpu: "1"
+        limits:
+          memory: "100M"
+          cpu: "2"
+    - name: log-aggregator
+      image: images.my-company.example/log-aggregator:v6
+      resources:
+        requests:
+          memory: "25M"
+          cpu: "0.5"
+        limits:
+          memory: "50M"
+          cpu: "1"
+status:
+  phase: Running
+  containerStatuses:
+  - containerID: containerd://app
+    name: app
+  - containerID: containerd://log-aggregator
+    name: log-aggregator
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-2-deployment-1
+  namespace: test-namespace-1
+  labels:
+    app: app-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: ReplicaSet
+      name: test-replicasset-1-deployment-1
+  uid: test-pod-2-deployment-1
+spec:
+  nodeName: test-node-2
+  priorityClassName: p1
+  containers:
+    - name: app
+      image: images.example/app:v4
+      resources:
+        requests:
+          memory: "50M"
+          cpu: "1"
+        limits:
+          memory: "100M"
+          cpu: "2"
+    - name: log-aggregator
+      image: images.my-company.example/log-aggregator:v6
+      resources:
+        requests:
+          memory: "25M"
+          cpu: "0.5"
+        limits:
+          memory: "50M"
+          cpu: "1"
+status:
+  phase: Running
+  containerStatuses:
+  - containerID: containerd://app
+    name: app
+  - containerID: containerd://log-aggregator
+    name: log-aggregator
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: test-replicasset-1-deployment-1
+  namespace: test-namespace-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: Deployment
+      name: test-deployment-1
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-1-deployment-2
+  namespace: test-namespace-1
+  labels:
+    app: app-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: ReplicaSet
+      name: test-replicasset-1-deployment-2
+  uid: test-pod-1-deployment-2
+spec:
+  nodeName: test-node-1
+  priorityClassName: p1
+  containers:
+    - name: app
+      image: images.example/app:v4
+      resources:
+        requests:
+          memory: "50M"
+          cpu: "1"
+        limits:
+          memory: "100M"
+          cpu: "2"
+    - name: log-aggregator
+      image: images.my-company.example/log-aggregator:v6
+      resources:
+        requests:
+          memory: "25M"
+          cpu: "0.5"
+        limits:
+          memory: "50M"
+          cpu: "1"
+status:
+  phase: Running
+  containerStatuses:
+  - containerID: containerd://app
+    name: app
+  - containerID: containerd://log-aggregator
+    name: log-aggregator
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-2-deployment-2
+  namespace: test-namespace-1
+  labels:
+    app: app-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: ReplicaSet
+      name: test-replicasset-2-deployment-2
+  uid: test-pod-2-deployment-2
+spec:
+  nodeName: test-node-2
+  priorityClassName: p1
+  containers:
+    - name: app
+      image: images.example/app:v4
+      resources:
+        requests:
+          memory: "50M"
+          cpu: "1"
+        limits:
+          memory: "100M"
+          cpu: "2"
+    - name: log-aggregator
+      image: images.my-company.example/log-aggregator:v6
+      resources:
+        requests:
+          memory: "25M"
+          cpu: "0.5"
+        limits:
+          memory: "50M"
+          cpu: "1"
+status:
+  phase: Running
+  containerStatuses:
+  - containerID: containerd://app
+    name: app
+  - containerID: containerd://log-aggregator
+    name: log-aggregator
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: test-replicasset-1-deployment-2
+  namespace: test-namespace-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: Deployment
+      name: test-deployment-2
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: test-replicasset-2-deployment-2
+  namespace: test-namespace-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: Deployment
+      name: test-deployment-2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-1
+  annotations:
+    n-a: namespace-annotation-1
+  labels:
+    n-l: namespace-label-1
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-2
+  annotations:
+    n-a: namespace-annotation-2
+    namespace_provisioner_type: safe-user
+  labels:
+    n-l: namespace-label-2
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: test-node-2
+  labels:
+    nd-l: node-label-value-2
+  annotations:
+    nd-a: node-annotation-value-2
+    nodes/pool: foo-bar
+status:
+  capacity:
+    cpu: 3
+    memory: 6
+  allocatable:
+    cpu: 1.5
+    memory: 3
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: test-node-1
+  labels:
+    nd-l: node-label-value-1
+  annotations:
+    nd-a: node-annotation-value-1
+    nodes/pool: A
+status:
+  capacity:
+    cpu: 2
+    memory: 4
+  allocatable:
+   cpu: 1
+   memory: 2
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: test-node-3
+  labels:
+    nd-l: node-label-value-2
+  annotations:
+    nd-a: node-annotation-value-2
+    nodes/pool: D
+status:
+  capacity:
+    cpu: 3
+    memory: 6
+  allocatable:
+    cpu: 1.5
+    memory: 3
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: test-node-4
+  labels:
+    nd-l: node-label-value-1
+  annotations:
+    nd-a: node-annotation-value-1
+    nodes/pool: some-pool
+status:
+  capacity:
+    cpu: 2
+    memory: 4
+  allocatable:
+   cpu: 1
+   memory: 2
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: test-node-5
+  labels:
+    nd-l: node-label-value-1
+  annotations:
+    nd-a: node-annotation-value-1
+spec:
+  unschedulable: true
+status:
+  capacity:
+    cpu: 2
+    memory: 4
+  allocatable:
+   cpu: 1
+   memory: 2
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p3-name
+  namespace: test-namespace-1
+spec:
+  hard:
+    local-storage.storageclass.storage.k8s.io/persistentvolumeclaims: "0"
+    remote-storage.storageclass.storage.k8s.io/requests.storage: 32Gi
+status:
+  hard:
+    local-storage.storageclass.storage.k8s.io/persistentvolumeclaims: "10"
+    remote-storage.storageclass.storage.k8s.io/requests.storage: 32Gi
+  used:
+    local-storage.storageclass.storage.k8s.io/persistentvolumeclaims: "0"
+    remote-storage.storageclass.storage.k8s.io/requests.storage: "0"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p1-name
+  namespace: test-namespace-1
+spec:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+  scopeSelector:
+    matchExpressions:
+    - operator: In
+      scopeName: PriorityClass
+      values:
+      - p1
+status:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+  used:
+    "limits.cpu": "3"
+    "limits.memory": "3G"
+    "requests.cpu": "3"
+    "requests.memory": "3G"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p2-name
+  namespace: test-namespace-1
+spec:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+  scopeSelector:
+    matchExpressions:
+    - operator: In
+      scopeName: PriorityClass
+      values:
+      - p2
+status:
+  hard:
+    "limits.cpu": "10"
+    "limits.memory": "15G"
+    "requests.cpu": "20"
+    "requests.memory": "30G"
+  used:
+    "limits.cpu": "10"
+    "limits.memory": "3G"
+    "requests.cpu": "5"
+    "requests.memory": "6G"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p1-name
+  namespace: test-namespace-2
+spec:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+  scopeSelector:
+    matchExpressions:
+    - operator: In
+      scopeName: PriorityClass
+      values:
+      - p1
+status:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5G"
+    "requests.cpu": "5"
+    "requests.memory": "5G"
+  used:
+    "limits.cpu": "3"
+    "limits.memory": "3G"
+    "requests.cpu": "3"
+    "requests.memory": "3G"

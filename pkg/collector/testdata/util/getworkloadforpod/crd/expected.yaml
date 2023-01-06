@@ -1,0 +1,4 @@
+name: test-crd
+kind: crd
+apiGroup: example_com
+apiVersion: v1alpha1

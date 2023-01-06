@@ -1,0 +1,41 @@
+# deployment-1 app: cpu_cores: [1 1 2 2 2 3 3 4] sum_max: 7 sum_avg: 4.5 sum_p95: 7 sum_median: 4
+# deployment-1 log-aggregator: cpu_cores: [1 2 2 2 3 3 4 4]
+# deployment-2 app: cpu_cores: [0.5 1 1 1.5 2 2 3 4]
+# deployment-2 log-aggregator: cpu_cores: [1 1 2 2 2 3 3 4]
+responses:
+  test-node-1:
+    containers:
+    - podUID: test-pod-1-deployment-1
+      containerID: app
+      cpuCoresNanoSec: [1000000000, 2000000000, 3000000000, 2000000000, 0, 0, 0] # max:3 avg:2 median:2 p95:2
+      memoryBytes: [12000000, 18000000, 22000000, 26000000, 0, 0, 0]
+    - podUID: test-pod-1-deployment-1
+      containerID: log-aggregator
+      cpuCoresNanoSec: [2000000000, 3000000000, 4000000000, 2000000000, 0, 0, 0] # trailing 0 values get trimmed for succeeded and failed pods
+      memoryBytes: [14000000, 20000000, 22000000, 24000000, 0, 0, 0]
+    - podUID: test-pod-1-deployment-2
+      containerID: app
+      cpuCoresNanoSec: [500000000, 1000000000, 1500000000, 2000000000, 0, 0, 0]
+      memoryBytes: [6000000, 9000000, 11000000, 13000000, 0, 0, 0]
+    - podUID: test-pod-1-deployment-2
+      containerID: log-aggregator
+      cpuCoresNanoSec: [1000000000, 2000000000, 3000000000, 2000000000, 0, 0, 0]
+      memoryBytes: [12000000, 18000000, 22000000, 26000000, 0, 0, 0]
+  test-node-2:
+    containers:
+    - podUID: test-pod-2-deployment-1
+      containerID: app
+      cpuCoresNanoSec: [1000000000, 2000000000, 3000000000, 4000000000] # max:4 avg:2.5 median:2 p95:3
+      memoryBytes: [12000000, 18000000, 22000000, 26000000]
+    - podUID: test-pod-2-deployment-1
+      containerID: log-aggregator
+      cpuCoresNanoSec: [1000000000, 2000000000, 3000000000, 4000000000]
+      memoryBytes: [12000000, 18000000, 22000000, 26000000]
+    - podUID: test-pod-2-deployment-2
+      containerID: app
+      cpuCoresNanoSec: [1000000000, 2000000000, 3000000000, 4000000000]
+      memoryBytes: [12000000, 18000000, 22000000, 26000000]
+    - podUID: test-pod-2-deployment-2
+      containerID: log-aggregator
+      cpuCoresNanoSec: [1000000000, 2000000000, 3000000000, 4000000000]
+      memoryBytes: [12000000, 18000000, 22000000, 26000000]

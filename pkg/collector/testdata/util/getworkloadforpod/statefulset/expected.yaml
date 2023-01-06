@@ -1,0 +1,4 @@
+name: test-statefulset
+kind: statefulset
+apiGroup: apps
+apiVersion: v1

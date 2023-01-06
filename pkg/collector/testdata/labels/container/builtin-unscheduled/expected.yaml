@@ -1,0 +1,11 @@
+app: app-1
+exported_container: app
+exported_namespace: test-namespace-1
+exported_node: ""
+exported_pod: test-pod-1
+priority_class: p1
+scheduled: "false"
+workload_api_group: apps
+workload_api_version: v1
+workload_kind: Deployment
+workload_name: deployment-1

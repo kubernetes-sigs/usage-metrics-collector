@@ -1,0 +1,121 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: p1
+value: 100
+description: "Test priority class."
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test
+  annotations:
+    test-3: c
+    test-4: d
+  labels:
+    global-owners: ds-gid-12345
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: p1
+  namespace: test
+spec:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5Gi"
+    "requests.cpu": "5"
+    "requests.memory": "5Gi"
+status:
+  hard:
+    "limits.cpu": "5"
+    "limits.memory": "5Gi"
+    "requests.cpu": "5"
+    "requests.memory": "5Gi"
+  used:
+    "limits.cpu": "3"
+    "limits.memory": "3Gi"
+    "requests.cpu": "3"
+    "requests.memory": "3Gi"
+---
+apiVersion: quotamanagement.usagemetricscollector.sigs.k8s.io/v1alpha1
+kind: ResourceQuotaDescriptor
+metadata:
+  name: p1
+  namespace: test
+spec:
+  allocationStrategy:
+    allocationStrategyType: "Constant"
+    constant:
+      constantAllocated: true
+  targetAllocationsPolicy:
+    limitsTargetPercent:
+      "cpu": 64
+      "memory": 69
+    requestsTargetPercent:
+      "cpu": 70
+      "memory": 72
+status:
+  proposedQuota:
+    "limits.cpu": "4.7"
+    "limits.memory": "7.2Gi"
+    "requests.cpu": "4.3"
+    "requests.memory": "4.2Gi"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-container
+  namespace: test
+  annotations:
+    example.com/ip-class: cluster-routable
+    test-1: a
+    test-2: b
+spec:
+  nodeName: node-1
+  priorityClassName: p1
+  containers:
+    - name: log-aggregator
+      image: images.my-company.example/log-aggregator:v6
+      resources:
+        requests:
+          memory: "70Mi"
+          cpu: "300m"
+        limits:
+          memory: "140Mi"
+          cpu: "600m"
+status:
+  phase: Running
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-container-2
+  namespace: test
+  labels:
+    app: foo
+  annotations:
+    example.com/ip-class: cluster-routable
+    test-1: a
+    test-2: b
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: ReplicaSet
+      name: test-replicasset-1-deployment-1
+      uid: "1234"
+spec:
+  nodeName: node-1
+  priorityClassName: p1
+  containers:
+    - name: log-aggregator
+      image: images.my-company.example/log-aggregator:v6
+      resources:
+        requests:
+          memory: "70Mi"
+          cpu: "300m"
+        limits:
+          memory: "140Mi"
+          cpu: "600m"
+status:
+  phase: Running

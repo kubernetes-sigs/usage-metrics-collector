@@ -1,0 +1,180 @@
+# HELP kube_usage_cluster_sum_node_allocatable_cpu_cores kube_usage_cluster_sum_node_allocatable_cpu_cores
+# TYPE kube_usage_cluster_sum_node_allocatable_cpu_cores gauge
+kube_usage_cluster_sum_node_allocatable_cpu_cores{node_unschedulable="false"} 5
+kube_usage_cluster_sum_node_allocatable_cpu_cores{node_unschedulable="true"} 1
+# HELP kube_usage_cluster_sum_node_allocatable_memory_bytes kube_usage_cluster_sum_node_allocatable_memory_bytes
+# TYPE kube_usage_cluster_sum_node_allocatable_memory_bytes gauge
+kube_usage_cluster_sum_node_allocatable_memory_bytes{node_unschedulable="false"} 10
+kube_usage_cluster_sum_node_allocatable_memory_bytes{node_unschedulable="true"} 2
+# HELP kube_usage_cluster_sum_node_allocatable_minus_requests_cpu_cores kube_usage_cluster_sum_node_allocatable_minus_requests_cpu_cores
+# TYPE kube_usage_cluster_sum_node_allocatable_minus_requests_cpu_cores gauge
+kube_usage_cluster_sum_node_allocatable_minus_requests_cpu_cores{node_unschedulable="false"} -1
+kube_usage_cluster_sum_node_allocatable_minus_requests_cpu_cores{node_unschedulable="true"} 1
+# HELP kube_usage_cluster_sum_node_allocatable_minus_requests_memory_bytes kube_usage_cluster_sum_node_allocatable_minus_requests_memory_bytes
+# TYPE kube_usage_cluster_sum_node_allocatable_minus_requests_memory_bytes gauge
+kube_usage_cluster_sum_node_allocatable_minus_requests_memory_bytes{node_unschedulable="false"} -2.9999999e+08
+kube_usage_cluster_sum_node_allocatable_minus_requests_memory_bytes{node_unschedulable="true"} 2
+# HELP kube_usage_cluster_sum_node_capacity_cpu_cores kube_usage_cluster_sum_node_capacity_cpu_cores
+# TYPE kube_usage_cluster_sum_node_capacity_cpu_cores gauge
+kube_usage_cluster_sum_node_capacity_cpu_cores{node_unschedulable="false"} 10
+kube_usage_cluster_sum_node_capacity_cpu_cores{node_unschedulable="true"} 2
+# HELP kube_usage_cluster_sum_node_capacity_memory_bytes kube_usage_cluster_sum_node_capacity_memory_bytes
+# TYPE kube_usage_cluster_sum_node_capacity_memory_bytes gauge
+kube_usage_cluster_sum_node_capacity_memory_bytes{node_unschedulable="false"} 20
+kube_usage_cluster_sum_node_capacity_memory_bytes{node_unschedulable="true"} 4
+# HELP kube_usage_cluster_sum_node_limits_cpu_cores kube_usage_cluster_sum_node_limits_cpu_cores
+# TYPE kube_usage_cluster_sum_node_limits_cpu_cores gauge
+kube_usage_cluster_sum_node_limits_cpu_cores{node_unschedulable="false"} 12
+kube_usage_cluster_sum_node_limits_cpu_cores{node_unschedulable="true"} 0
+# HELP kube_usage_cluster_sum_node_limits_memory_bytes kube_usage_cluster_sum_node_limits_memory_bytes
+# TYPE kube_usage_cluster_sum_node_limits_memory_bytes gauge
+kube_usage_cluster_sum_node_limits_memory_bytes{node_unschedulable="false"} 6e+08
+kube_usage_cluster_sum_node_limits_memory_bytes{node_unschedulable="true"} 0
+# HELP kube_usage_cluster_sum_node_requests_cpu_cores kube_usage_cluster_sum_node_requests_cpu_cores
+# TYPE kube_usage_cluster_sum_node_requests_cpu_cores gauge
+kube_usage_cluster_sum_node_requests_cpu_cores{node_unschedulable="false"} 6
+kube_usage_cluster_sum_node_requests_cpu_cores{node_unschedulable="true"} 0
+# HELP kube_usage_cluster_sum_node_requests_memory_bytes kube_usage_cluster_sum_node_requests_memory_bytes
+# TYPE kube_usage_cluster_sum_node_requests_memory_bytes gauge
+kube_usage_cluster_sum_node_requests_memory_bytes{node_unschedulable="false"} 3e+08
+kube_usage_cluster_sum_node_requests_memory_bytes{node_unschedulable="true"} 0
+# HELP kube_usage_node_sum_node_allocatable_cpu_cores kube_usage_node_sum_node_allocatable_cpu_cores
+# TYPE kube_usage_node_sum_node_allocatable_cpu_cores gauge
+kube_usage_node_sum_node_allocatable_cpu_cores{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} 1
+kube_usage_node_sum_node_allocatable_cpu_cores{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} 1.5
+kube_usage_node_sum_node_allocatable_cpu_cores{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 1.5
+kube_usage_node_sum_node_allocatable_cpu_cores{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 1
+kube_usage_node_sum_node_allocatable_cpu_cores{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 1
+# HELP kube_usage_node_sum_node_allocatable_memory_bytes kube_usage_node_sum_node_allocatable_memory_bytes
+# TYPE kube_usage_node_sum_node_allocatable_memory_bytes gauge
+kube_usage_node_sum_node_allocatable_memory_bytes{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} 2
+kube_usage_node_sum_node_allocatable_memory_bytes{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} 3
+kube_usage_node_sum_node_allocatable_memory_bytes{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 3
+kube_usage_node_sum_node_allocatable_memory_bytes{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 2
+kube_usage_node_sum_node_allocatable_memory_bytes{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 2
+# HELP kube_usage_node_sum_node_allocatable_minus_requests_cpu_cores kube_usage_node_sum_node_allocatable_minus_requests_cpu_cores
+# TYPE kube_usage_node_sum_node_allocatable_minus_requests_cpu_cores gauge
+kube_usage_node_sum_node_allocatable_minus_requests_cpu_cores{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} -2
+kube_usage_node_sum_node_allocatable_minus_requests_cpu_cores{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} -1.5
+kube_usage_node_sum_node_allocatable_minus_requests_cpu_cores{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 1.5
+kube_usage_node_sum_node_allocatable_minus_requests_cpu_cores{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 1
+kube_usage_node_sum_node_allocatable_minus_requests_cpu_cores{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 1
+# HELP kube_usage_node_sum_node_allocatable_minus_requests_memory_bytes kube_usage_node_sum_node_allocatable_minus_requests_memory_bytes
+# TYPE kube_usage_node_sum_node_allocatable_minus_requests_memory_bytes gauge
+kube_usage_node_sum_node_allocatable_minus_requests_memory_bytes{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} -1.49999998e+08
+kube_usage_node_sum_node_allocatable_minus_requests_memory_bytes{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} -1.49999997e+08
+kube_usage_node_sum_node_allocatable_minus_requests_memory_bytes{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 3
+kube_usage_node_sum_node_allocatable_minus_requests_memory_bytes{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 2
+kube_usage_node_sum_node_allocatable_minus_requests_memory_bytes{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 2
+# HELP kube_usage_node_sum_node_capacity_cpu_cores kube_usage_node_sum_node_capacity_cpu_cores
+# TYPE kube_usage_node_sum_node_capacity_cpu_cores gauge
+kube_usage_node_sum_node_capacity_cpu_cores{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} 2
+kube_usage_node_sum_node_capacity_cpu_cores{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} 3
+kube_usage_node_sum_node_capacity_cpu_cores{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 3
+kube_usage_node_sum_node_capacity_cpu_cores{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 2
+kube_usage_node_sum_node_capacity_cpu_cores{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 2
+# HELP kube_usage_node_sum_node_capacity_memory_bytes kube_usage_node_sum_node_capacity_memory_bytes
+# TYPE kube_usage_node_sum_node_capacity_memory_bytes gauge
+kube_usage_node_sum_node_capacity_memory_bytes{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} 4
+kube_usage_node_sum_node_capacity_memory_bytes{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} 6
+kube_usage_node_sum_node_capacity_memory_bytes{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 6
+kube_usage_node_sum_node_capacity_memory_bytes{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 4
+kube_usage_node_sum_node_capacity_memory_bytes{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 4
+# HELP kube_usage_node_sum_node_limits_cpu_cores kube_usage_node_sum_node_limits_cpu_cores
+# TYPE kube_usage_node_sum_node_limits_cpu_cores gauge
+kube_usage_node_sum_node_limits_cpu_cores{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} 6
+kube_usage_node_sum_node_limits_cpu_cores{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} 6
+kube_usage_node_sum_node_limits_cpu_cores{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 0
+kube_usage_node_sum_node_limits_cpu_cores{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 0
+kube_usage_node_sum_node_limits_cpu_cores{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 0
+# HELP kube_usage_node_sum_node_limits_memory_bytes kube_usage_node_sum_node_limits_memory_bytes
+# TYPE kube_usage_node_sum_node_limits_memory_bytes gauge
+kube_usage_node_sum_node_limits_memory_bytes{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} 3e+08
+kube_usage_node_sum_node_limits_memory_bytes{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} 3e+08
+kube_usage_node_sum_node_limits_memory_bytes{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 0
+kube_usage_node_sum_node_limits_memory_bytes{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 0
+kube_usage_node_sum_node_limits_memory_bytes{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 0
+# HELP kube_usage_node_sum_node_requests_cpu_cores kube_usage_node_sum_node_requests_cpu_cores
+# TYPE kube_usage_node_sum_node_requests_cpu_cores gauge
+kube_usage_node_sum_node_requests_cpu_cores{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} 3
+kube_usage_node_sum_node_requests_cpu_cores{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} 3
+kube_usage_node_sum_node_requests_cpu_cores{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 0
+kube_usage_node_sum_node_requests_cpu_cores{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 0
+kube_usage_node_sum_node_requests_cpu_cores{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 0
+# HELP kube_usage_node_sum_node_requests_memory_bytes kube_usage_node_sum_node_requests_memory_bytes
+# TYPE kube_usage_node_sum_node_requests_memory_bytes gauge
+kube_usage_node_sum_node_requests_memory_bytes{exported_node="test-node-1",node_unschedulable="false",out_of_service="true",reserved="special-project-2"} 1.5e+08
+kube_usage_node_sum_node_requests_memory_bytes{exported_node="test-node-2",node_unschedulable="false",out_of_service="false",reserved=""} 1.5e+08
+kube_usage_node_sum_node_requests_memory_bytes{exported_node="test-node-3",node_unschedulable="false",out_of_service="true",reserved=""} 0
+kube_usage_node_sum_node_requests_memory_bytes{exported_node="test-node-4",node_unschedulable="false",out_of_service="false",reserved="special-project-1"} 0
+kube_usage_node_sum_node_requests_memory_bytes{exported_node="test-node-5",node_unschedulable="true",out_of_service="false",reserved="special-project-1"} 0
+# HELP kube_usage_nodepool_sum_node_allocatable_cpu_cores kube_usage_nodepool_sum_node_allocatable_cpu_cores
+# TYPE kube_usage_nodepool_sum_node_allocatable_cpu_cores gauge
+kube_usage_nodepool_sum_node_allocatable_cpu_cores{node_unschedulable="false",reserved=""} 3
+kube_usage_nodepool_sum_node_allocatable_cpu_cores{node_unschedulable="false",reserved="special-project-1"} 1
+kube_usage_nodepool_sum_node_allocatable_cpu_cores{node_unschedulable="false",reserved="special-project-2"} 1
+kube_usage_nodepool_sum_node_allocatable_cpu_cores{node_unschedulable="true",reserved="special-project-1"} 1
+# HELP kube_usage_nodepool_sum_node_allocatable_memory_bytes kube_usage_nodepool_sum_node_allocatable_memory_bytes
+# TYPE kube_usage_nodepool_sum_node_allocatable_memory_bytes gauge
+kube_usage_nodepool_sum_node_allocatable_memory_bytes{node_unschedulable="false",reserved=""} 6
+kube_usage_nodepool_sum_node_allocatable_memory_bytes{node_unschedulable="false",reserved="special-project-1"} 2
+kube_usage_nodepool_sum_node_allocatable_memory_bytes{node_unschedulable="false",reserved="special-project-2"} 2
+kube_usage_nodepool_sum_node_allocatable_memory_bytes{node_unschedulable="true",reserved="special-project-1"} 2
+# HELP kube_usage_nodepool_sum_node_allocatable_minus_requests_cpu_cores kube_usage_nodepool_sum_node_allocatable_minus_requests_cpu_cores
+# TYPE kube_usage_nodepool_sum_node_allocatable_minus_requests_cpu_cores gauge
+kube_usage_nodepool_sum_node_allocatable_minus_requests_cpu_cores{node_unschedulable="false",reserved=""} 0
+kube_usage_nodepool_sum_node_allocatable_minus_requests_cpu_cores{node_unschedulable="false",reserved="special-project-1"} 1
+kube_usage_nodepool_sum_node_allocatable_minus_requests_cpu_cores{node_unschedulable="false",reserved="special-project-2"} -2
+kube_usage_nodepool_sum_node_allocatable_minus_requests_cpu_cores{node_unschedulable="true",reserved="special-project-1"} 1
+# HELP kube_usage_nodepool_sum_node_allocatable_minus_requests_memory_bytes kube_usage_nodepool_sum_node_allocatable_minus_requests_memory_bytes
+# TYPE kube_usage_nodepool_sum_node_allocatable_minus_requests_memory_bytes gauge
+kube_usage_nodepool_sum_node_allocatable_minus_requests_memory_bytes{node_unschedulable="false",reserved=""} -1.49999994e+08
+kube_usage_nodepool_sum_node_allocatable_minus_requests_memory_bytes{node_unschedulable="false",reserved="special-project-1"} 2
+kube_usage_nodepool_sum_node_allocatable_minus_requests_memory_bytes{node_unschedulable="false",reserved="special-project-2"} -1.49999998e+08
+kube_usage_nodepool_sum_node_allocatable_minus_requests_memory_bytes{node_unschedulable="true",reserved="special-project-1"} 2
+# HELP kube_usage_nodepool_sum_node_capacity_cpu_cores kube_usage_nodepool_sum_node_capacity_cpu_cores
+# TYPE kube_usage_nodepool_sum_node_capacity_cpu_cores gauge
+kube_usage_nodepool_sum_node_capacity_cpu_cores{node_unschedulable="false",reserved=""} 6
+kube_usage_nodepool_sum_node_capacity_cpu_cores{node_unschedulable="false",reserved="special-project-1"} 2
+kube_usage_nodepool_sum_node_capacity_cpu_cores{node_unschedulable="false",reserved="special-project-2"} 2
+kube_usage_nodepool_sum_node_capacity_cpu_cores{node_unschedulable="true",reserved="special-project-1"} 2
+# HELP kube_usage_nodepool_sum_node_capacity_memory_bytes kube_usage_nodepool_sum_node_capacity_memory_bytes
+# TYPE kube_usage_nodepool_sum_node_capacity_memory_bytes gauge
+kube_usage_nodepool_sum_node_capacity_memory_bytes{node_unschedulable="false",reserved=""} 12
+kube_usage_nodepool_sum_node_capacity_memory_bytes{node_unschedulable="false",reserved="special-project-1"} 4
+kube_usage_nodepool_sum_node_capacity_memory_bytes{node_unschedulable="false",reserved="special-project-2"} 4
+kube_usage_nodepool_sum_node_capacity_memory_bytes{node_unschedulable="true",reserved="special-project-1"} 4
+# HELP kube_usage_nodepool_sum_node_limits_cpu_cores kube_usage_nodepool_sum_node_limits_cpu_cores
+# TYPE kube_usage_nodepool_sum_node_limits_cpu_cores gauge
+kube_usage_nodepool_sum_node_limits_cpu_cores{node_unschedulable="false",reserved=""} 6
+kube_usage_nodepool_sum_node_limits_cpu_cores{node_unschedulable="false",reserved="special-project-1"} 0
+kube_usage_nodepool_sum_node_limits_cpu_cores{node_unschedulable="false",reserved="special-project-2"} 6
+kube_usage_nodepool_sum_node_limits_cpu_cores{node_unschedulable="true",reserved="special-project-1"} 0
+# HELP kube_usage_nodepool_sum_node_limits_memory_bytes kube_usage_nodepool_sum_node_limits_memory_bytes
+# TYPE kube_usage_nodepool_sum_node_limits_memory_bytes gauge
+kube_usage_nodepool_sum_node_limits_memory_bytes{node_unschedulable="false",reserved=""} 3e+08
+kube_usage_nodepool_sum_node_limits_memory_bytes{node_unschedulable="false",reserved="special-project-1"} 0
+kube_usage_nodepool_sum_node_limits_memory_bytes{node_unschedulable="false",reserved="special-project-2"} 3e+08
+kube_usage_nodepool_sum_node_limits_memory_bytes{node_unschedulable="true",reserved="special-project-1"} 0
+# HELP kube_usage_nodepool_sum_node_requests_cpu_cores kube_usage_nodepool_sum_node_requests_cpu_cores
+# TYPE kube_usage_nodepool_sum_node_requests_cpu_cores gauge
+kube_usage_nodepool_sum_node_requests_cpu_cores{node_unschedulable="false",reserved=""} 3
+kube_usage_nodepool_sum_node_requests_cpu_cores{node_unschedulable="false",reserved="special-project-1"} 0
+kube_usage_nodepool_sum_node_requests_cpu_cores{node_unschedulable="false",reserved="special-project-2"} 3
+kube_usage_nodepool_sum_node_requests_cpu_cores{node_unschedulable="true",reserved="special-project-1"} 0
+# HELP kube_usage_nodepool_sum_node_requests_memory_bytes kube_usage_nodepool_sum_node_requests_memory_bytes
+# TYPE kube_usage_nodepool_sum_node_requests_memory_bytes gauge
+kube_usage_nodepool_sum_node_requests_memory_bytes{node_unschedulable="false",reserved=""} 1.5e+08
+kube_usage_nodepool_sum_node_requests_memory_bytes{node_unschedulable="false",reserved="special-project-1"} 0
+kube_usage_nodepool_sum_node_requests_memory_bytes{node_unschedulable="false",reserved="special-project-2"} 1.5e+08
+kube_usage_nodepool_sum_node_requests_memory_bytes{node_unschedulable="true",reserved="special-project-1"} 0
+# HELP metrics_prometheus_collector_cgroup_usage_result The number of containers missing usage information
+# TYPE metrics_prometheus_collector_cgroup_usage_result gauge
+metrics_prometheus_collector_cgroup_usage_result{exported_node="test-node-1",found="false",reason="unknown",sampler_phase="Running",sampler_pod="test-pod-1-deployment-2"} 1
+metrics_prometheus_collector_cgroup_usage_result{exported_node="test-node-2",found="false",reason="unknown",sampler_phase="Running",sampler_pod="test-pod-2-deployment-2"} 1
+metrics_prometheus_collector_cgroup_usage_result{exported_node="test-node-3",found="false",reason="sampler-pod-missing",sampler_phase="unknown",sampler_pod="unknown"} 1
+metrics_prometheus_collector_cgroup_usage_result{exported_node="test-node-4",found="false",reason="sampler-pod-missing",sampler_phase="unknown",sampler_pod="unknown"} 1
+metrics_prometheus_collector_cgroup_usage_result{exported_node="test-node-5",found="false",reason="sampler-pod-missing",sampler_phase="unknown",sampler_pod="unknown"} 1
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 4

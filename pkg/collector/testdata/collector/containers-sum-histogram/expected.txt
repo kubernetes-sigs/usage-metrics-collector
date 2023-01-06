@@ -1,0 +1,75 @@
+# HELP kube_usage_cluster_hist_limits_allocated_cpu_cores kube_usage_cluster_hist_limits_allocated_cpu_cores
+# TYPE kube_usage_cluster_hist_limits_allocated_cpu_cores histogram
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p1",le="1.5"} 0
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p1",le="2"} 0
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p1",le="3"} 2
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p1",le="4"} 2
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p1",le="5"} 2
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p1",le="+Inf"} 2
+kube_usage_cluster_hist_limits_allocated_cpu_cores_sum{priority_class="p1"} 6
+kube_usage_cluster_hist_limits_allocated_cpu_cores_count{priority_class="p1"} 2
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p2",le="1.5"} 0
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p2",le="2"} 0
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p2",le="3"} 1
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p2",le="4"} 1
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p2",le="5"} 2
+kube_usage_cluster_hist_limits_allocated_cpu_cores_bucket{priority_class="p2",le="+Inf"} 2
+kube_usage_cluster_hist_limits_allocated_cpu_cores_sum{priority_class="p2"} 8
+kube_usage_cluster_hist_limits_allocated_cpu_cores_count{priority_class="p2"} 2
+# HELP kube_usage_cluster_hist_limits_allocated_memory_bytes kube_usage_cluster_hist_limits_allocated_memory_bytes
+# TYPE kube_usage_cluster_hist_limits_allocated_memory_bytes histogram
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p1",le="1e+07"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p1",le="2.5e+07"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p1",le="5e+07"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p1",le="7.5e+07"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p1",le="1e+08"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p1",le="+Inf"} 2
+kube_usage_cluster_hist_limits_allocated_memory_bytes_sum{priority_class="p1"} 3e+08
+kube_usage_cluster_hist_limits_allocated_memory_bytes_count{priority_class="p1"} 2
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p2",le="1e+07"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p2",le="2.5e+07"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p2",le="5e+07"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p2",le="7.5e+07"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p2",le="1e+08"} 0
+kube_usage_cluster_hist_limits_allocated_memory_bytes_bucket{priority_class="p2",le="+Inf"} 2
+kube_usage_cluster_hist_limits_allocated_memory_bytes_sum{priority_class="p2"} 3e+08
+kube_usage_cluster_hist_limits_allocated_memory_bytes_count{priority_class="p2"} 2
+# HELP kube_usage_cluster_hist_requests_allocated_cpu_cores kube_usage_cluster_hist_requests_allocated_cpu_cores
+# TYPE kube_usage_cluster_hist_requests_allocated_cpu_cores histogram
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p1",le="1.5"} 1
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p1",le="2"} 1
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p1",le="3"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p1",le="4"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p1",le="5"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p1",le="+Inf"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_sum{priority_class="p1"} 4.25
+kube_usage_cluster_hist_requests_allocated_cpu_cores_count{priority_class="p1"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p2",le="1.5"} 0
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p2",le="2"} 0
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p2",le="3"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p2",le="4"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p2",le="5"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_bucket{priority_class="p2",le="+Inf"} 2
+kube_usage_cluster_hist_requests_allocated_cpu_cores_sum{priority_class="p2"} 6
+kube_usage_cluster_hist_requests_allocated_cpu_cores_count{priority_class="p2"} 2
+# HELP kube_usage_cluster_hist_requests_allocated_memory_bytes kube_usage_cluster_hist_requests_allocated_memory_bytes
+# TYPE kube_usage_cluster_hist_requests_allocated_memory_bytes histogram
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p1",le="1e+07"} 0
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p1",le="2.5e+07"} 0
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p1",le="5e+07"} 0
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p1",le="7.5e+07"} 2
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p1",le="1e+08"} 2
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p1",le="+Inf"} 2
+kube_usage_cluster_hist_requests_allocated_memory_bytes_sum{priority_class="p1"} 1.5e+08
+kube_usage_cluster_hist_requests_allocated_memory_bytes_count{priority_class="p1"} 2
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p2",le="1e+07"} 0
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p2",le="2.5e+07"} 0
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p2",le="5e+07"} 0
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p2",le="7.5e+07"} 2
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p2",le="1e+08"} 2
+kube_usage_cluster_hist_requests_allocated_memory_bytes_bucket{priority_class="p2",le="+Inf"} 2
+kube_usage_cluster_hist_requests_allocated_memory_bytes_sum{priority_class="p2"} 1.5e+08
+kube_usage_cluster_hist_requests_allocated_memory_bytes_count{priority_class="p2"} 2
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 4

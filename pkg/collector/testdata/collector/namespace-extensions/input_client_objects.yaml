@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-1
+  annotations:
+    n-a: namespace-annotations-value-1
+    namespace_extention_annotation: "abc,def"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-2
+  annotations:
+    n-a: namespace-annotations-value-1
+    namespace_extention_annotation: "xyz"

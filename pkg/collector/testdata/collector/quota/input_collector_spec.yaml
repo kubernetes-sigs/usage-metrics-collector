@@ -1,0 +1,70 @@
+prefix: "kube_usage"
+resources:
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+  "local-storage.storageclass.storage.k8s.io/persistentvolumeclaims": "items"
+  "remote-storage.storageclass.storage.k8s.io/requests.storage": "storage_bytes"
+extensions:
+  namespaceLabels:
+  - name: namespace_annotation
+    annotation: n-a
+  - name: namespace_label
+    label: n-l
+  - name: provisioner_type
+    annotation: namespace_provisioner_type
+aggregations:
+- sources:
+    type: "quota"
+    quota:
+    - "requests_quota_hard"
+    - "requests_quota_used"
+    - "limits_quota_hard"
+    - "limits_quota_used"
+    - "requests_quota_hard_minus_used"
+    - "limits_quota_hard_minus_used"
+    - "pvc_requests_quota_hard"
+    - "pvc_requests_quota_used"
+  levels:
+  - mask:
+      name: "quota"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+        quota_name: true
+        storage_class: true
+      extensions:
+        namespace_annotation: true
+        namespace_label: true
+  - mask:
+      name: "namespace"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+        storage_class: true
+      extensions:
+        namespace_annotation: true
+        namespace_label: true
+  - mask:
+      name: "custom"
+      builtIn:
+        priority_class: true
+        storage_class: true
+      extensions:
+        namespace_annotation: true
+        namespace_label: true
+  - mask:
+      name: "cluster"
+      builtIn:
+        priority_class: true
+        storage_class: true
+- sources:
+    type: "quota"
+    quota:
+      - "requests_quota_hard"
+  levels:
+    - mask:
+        name: "safe"
+        builtIn:
+          priority_class: true
+        extensions:
+          provisioner_type: true

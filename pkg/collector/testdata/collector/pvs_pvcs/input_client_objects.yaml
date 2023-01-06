@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-1-deployment-1
+  namespace: test-namespace-1
+  labels:
+    app: app-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: ReplicaSet
+      name: test-replicasset-1-deployment-1
+spec:
+  nodeName: test-node-1
+  priorityClassName: p1
+  volumes:
+  - name: test-volume-1
+    persistentVolumeClaim:
+      claimName: test-pvc-1
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: test-replicasset-1-deployment-1
+  namespace: test-namespace-1
+  ownerReferences:
+    - apiVersion: apps/v1
+      controller: true
+      kind: Deployment
+      name: test-deployment-1
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace-1
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: test-node-1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-pv-1
+  annotations:
+    kubernetes.io/hostname: test-node-1
+spec:
+  capacity:
+    storage: 880Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: test-pvc-1
+    namespace: test-namespace-1
+  storageClassName: local-storage
+status:
+  phase: Bound
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-pvc-1
+  namespace: test-namespace-1
+spec:
+  resources:
+    requests:
+      storage: 32Gi
+  storageClassName: local-storage
+  volumeName: test-pv-1
+status:
+  capacity:
+    storage: 32Gi
+  phase: Bound
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-pv-2
+  annotations:
+    kubernetes.io/hostname: test-node-1
+spec:
+  capacity:
+    storage: 880Gi
+  storageClassName: local-storage
+status:
+  phase: Available
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-pvc-1-missing
+  namespace: test-namespace-2
+spec:
+  resources:
+    requests:
+      storage: 32Gi
+  storageClassName: local-storage
+  volumeName: test-pv-2
+status:
+  capacity:
+    storage: 32Gi
+  phase: Bound

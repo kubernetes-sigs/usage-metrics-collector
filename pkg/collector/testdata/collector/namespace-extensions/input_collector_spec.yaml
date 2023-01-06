@@ -1,0 +1,19 @@
+prefix: "kube_usage"
+resources:
+  "items" : "items"
+extensions:
+  namespaceLabels:
+  - name: namespace_extention
+    annotation: namespace_extention_annotation
+aggregations:
+- sources:
+    type: "namespace"
+    namespace:
+    - "namespace"
+  levels:
+  - mask:
+      name: "namespace_extension_metric"
+      builtIn:
+        exported_namespace: true
+      extensions:
+        namespace_extention: true

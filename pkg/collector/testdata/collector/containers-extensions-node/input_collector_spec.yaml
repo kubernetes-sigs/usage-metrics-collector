@@ -1,0 +1,98 @@
+prefix: "kube_usage"
+resources:
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+extensions:
+  podLabels:
+  - name: pod_annotation # set the label "pod_annotation" on metrics derived from pods
+    annotation: p-a # get the metric label value from the pod annotation "p-a"
+  - name: pod_label # set the label "pod_label" on metrics derived from pods
+    label: p-l # get the metric label value from the pod label "p-l"
+  namespaceLabels:
+  - name: namespace_annotation # set the label "namespace_annotation" on metrics which have namespace (container, pod, quota)
+    annotation: n-a # get the metric label value from the namespace annotation "n-a"
+  - name: namespace_label
+    label: n-l
+  nodeLabels:
+  - name: node_annotation  # set the label "node_annotation" on metrics which have a node (container, pod, node)
+    annotation: nd-a # get the metric label value from the node annotation "nd-a"
+  - name: node_label
+    label: nd-l
+aggregations:
+- sources:
+    type: "container" # use container sources
+    container:
+    - "requests_allocated" # pod.spec.containers.resources.requests
+    - "limits_allocated" # pod.spec.containers.resources.limits
+  levels:
+  - mask:
+      name: "container"
+      builtIn:
+        exported_container: true # container name
+        exported_pod: true # pod name
+        exported_namespace: true # pod namespace
+        exported_node: true # node pod is scheduled to
+        workload_name: true # name of workload that created the pod
+        workload_kind: true # kind of workload that created the pod
+        workload_api_group: true # api group of workload that created the pod
+        workload_api_version: true # api version of workload that created the pod
+        app: true # pulled from pod.metadata.labels["app"]
+        priority_class: true # pod.spec.priorityClassName
+        scheduled: true # "true" if pod is scheduled to a node
+      extensions: # labels defined in extensions above
+        pod_label: true
+        pod_annotation: true
+        namespace_label: true
+        namespace_annotation: true
+        node_label: true
+        node_annotation: true
+  - mask:
+      name: "node_namespace"
+      builtIn:
+        priority_class: true
+      extensions:
+        namespace_label: true
+        namespace_annotation: true
+        node_label: true
+        node_annotation: true
+  - mask:
+      name: "node"
+      builtIn:
+        priority_class: true
+      extensions:
+        node_label: true
+  - mask:
+      name: "cluster"
+- sources:
+    type: "pod" # use pod sources
+    pod:
+    - "pod" # pod count
+  levels:
+  - mask:
+      name: "pod_ext"
+      builtIn:
+        exported_pod: true
+        exported_namespace: true
+        priority_class: true
+      extensions:
+        pod_label: true
+        pod_annotation: true
+        namespace_label: true
+        namespace_annotation: true
+        node_label: true
+        node_annotation: true
+  - mask:
+      name: "namespace_ext"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+      extensions:
+        pod_label: true
+        pod_annotation: true
+  - mask:
+      name: "cluster_ext"
+      builtIn:
+        priority_class: true
+      extensions:
+        pod_label: true
+        pod_annotation: true

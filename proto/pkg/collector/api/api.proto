@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package containerd.api;
+option go_package="./api";
+import "google/protobuf/timestamp.proto";
+
+message ScrapeResult {
+  repeated SampleList items = 1;
+}
+
+// SampleList stores a collection of capacity metric samples
+message SampleList {
+  // type is the type of object the samples are for
+  string type = 1;
+
+  // timestamp is the time the samples were taken
+  google.protobuf.Timestamp timestamp = 2;
+
+  // items are the samples for each object
+  repeated Sample items = 3;
+
+  // name is set by aggregated metrics in the level retentionName field
+  string name = 4;
+
+  // metricName is set if this is from an aggregated metric exported to prometheus
+  string metricName = 5;
+
+  // clusterName is the name of the cluster
+  string clusterName = 6;
+}
+
+// Sample stores a set of capacity metric samples for a single object
+message Sample {
+  // labels are the labels specific to object this sample is for
+  // e.g. the exported_container
+  map<string, string> labels = 2;
+
+  // values are the metric values for different source types
+  repeated Metric values = 3;
+
+  string level = 4;
+
+  string operation = 5;
+
+  string source = 6;
+}
+
+// Metric stores a metric sample for a single object + source type
+message Metric {
+  // source is the source of the metric data
+  // e.g. utilization, requests
+  string source = 1;
+
+  // resourceType is the type of compute resource the values represent
+  // e.g. cpu, memory
+  string resourceType = 2;
+
+  // values are the sample values
+  repeated double values = 3;
+}

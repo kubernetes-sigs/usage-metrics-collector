@@ -1,0 +1,37 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+cgroupMetrics:
+  sources:
+    "/": {name: "root_utilization"}
+    "/kubepods": {name: "kubepods_utilization"}
+    "/system.slice": {name: "system_utilization"}
+  rootSource: {name: "utilization"}
+aggregations: # aggregate metrics and export them
+- sources: # use these sources (see the API documentation for sources)
+    type: "cgroup" # use container source
+    cgroup:
+    - "utilization"
+    - "root_utilization"
+    - "kubepods_utilization"
+    - "system_utilization"
+  levels:
+  - mask:
+      name: "node" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_node: true
+        cgroup: true
+    operation: "hist"
+    histogramBuckets:
+      cpu_cores: [0.0000011, 0.0000021, 0.0000031, 0.0000041, 0.0000051]
+      memory_bytes: [50, 100, 200, 400, 800, 1600]
+  - mask:
+      name: "node" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_node: true
+        cgroup: true
+    operation: "p95"

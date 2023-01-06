@@ -1,0 +1,55 @@
+pod:
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: test-pod-1
+    namespace: test-namespace-1
+    labels:
+      app: app-1
+  spec:
+    nodeName: test-node-1
+    priorityClassName: p1
+container:
+  name: app
+node:
+  apiVersion: v1
+  kind: Node
+  metadata:
+    name: test-node-1
+namespace:
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: test-namespace-1
+workload:
+  name: deployment-1
+  kind: Deployment
+  apiGroup: apps
+  apiVersion: v1
+spec:
+  aggregations:
+  - sources:
+      type: "container"
+    levels:
+    - mask:
+        name: "container"
+        builtIn:
+          exported_container: true
+          exported_pod: true
+          exported_namespace: true
+          exported_node: true
+          workload_name: true
+          workload_kind: true
+          workload_api_group: true
+          workload_api_version: true
+          app: true
+          priority_class: true
+          scheduled: true
+        extensions:
+          pod_label: true 
+          pod_label_2: true
+          pod_annotation: true
+          namespace_label: true
+          namespace_annotation: true
+          node_label: true
+          node_annotation: true

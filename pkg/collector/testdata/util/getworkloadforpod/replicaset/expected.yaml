@@ -1,0 +1,4 @@
+name: test-replicaset
+kind: replicaset
+apiGroup: apps
+apiVersion: v1

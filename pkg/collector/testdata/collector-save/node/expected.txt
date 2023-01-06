@@ -1,0 +1,406 @@
+{
+ "type": "node",
+ "items": [
+  {
+   "labels": {
+    "exported_node": "test-node-1",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "false"
+   },
+   "values": [
+    {
+     "source": "node_allocatable",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "node_allocatable",
+     "resourceType": "memory",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "cpu",
+     "values": [
+      -2
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "memory",
+     "values": [
+      -149999998
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "memory",
+     "values": [
+      4
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "cpu",
+     "values": [
+      6
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "memory",
+     "values": [
+      300000000
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "cpu",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "memory",
+     "values": [
+      150000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "exported_node": "test-node-2",
+    "node_annotation": "node-annotation-value-2",
+    "node_label": "node-label-value-2",
+    "node_unschedulable": "false"
+   },
+   "values": [
+    {
+     "source": "node_allocatable",
+     "resourceType": "cpu",
+     "values": [
+      1.5
+     ]
+    },
+    {
+     "source": "node_allocatable",
+     "resourceType": "memory",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "cpu",
+     "values": [
+      -1.5
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "memory",
+     "values": [
+      -149999997
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "cpu",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "memory",
+     "values": [
+      6
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "cpu",
+     "values": [
+      6
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "memory",
+     "values": [
+      300000000
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "cpu",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "memory",
+     "values": [
+      150000000
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "exported_node": "test-node-3",
+    "node_annotation": "node-annotation-value-2",
+    "node_label": "node-label-value-2",
+    "node_unschedulable": "false"
+   },
+   "values": [
+    {
+     "source": "node_allocatable",
+     "resourceType": "cpu",
+     "values": [
+      1.5
+     ]
+    },
+    {
+     "source": "node_allocatable",
+     "resourceType": "memory",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "cpu",
+     "values": [
+      1.5
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "memory",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "cpu",
+     "values": [
+      3
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "memory",
+     "values": [
+      6
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "exported_node": "test-node-4",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "false"
+   },
+   "values": [
+    {
+     "source": "node_allocatable",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "node_allocatable",
+     "resourceType": "memory",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "memory",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "memory",
+     "values": [
+      4
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "labels": {
+    "exported_node": "test-node-5",
+    "node_annotation": "node-annotation-value-1",
+    "node_label": "node-label-value-1",
+    "node_unschedulable": "true"
+   },
+   "values": [
+    {
+     "source": "node_allocatable",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "node_allocatable",
+     "resourceType": "memory",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "cpu",
+     "values": [
+      1
+     ]
+    },
+    {
+     "source": "node_allocatable_minus_requests",
+     "resourceType": "memory",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "cpu",
+     "values": [
+      2
+     ]
+    },
+    {
+     "source": "node_capacity",
+     "resourceType": "memory",
+     "values": [
+      4
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_limits",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "node_requests",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    }
+   ]
+  }
+ ],
+ "clusterName": "unit-test"
+}

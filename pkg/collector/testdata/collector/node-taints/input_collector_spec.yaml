@@ -1,0 +1,55 @@
+prefix: "kube_usage"
+resources:
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+extensions:
+  nodeLabels:
+  - name: node_annotation
+    annotation: nd-a
+  - name: node_label
+    label: nd-l
+  nodeTaints:
+  - name: reserved
+    keys:
+    - operator: In
+      values: [ reserved ]
+    effects:
+    - operator: In
+      values: [ NodeNoSchedule ]
+  - name: out_of_service
+    value: true
+    negativeValue: false
+    keys:
+    - operator: NotIn
+      values: [ reserved ]
+    effects:
+    - operator: In
+      values: [ NodeNoSchedule, NodeNoExecute ]
+aggregations:
+- sources:
+    type: "node"
+    node:
+    - "node_capacity"
+    - "node_allocatable"
+    - "node_requests"
+    - "node_limits"
+    - "node_allocatable_minus_requests"
+  levels:
+  - mask:
+      name: "node"
+      builtIn:
+        exported_node: true
+        node_unschedulable: true
+      extensions:
+        out_of_service: true
+        reserved: true
+  - mask:
+      name: "nodepool"
+      builtIn:
+        node_unschedulable: true
+      extensions:
+        reserved: true
+  - mask:
+      name: "cluster"
+      builtIn:
+        node_unschedulable: true

@@ -1,0 +1,103 @@
+# HELP kube_usage_app_sum_limits_allocated_cpu_cores kube_usage_app_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_app_sum_limits_allocated_cpu_cores gauge
+kube_usage_app_sum_limits_allocated_cpu_cores{app="app-1",exported_namespace="test-namespace-1",priority_class="p1"} 12
+# HELP kube_usage_app_sum_limits_allocated_memory_bytes kube_usage_app_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_app_sum_limits_allocated_memory_bytes gauge
+kube_usage_app_sum_limits_allocated_memory_bytes{app="app-1",exported_namespace="test-namespace-1",priority_class="p1"} 6e+08
+# HELP kube_usage_app_sum_requests_allocated_cpu_cores kube_usage_app_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_app_sum_requests_allocated_cpu_cores gauge
+kube_usage_app_sum_requests_allocated_cpu_cores{app="app-1",exported_namespace="test-namespace-1",priority_class="p1"} 6
+# HELP kube_usage_app_sum_requests_allocated_memory_bytes kube_usage_app_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_app_sum_requests_allocated_memory_bytes gauge
+kube_usage_app_sum_requests_allocated_memory_bytes{app="app-1",exported_namespace="test-namespace-1",priority_class="p1"} 3e+08
+# HELP kube_usage_cluster_sum_limits_allocated_cpu_cores kube_usage_cluster_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_cluster_sum_limits_allocated_cpu_cores gauge
+kube_usage_cluster_sum_limits_allocated_cpu_cores{priority_class="p1"} 12
+# HELP kube_usage_cluster_sum_limits_allocated_memory_bytes kube_usage_cluster_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_cluster_sum_limits_allocated_memory_bytes gauge
+kube_usage_cluster_sum_limits_allocated_memory_bytes{priority_class="p1"} 6e+08
+# HELP kube_usage_cluster_sum_requests_allocated_cpu_cores kube_usage_cluster_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_cluster_sum_requests_allocated_cpu_cores gauge
+kube_usage_cluster_sum_requests_allocated_cpu_cores{priority_class="p1"} 6
+# HELP kube_usage_cluster_sum_requests_allocated_memory_bytes kube_usage_cluster_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_cluster_sum_requests_allocated_memory_bytes gauge
+kube_usage_cluster_sum_requests_allocated_memory_bytes{priority_class="p1"} 3e+08
+# HELP kube_usage_container_sum_limits_allocated_cpu_cores kube_usage_container_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_container_sum_limits_allocated_cpu_cores gauge
+kube_usage_container_sum_limits_allocated_cpu_cores{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-1",priority_class="p1",scheduled="true",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 2
+kube_usage_container_sum_limits_allocated_cpu_cores{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 2
+kube_usage_container_sum_limits_allocated_cpu_cores{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-1",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 2
+kube_usage_container_sum_limits_allocated_cpu_cores{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 2
+kube_usage_container_sum_limits_allocated_cpu_cores{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-1",priority_class="p1",scheduled="true",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 1
+kube_usage_container_sum_limits_allocated_cpu_cores{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 1
+kube_usage_container_sum_limits_allocated_cpu_cores{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-1",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 1
+kube_usage_container_sum_limits_allocated_cpu_cores{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 1
+# HELP kube_usage_container_sum_limits_allocated_memory_bytes kube_usage_container_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_container_sum_limits_allocated_memory_bytes gauge
+kube_usage_container_sum_limits_allocated_memory_bytes{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-1",priority_class="p1",scheduled="true",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 1e+08
+kube_usage_container_sum_limits_allocated_memory_bytes{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 1e+08
+kube_usage_container_sum_limits_allocated_memory_bytes{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-1",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 1e+08
+kube_usage_container_sum_limits_allocated_memory_bytes{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 1e+08
+kube_usage_container_sum_limits_allocated_memory_bytes{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-1",priority_class="p1",scheduled="true",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 5e+07
+kube_usage_container_sum_limits_allocated_memory_bytes{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 5e+07
+kube_usage_container_sum_limits_allocated_memory_bytes{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-1",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 5e+07
+kube_usage_container_sum_limits_allocated_memory_bytes{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 5e+07
+# HELP kube_usage_container_sum_requests_allocated_cpu_cores kube_usage_container_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_container_sum_requests_allocated_cpu_cores gauge
+kube_usage_container_sum_requests_allocated_cpu_cores{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-1",priority_class="p1",scheduled="true",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 1
+kube_usage_container_sum_requests_allocated_cpu_cores{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 1
+kube_usage_container_sum_requests_allocated_cpu_cores{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-1",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 1
+kube_usage_container_sum_requests_allocated_cpu_cores{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 1
+kube_usage_container_sum_requests_allocated_cpu_cores{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-1",priority_class="p1",scheduled="true",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 0.5
+kube_usage_container_sum_requests_allocated_cpu_cores{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 0.5
+kube_usage_container_sum_requests_allocated_cpu_cores{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-1",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 0.5
+kube_usage_container_sum_requests_allocated_cpu_cores{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 0.5
+# HELP kube_usage_container_sum_requests_allocated_memory_bytes kube_usage_container_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_container_sum_requests_allocated_memory_bytes gauge
+kube_usage_container_sum_requests_allocated_memory_bytes{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-1",priority_class="p1",scheduled="true",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 5e+07
+kube_usage_container_sum_requests_allocated_memory_bytes{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 5e+07
+kube_usage_container_sum_requests_allocated_memory_bytes{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-1",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 5e+07
+kube_usage_container_sum_requests_allocated_memory_bytes{app="app-1",exported_container="app",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 5e+07
+kube_usage_container_sum_requests_allocated_memory_bytes{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-1",priority_class="p1",scheduled="true",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 2.5e+07
+kube_usage_container_sum_requests_allocated_memory_bytes{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-1",exported_pod="test-pod-1-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 2.5e+07
+kube_usage_container_sum_requests_allocated_memory_bytes{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-1",priority_class="p1",scheduled="true",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 2.5e+07
+kube_usage_container_sum_requests_allocated_memory_bytes{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",exported_node="test-node-2",exported_pod="test-pod-2-deployment-2",priority_class="p1",scheduled="true",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 2.5e+07
+# HELP kube_usage_namespace_sum_limits_allocated_cpu_cores kube_usage_namespace_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_namespace_sum_limits_allocated_cpu_cores gauge
+kube_usage_namespace_sum_limits_allocated_cpu_cores{exported_namespace="test-namespace-1",priority_class="p1"} 12
+# HELP kube_usage_namespace_sum_limits_allocated_memory_bytes kube_usage_namespace_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_namespace_sum_limits_allocated_memory_bytes gauge
+kube_usage_namespace_sum_limits_allocated_memory_bytes{exported_namespace="test-namespace-1",priority_class="p1"} 6e+08
+# HELP kube_usage_namespace_sum_requests_allocated_cpu_cores kube_usage_namespace_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_namespace_sum_requests_allocated_cpu_cores gauge
+kube_usage_namespace_sum_requests_allocated_cpu_cores{exported_namespace="test-namespace-1",priority_class="p1"} 6
+# HELP kube_usage_namespace_sum_requests_allocated_memory_bytes kube_usage_namespace_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_namespace_sum_requests_allocated_memory_bytes gauge
+kube_usage_namespace_sum_requests_allocated_memory_bytes{exported_namespace="test-namespace-1",priority_class="p1"} 3e+08
+# HELP kube_usage_workload_sum_limits_allocated_cpu_cores kube_usage_workload_sum_limits_allocated_cpu_cores
+# TYPE kube_usage_workload_sum_limits_allocated_cpu_cores gauge
+kube_usage_workload_sum_limits_allocated_cpu_cores{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 3
+kube_usage_workload_sum_limits_allocated_cpu_cores{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 3
+kube_usage_workload_sum_limits_allocated_cpu_cores{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 6
+# HELP kube_usage_workload_sum_limits_allocated_memory_bytes kube_usage_workload_sum_limits_allocated_memory_bytes
+# TYPE kube_usage_workload_sum_limits_allocated_memory_bytes gauge
+kube_usage_workload_sum_limits_allocated_memory_bytes{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 1.5e+08
+kube_usage_workload_sum_limits_allocated_memory_bytes{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 1.5e+08
+kube_usage_workload_sum_limits_allocated_memory_bytes{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 3e+08
+# HELP kube_usage_workload_sum_requests_allocated_cpu_cores kube_usage_workload_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_workload_sum_requests_allocated_cpu_cores gauge
+kube_usage_workload_sum_requests_allocated_cpu_cores{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 1.5
+kube_usage_workload_sum_requests_allocated_cpu_cores{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 1.5
+kube_usage_workload_sum_requests_allocated_cpu_cores{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 3
+# HELP kube_usage_workload_sum_requests_allocated_memory_bytes kube_usage_workload_sum_requests_allocated_memory_bytes
+# TYPE kube_usage_workload_sum_requests_allocated_memory_bytes gauge
+kube_usage_workload_sum_requests_allocated_memory_bytes{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="api-group",workload_api_version="api-version",workload_kind="Bar",workload_name="foo"} 7.5e+07
+kube_usage_workload_sum_requests_allocated_memory_bytes{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 7.5e+07
+kube_usage_workload_sum_requests_allocated_memory_bytes{app="app-1",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps-override",workload_api_version="v1-override",workload_kind="deployment-override",workload_name="test-deployment-override"} 1.5e+08
+# HELP metrics_prometheus_collector_container_usage_result The number of containers missing usage information
+# TYPE metrics_prometheus_collector_container_usage_result gauge
+metrics_prometheus_collector_container_usage_result{exported_node="test-node-1",found="true",reason="",sampler_phase="Running",sampler_pod="test-pod-1-deployment-2"} 4
+metrics_prometheus_collector_container_usage_result{exported_node="test-node-2",found="true",reason="",sampler_phase="Running",sampler_pod="test-pod-2-deployment-2"} 4
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 4
