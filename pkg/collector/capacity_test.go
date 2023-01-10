@@ -3,6 +3,7 @@ package collector
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -165,11 +166,30 @@ func TestCollectorOverride(t *testing.T) {
 }
 
 func TestCollectorSave(t *testing.T) {
-	parser := testutil.TestCaseParser{
-		Subdir:         "collector-save",
-		ExpectedSuffix: ".txt",
+	for _, saveJSON := range []bool{true, false} {
+		for _, saveProto := range []bool{true, false} {
+			if !saveJSON && !saveProto {
+				continue
+			}
+			testSave(t, saveJSON, saveProto)
+		}
+	}
+}
+
+func testSave(t *testing.T, saveJSON, saveProto bool) {
+	parser := testutil.TestCaseParser{Subdir: "collector-save",
+		NameSuffix: fmt.Sprintf("/json-%v-proto-%v", saveJSON, saveProto)}
+	if saveJSON {
+		parser.ExpectedSuffix = ".json"
+	} else {
+		parser.ExpectedSuffix = ".txt"
 	}
 	parser.TestDir(t, func(tc *testutil.TestCase) error {
+		if saveJSON && !strings.Contains(tc.Name, "aggregatedsamples") {
+			// we don't do JSON saves for non-aggregated samples
+			return nil
+		}
+
 		os.Setenv("CLUSTER_NAME", "unit-test")
 		t := tc.T
 
@@ -190,6 +210,8 @@ func TestCollectorSave(t *testing.T) {
 		spec.SaveSamplesLocally.DirectoryPath = tmpDir  // override the directory for saving samples
 		spec.SaveSamplesLocally.ExcludeTimestamp = true // don't include the timestamp in the tests
 		spec.SaveSamplesLocally.SortValues = true       // sort that values so the output is stable
+		spec.SaveSamplesLocally.SaveJSON = &saveJSON
+		spec.SaveSamplesLocally.SaveProto = &saveProto
 
 		// create the collector
 		instance, err := NewCollector(context.Background(), c, &spec)
@@ -217,45 +239,74 @@ func TestCollectorSave(t *testing.T) {
 		list, err := os.ReadDir(filepath.Join(tmpDir, subDir))
 		require.NoError(t, err)
 
-		var filename string
+		var jsonFileName, protoFilename string
 		for i := range list {
-			// get the matching file if specified
 			if contains != "" && !strings.Contains(list[i].Name(), contains) {
 				continue
 			}
-			filename = list[i].Name()
-			break
+			if strings.HasSuffix(list[i].Name(), ".json") {
+				jsonFileName = list[i].Name()
+			}
+			if strings.HasSuffix(list[i].Name(), ".pb") {
+				protoFilename = list[i].Name()
+			}
 		}
-		require.NotEmpty(t, filename)
-
-		require.NotEmpty(t, filename)
-		b, err := os.ReadFile(filepath.Join(tmpDir, subDir, filename))
-		require.NoError(t, err)
-
-		var m proto.Message
-		if strings.Contains(filename, "samplelist") {
-			m = &collectorapi.SampleList{}
-		} else if strings.Contains(filename, "scraperesult") {
-			m = &collectorapi.ScrapeResult{}
-		} else {
-			require.Fail(t, "unrecognized result type", "filename", filename)
+		if saveJSON {
+			require.NotEmpty(t, jsonFileName)
+		}
+		if saveProto {
+			require.NotEmpty(t, protoFilename)
 		}
 
-		err = proto.Unmarshal(b, m)
-		if err != nil {
-			return err
+		if saveProto {
+			b, err := os.ReadFile(filepath.Join(tmpDir, subDir, protoFilename))
+			require.NoError(t, err)
+			var m proto.Message
+			if strings.Contains(protoFilename, "samplelist") {
+				m = &collectorapi.SampleList{}
+			} else if strings.Contains(protoFilename, "scraperesult") {
+				m = &collectorapi.ScrapeResult{}
+			} else {
+				require.Fail(t, "unrecognized result type", "filename", protoFilename)
+			}
+
+			err = proto.Unmarshal(b, m)
+			if err != nil {
+				return err
+			}
+
+			// convert the results to json
+			marshaler := protojson.MarshalOptions{
+				Indent:    " ",
+				Multiline: true,
+			}
+			jsn, err := marshaler.Marshal(m)
+			if err != nil {
+				return err
+			}
+			if !saveJSON {
+				// Check the proto results as the actual
+				tc.Actual = strings.ReplaceAll(string(jsn), ":  ", ": ")
+			} else {
+				// Verify that the proto and json outputs are equivalent
+				// But check the json results as the actual
+				jsonBytes, err := os.ReadFile(filepath.Join(tmpDir, subDir, jsonFileName))
+				require.NoError(t, err)
+
+				sr := m.(*collectorapi.ScrapeResult)
+				b := &bytes.Buffer{}
+				for _, s := range sr.Items {
+					ProtoToJSON(s, b)
+				}
+				require.Equal(t, string(jsonBytes), b.String())
+			}
 		}
 
-		// convert the results to json
-		marshaler := protojson.MarshalOptions{
-			Indent:    " ",
-			Multiline: true,
+		if saveJSON {
+			b, err := os.ReadFile(filepath.Join(tmpDir, subDir, jsonFileName))
+			require.NoError(t, err)
+			tc.Actual = string(b)
 		}
-		jsn, err := marshaler.Marshal(m)
-		if err != nil {
-			return err
-		}
-		tc.Actual = strings.ReplaceAll(string(jsn), ":  ", ": ")
 
 		return nil
 	})

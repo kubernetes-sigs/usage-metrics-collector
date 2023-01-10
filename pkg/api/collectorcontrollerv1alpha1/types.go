@@ -76,6 +76,12 @@ type SaveSamplesLocally struct {
 	ExcludeTimestamp bool   `json:"excludeTimestamp" yaml:"excludeTimestamp"`
 	SortValues       bool   `json:"sortValues" yaml:"sortValues"`
 
+	// SaveProto if set to true will save local copies of the metrics as pb files
+	// SaveProto defaults to true if SaveJSON is empty
+	SaveProto *bool `json:"saveProto,omitempty" yaml:"saveProto,omitempty"`
+	// SaveJSON if set to true will save local copies of the metrics as json files
+	SaveJSON *bool `json:"saveJSON,omitempty" yaml:"saveJSON,omitempty"`
+
 	SampleSources []SampleSources `json:"metrics" yaml:"metrics"`
 }
 

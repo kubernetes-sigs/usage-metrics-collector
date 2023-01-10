@@ -1,6 +1,8 @@
 package collector
 
 import (
+	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"sort"
@@ -155,7 +157,7 @@ func (sb *SampleListBuilder) SaveSamplesToFile() error {
 	return nil
 }
 
-func (c *Collector) SaveScrapeResultToFile(sr *collectorapi.ScrapeResult) error {
+func (c *Collector) NormalizeForSave(sr *collectorapi.ScrapeResult) error {
 	if sr == nil {
 		return nil
 	}
@@ -213,6 +215,13 @@ func (c *Collector) SaveScrapeResultToFile(sr *collectorapi.ScrapeResult) error 
 			}
 		}
 	}
+	return nil
+}
+
+func (c *Collector) SaveScrapeResultToFile(sr *collectorapi.ScrapeResult) error {
+	if sr == nil {
+		return nil
+	}
 
 	// shard output files so they are more efficient to read
 	am := map[string]*collectorapi.ScrapeResult{}
@@ -247,6 +256,79 @@ func (c *Collector) SaveScrapeResultToFile(sr *collectorapi.ScrapeResult) error 
 		}
 
 		err = os.WriteFile(filename, b, 0200)
+		if err != nil {
+			return err
+		}
+		err = os.Chmod(filename, 0600)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type JSONLine struct {
+	MetricName string            `json:"metricName"`
+	Timestamp  time.Time         `json:"timestamp"`
+	Value      float64           `json:"value"`
+	Labels     map[string]string `json:"labels"`
+}
+
+func ProtoToJSON(s *collectorapi.SampleList, b *bytes.Buffer) {
+	// shard output files so they are more efficient to read
+	for _, i := range s.Items {
+		for _, v := range i.Values {
+			for _, x := range v.Values {
+				line := JSONLine{
+					MetricName: s.MetricName,
+					Timestamp:  s.Timestamp.AsTime(),
+					Value:      x,
+					Labels:     i.Labels,
+				}
+				line.Labels["data_source"] = s.Name
+				line.Labels["cluster_name"] = s.ClusterName
+				e := json.NewEncoder(b)
+				e.SetIndent("", "")
+				e.Encode(line)
+			}
+		}
+	}
+}
+
+func (c *Collector) SaveScrapeResultToJSONFile(sr *collectorapi.ScrapeResult) error {
+	if sr == nil {
+		return nil
+	}
+
+	// shard output files so they are more efficient to read
+	am := map[string]*bytes.Buffer{}
+	for _, s := range sr.Items {
+		if am[s.Name] == nil {
+			am[s.Name] = &bytes.Buffer{}
+		}
+		ProtoToJSON(s, am[s.Name])
+	}
+
+	for k, v := range am {
+		cn := os.Getenv("CLUSTER_NAME")
+		var filename string
+		if cn != "" {
+			filename = filepath.Join(
+				c.SaveSamplesLocally.DirectoryPath,
+				k, time.Now().Format(c.SaveSamplesLocally.TimeFormat)+"_"+cn+"_"+k+"_metrics.json")
+		} else {
+			filename = filepath.Join(
+				c.SaveSamplesLocally.DirectoryPath,
+				k, time.Now().Format(c.SaveSamplesLocally.TimeFormat)+"_"+k+"_metrics.json")
+		}
+
+		err := os.MkdirAll(filepath.Dir(filename), 0700)
+		if err != nil {
+			return err
+		}
+
+		err = os.WriteFile(filename, v.Bytes(), 0200)
 		if err != nil {
 			return err
 		}
