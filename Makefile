@@ -8,7 +8,7 @@ export GOARCH           ?= $(shell go env GOARCH)
 export GIT_BRANCH       ?= $(shell git rev-parse --abbrev-ref HEAD)
 export GIT_COMMIT       ?= $(shell git rev-parse --short HEAD)
 export DATE             ?= $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
-export VERSION          ?= $(shell cat version)
+export VERSION          ?= $(shell git tag)
 export VERSION_FLAGS    = -X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X main.date="$(DATE)"
 export LD_FLAGS         ?= -ldflags="$(VERSION_FLAGS) -w -s"
 
@@ -74,6 +74,12 @@ build:	proto build-dir	 ## Build this project go binaries
 	@$(foreach pkg,$(BINARIES),\
 		go build -o bin $(LD_FLAGS) $(pkg);)
 
+## Some binaries are Linux/amd64-only. To build, run
+##     GOOS=linux GOARCH=amd64 make build
+build-docker:	build-dir	 ## Build this project go binaries
+	@$(foreach pkg,$(BINARIES),\
+		go build -o bin $(LD_FLAGS) $(pkg);)
+
 generate: controller-gen
 	$(CONTROLLER_GEN) object paths="./..."
 
@@ -107,17 +113,6 @@ docker:	## Build the docker image
 tools: ## Install dev tools.
 	tools/install.sh
 
-.PHONY: run-kind
-run-kind: docker install-kind ## Build and install into a kind dev cluster.
-	kind load docker-image usage-metrics-collector:v$(VERSION)
-	kustomize build ./config/ | kubectl apply -f -
-
-.PHONY: install-kind
-install-kind: ## Install into a kind dev cluster.
-	kind load docker-image usage-metrics-collector:v$(VERSION)
-	kustomize build ./config/ | kubectl apply -f -
-
-
 .PHONY: lint
 lint: tools ## Lint the code.
 	golangci-lint run
@@ -142,3 +137,7 @@ else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
+run-local:
+	docker build . -t usage-metrics-collector:v0.0.0
+	kind load docker-image usage-metrics-collector:v0.0.0
+	kustomize build config | kubectl apply -f -

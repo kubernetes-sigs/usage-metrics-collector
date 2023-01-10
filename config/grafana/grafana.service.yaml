@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+spec:
+  sessionAffinity: None
+  type: LoadBalancer
+  ports:
+    - { port: 3000, protocol: TCP, targetPort: grafana}

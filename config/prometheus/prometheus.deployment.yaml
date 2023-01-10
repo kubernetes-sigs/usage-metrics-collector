@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  template:
+    spec:
+      containers:
+      - image: prom/prometheus
+        name: prometheus
+        args: [ "--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus/" ]
+        ports:
+        - { name: http, containerPort: 9090 }
+        resources:
+          requests: { cpu: "500m", memory: 500M }
+          limits: { cpu: "1", memory: 1Gi  }
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus
+        - name: prometheus-storage-volume
+          mountPath: /prometheus/
+      volumes:
+      - name: config-volume
+        configMap:
+         name: prometheus-config
+      - name: prometheus-storage-volume
+        emptyDir: {}
+      serviceAccountName: prometheus

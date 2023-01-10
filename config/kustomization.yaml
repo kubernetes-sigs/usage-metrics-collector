@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: usage-metrics-collector
+
+images:
+- name: grafana/grafana
+  newTag: latest
+- name: prom/prometheus
+  newTag: latest
+- name: usage-metrics-collector
+  newTag: v0.0.0
+
+labels:
+- pairs:
+    project: usage-metrics-collector
+  includeTemplates: true
+
+resources:
+- grafana/
+- metrics-node-sampler/
+- metrics-prometheus-collector/
+- namespace.yaml
+- prometheus/
+
+configMapGenerator:
+- name:  metrics-log-config
+  literals:
+  - node-sampler=0
+  - prometheus-collector=0
+  options:
+    disableNameSuffixHash: true
+- name: metrics-cluster-config
+  literals:
+  - CLUSTER_NAME=local
+  options:
+    disableNameSuffixHash: true

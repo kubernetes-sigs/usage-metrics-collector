@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: metrics-node-sampler
+spec:
+  template:
+    spec:
+      containers:
+      - name: metrics-node-sampler
+        image: usage-metrics-collector
+        command: [ metrics-node-sampler ]
+        args:
+        - --sampler-config-filepath=/config/sampler.yaml
+        - --log-level-filepath=/log-config/log.level
+        envFrom: [ {configMapRef: { name: metrics-cluster-config } } ]
+        env:
+        - { name: NODE_NAME, valueFrom: { fieldRef: { fieldPath: spec.nodeName } } }
+        - { name: POD_NAME,  valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+        ports:
+        - { name: proto, containerPort: 8080 }
+        volumeMounts:
+        - { name: cgroup,     mountPath: /sys/fs/cgroup, readOnly: true }
+        - { name: config,     mountPath: /config, readOnly: true }
+        - { name: log-config, mountPath: /log-config, readOnly: true }
+        resources:
+          requests: { cpu: 100m, memory: 256Mi }
+          limits:   { cpu: 500m, memory: 256Mi }
+        livenessProbe:
+          failureThreshold: 3
+          httpGet: { path: /v1/healthz, port: 8090 }
+          initialDelaySeconds: 120
+          periodSeconds: 120
+      volumes:
+      - name: cgroup
+        hostPath: { path: /sys/fs/cgroup }
+      - name: config
+        configMap: { name: metrics-node-sampler, items: [ { key: sampler.yaml, path: sampler.yaml } ] }
+      - name: log-config
+        configMap: { name: metrics-log-config, items: [ { key: node-sampler, path: log.level } ] }
+      serviceAccountName: metrics-node-sampler
+      terminationGracePeriodSeconds: 10
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 15%
+    type: RollingUpdate
+  minReadySeconds: 15
+

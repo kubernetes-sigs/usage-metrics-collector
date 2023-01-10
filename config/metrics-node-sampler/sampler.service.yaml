@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-node-sampler
+spec:
+  type: ClusterIP
+  ports:
+  - { name: proto, port: 8080, targetPort: proto }

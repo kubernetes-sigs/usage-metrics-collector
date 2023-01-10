@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-prometheus-collector
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      containers:
+      - name: metrics-prometheus-collector
+        image: usage-metrics-collector
+        command: [ metrics-prometheus-collector ]
+        args:
+        - --collector-config-filepath=/config/collector.yaml
+        - --log-level-filepath=/log-config/log.level
+        - --leader-election=true
+        envFrom: [ {configMapRef: { name: metrics-cluster-config } } ]
+        env:
+        - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+        ports:
+        - { containerPort: 8080, name: metrics, protocol: TCP }
+        - { containerPort: 8090, name: healthz, protocol: TCP }
+        - { containerPort: 9090, name: proto,   protocol: TCP }
+        volumeMounts:
+        - { name: config, mountPath: /config, readOnly: true }
+        - { name: log-config, mountPath: /log-config, readOnly: true }
+        - { name: metrics-prometheus-collector-samples, mountPath: /metrics-prometheus-collector-samples, readOnly: false }
+        resources:
+          requests: { cpu: "0.5", memory: 1Gi }
+          limits:   { cpu: "0.5", memory: 1Gi }
+        livenessProbe:
+          failureThreshold: 3
+          httpGet: { path: /v1/healthz, port: 8090 }
+          initialDelaySeconds: 1
+          periodSeconds: 1
+        # IMPORTANT: Keeps non-leader collectors from receiving node sampler traffic
+        readinessProbe:
+          failureThreshold: 3
+          httpGet: { path: /v1/is-leader, port: 8090 }
+          initialDelaySeconds: 1
+          periodSeconds: 1
+      volumes:
+      - name: metrics-prometheus-collector-samples  # location for saving samples locally
+        emptyDir: {}
+      - name: config # configuration for the metrics prometheus collector
+        configMap: { name: metrics-prometheus-collector, items: [{ key: "collector.yaml", path: "collector.yaml" }] }
+      - name: log-config  # controls the log level
+        configMap: { items: [ { key: prometheus-collector, path: log.level } ], name: metrics-log-config }
+      - name: logs # controls the logging level -- doesn't require push to take affect
+        emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values: [ metrics-prometheus-collector ]
+            topologyKey: kubernetes.io/hostname
+      serviceAccountName: metrics-prometheus-collector
+      terminationGracePeriodSeconds: 1
