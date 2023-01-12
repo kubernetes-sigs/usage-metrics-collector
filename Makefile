@@ -160,5 +160,5 @@ update-licenses: addlicense
 .PHONY: addlicense
 addlicense:
 ifndef HAS_ADDLICENSE
-	go install -mod=readonly github.com/google/addlicense
+	go install github.com/google/addlicense@v1.0.0
 endif
