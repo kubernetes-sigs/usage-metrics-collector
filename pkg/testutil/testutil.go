@@ -59,6 +59,9 @@ type TestCase struct {
 // file called "expected".
 // Errors are stored
 type TestCaseParser struct {
+	// NameSuffix is appended to the test name
+	NameSuffix string
+
 	// Subdir is an optional subdirectory
 	Subdir string
 
@@ -91,7 +94,7 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 
 	for i := range cases {
 		tc := cases[i]
-		t.Run(tc.Name, func(t *testing.T) {
+		t.Run(tc.Name+p.NameSuffix, func(t *testing.T) {
 			tc.T = t
 			if tc.Error != "" {
 				err := fn(&tc)
@@ -113,7 +116,7 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 func (p TestCaseParser) UpdateExpectedDir(t *testing.T, cases []TestCase, fn func(*TestCase) error) {
 	for i := range cases {
 		tc := cases[i]
-		t.Run(tc.Name, func(t *testing.T) {
+		t.Run(tc.Name+p.NameSuffix, func(t *testing.T) {
 			tc.T = t
 			err := fn(&tc)
 			if err != nil {

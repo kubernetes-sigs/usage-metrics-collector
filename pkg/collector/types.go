@@ -3,6 +3,7 @@ package collector
 import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 )
 
@@ -87,6 +88,9 @@ func (c *Collector) defaultMetricsPrometheusCollector() {
 		}
 		if c.SaveSamplesLocally.TimeFormat == "" {
 			c.SaveSamplesLocally.TimeFormat = collectorcontrollerv1alpha1.DefaultSamplesTimeFormat
+		}
+		if c.SaveSamplesLocally.SaveJSON == nil && c.SaveSamplesLocally.SaveProto == nil {
+			c.SaveSamplesLocally.SaveProto = pointer.BoolPtr(true)
 		}
 	}
 }

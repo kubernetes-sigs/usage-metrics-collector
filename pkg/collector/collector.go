@@ -23,6 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -122,7 +123,7 @@ func (c *Collector) continuouslyCollect(ctx context.Context) {
 
 func (c *Collector) cacheMetrics() *cachedMetrics {
 	sCh := make(chan *collectorapi.SampleList) // channel for aggregation to send SampleLists for saving locally
-	ch := make(chan prometheus.Metric)         // channgel for aggergation to send Metrics for exporting to prometheus
+	ch := make(chan prometheus.Metric)         // channel for aggregation to send Metrics for exporting to prometheus
 	cm := cachedMetrics{startTime: time.Now()}
 
 	// read metrics from the collector and add to a slice
@@ -157,10 +158,53 @@ func (c *Collector) cacheMetrics() *cachedMetrics {
 
 	cm.endTime = time.Now()
 
-	// write the aggregated samples locally if configured to do so
+	// Save local copies of the metrics
+	savedLocalSuccessMetric := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "metrics_prometheus_collector_save_local_success",
+		Help: "The number of local metrics saved as json.",
+	})
+	savedLocalFailMetric := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "metrics_prometheus_collector_save_local_fail",
+		Help: "The number of local metrics saved as json.",
+	})
+	savedJSONLocalSuccessMetric := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "metrics_prometheus_collector_save_json_local_success",
+		Help: "The number of local metrics saved as json.",
+	})
+	savedJSONLocalFailMetric := prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "metrics_prometheus_collector_save_json_local_fail",
+		Help: "The number of local metrics saved as json.",
+	})
+	defer func() {
+		cm.metrics = append(cm.metrics,
+			savedLocalSuccessMetric, savedLocalFailMetric,
+			savedJSONLocalSuccessMetric, savedJSONLocalFailMetric)
+	}()
 	if c.SaveSamplesLocally != nil && len(scrapeResult.Items) > 0 {
-		if err := c.SaveScrapeResultToFile(&scrapeResult); err != nil {
+		if err := c.NormalizeForSave(&scrapeResult); err != nil {
 			log.Error(err, "unable to save aggregated metrics locally")
+			savedLocalFailMetric.Inc()
+			savedJSONLocalFailMetric.Inc()
+		} else {
+			// write the aggregated samples locally if configured to do so
+			if c.SaveSamplesLocally != nil && pointer.BoolDeref(c.SaveSamplesLocally.SaveProto, false) && len(scrapeResult.Items) > 0 {
+				if err := c.SaveScrapeResultToFile(&scrapeResult); err != nil {
+					log.Error(err, "unable to save aggregated metrics locally")
+					savedLocalFailMetric.Inc()
+				} else {
+					savedLocalSuccessMetric.Inc()
+				}
+			}
+
+			// write the aggregated samples locally if configured to do so
+			if c.SaveSamplesLocally != nil && pointer.BoolDeref(c.SaveSamplesLocally.SaveJSON, false) && len(scrapeResult.Items) > 0 {
+				if err := c.SaveScrapeResultToJSONFile(&scrapeResult); err != nil {
+					log.Error(err, "unable to save aggregated metrics locally as json")
+					savedJSONLocalFailMetric.Inc()
+				} else {
+					savedJSONLocalSuccessMetric.Inc()
+				}
+			}
 		}
 	}
 
