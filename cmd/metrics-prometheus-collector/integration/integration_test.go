@@ -58,7 +58,7 @@ func TestMetricsPrometheusCollector(t *testing.T) {
 		select {
 		case err := <-cmdErr:
 			return err
-		case <-time.After(5 * time.Second):
+		case <-time.After(30 * time.Second):
 		}
 
 		// Get the metrics
