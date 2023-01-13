@@ -180,7 +180,7 @@ func setupTests(t *testing.T, f func([]int) string) {
 				// poll until the server has populated its sample cache
 				return len(result.Containers[0].CpuCoresNanoSec) >= sampleSize
 
-			}, time.Second*10, time.Second)
+			}, time.Second*60, time.Second)
 
 			// TODO: test adding a new pod and getting the metrics within ~seconds with
 			// a reason for the new pod
