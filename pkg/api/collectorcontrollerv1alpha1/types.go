@@ -77,6 +77,10 @@ type MetricsPrometheusCollector struct {
 	SaveSamplesLocally *SaveSamplesLocally `json:"saveSamplesLocally" yaml:"saveSamplesLocally"`
 
 	ExitOnConfigChange bool `json:"exitOnConfigChange" yaml:"exitOnConfigChange"`
+
+	// SideCarConfigDirectoryPaths are paths to directories with sidecar metric files.
+	// SideCar metric
+	SideCarConfigDirectoryPaths []string `json:"sideCarMetricPaths" yaml:"sideCarMetricPaths"`
 }
 
 var (
@@ -781,4 +785,24 @@ type LabelId int
 type LabeledResources struct {
 	Labels map[string]string   `json:"labels" yaml:"labels"`
 	Values corev1.ResourceList `json:"values" yaml:"values"`
+}
+
+const SideCarConfigFileSuffix = "_sidecar_config.json"
+
+// SideCarConfig stores metrics and labels written by sidecars
+type SideCarConfig struct {
+	SideCarMetrics []SideCarMetric `json:"metrics" yaml:"metrics"`
+}
+
+// SideCarMetric is an external metric that can be published by a side-car
+type SideCarMetric struct {
+	Name       string               `json:"name" yaml:"name"`
+	Help       string               `json:"help" yaml:"help"`
+	LabelNames []string             `json:"labelNames" yaml:"labelNames"`
+	Values     []SideCarMetricValue `json:"values" yaml:"values"`
+}
+
+type SideCarMetricValue struct {
+	MetricLabels []string `json:"labels" yaml:"labels"`
+	Value        float64  `json:"value" yaml:"value"`
 }

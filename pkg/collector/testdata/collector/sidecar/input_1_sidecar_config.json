@@ -1,0 +1,12 @@
+{
+    "metrics": [
+        { "name": "1_test_metric_i_cpu_cores", "labelNames": ["foo", "bar"], "values": [
+            {"labels": ["a", "b"], "value": 5},
+            {"labels": ["c", "d"], "value": 6}
+        ]},
+        { "name": "1_test_metric_ii_cpu_cores", "labelNames": ["lbl"], "values": [
+            {"labels": ["a"], "value": 7},
+            {"labels": ["c"], "value": 8}
+        ]}
+    ]
+}

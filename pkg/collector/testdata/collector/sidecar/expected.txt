@@ -1,0 +1,22 @@
+# HELP kube_usage_1_test_metric_i_cpu_cores kube_usage_1_test_metric_i_cpu_cores
+# TYPE kube_usage_1_test_metric_i_cpu_cores gauge
+kube_usage_1_test_metric_i_cpu_cores{bar="b",foo="a"} 5
+kube_usage_1_test_metric_i_cpu_cores{bar="d",foo="c"} 6
+# HELP kube_usage_1_test_metric_ii_cpu_cores kube_usage_1_test_metric_ii_cpu_cores
+# TYPE kube_usage_1_test_metric_ii_cpu_cores gauge
+kube_usage_1_test_metric_ii_cpu_cores{lbl="a"} 7
+kube_usage_1_test_metric_ii_cpu_cores{lbl="c"} 8
+# HELP kube_usage_2_test_metric_i_cpu_cores kube_usage_2_test_metric_i_cpu_cores
+# TYPE kube_usage_2_test_metric_i_cpu_cores gauge
+kube_usage_2_test_metric_i_cpu_cores{bar="b",foo="a"} 5
+kube_usage_2_test_metric_i_cpu_cores{bar="d",foo="c"} 6
+# HELP kube_usage_2_test_metric_ii_cpu_cores kube_usage_2_test_metric_ii_cpu_cores
+# TYPE kube_usage_2_test_metric_ii_cpu_cores gauge
+kube_usage_2_test_metric_ii_cpu_cores{lbl="a"} 7
+kube_usage_2_test_metric_ii_cpu_cores{lbl="c"} 8
+# HELP kube_usage_cluster_sum_requests_allocated_cpu_cores kube_usage_cluster_sum_requests_allocated_cpu_cores
+# TYPE kube_usage_cluster_sum_requests_allocated_cpu_cores gauge
+kube_usage_cluster_sum_requests_allocated_cpu_cores 6
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 4

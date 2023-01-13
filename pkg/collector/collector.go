@@ -15,7 +15,9 @@
 package collector
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"sort"
@@ -284,6 +286,44 @@ func (c *Collector) collect(ch chan<- prometheus.Metric, sCh chan *collectorapi.
 	}, ch)
 	if err != nil {
 		log.Error(err, "failed to collect container metrics")
+	}
+
+	for _, p := range c.SideCarConfigDirectoryPaths {
+		entries, err := os.ReadDir(p)
+		if err != nil {
+			log.Error(err, "unable to read side car metrics directory", "directory", p)
+			continue
+		}
+		for _, e := range entries {
+			if !strings.HasSuffix(e.Name(), collectorcontrollerv1alpha1.SideCarConfigFileSuffix) {
+				continue
+			}
+			b, err := os.ReadFile(filepath.Join(p, e.Name()))
+			if err != nil {
+				log.Error(err, "unable to read side car metrics file", "filename", e.Name())
+				continue
+			}
+			d := json.NewDecoder(bytes.NewBuffer(b))
+			sc := collectorcontrollerv1alpha1.SideCarConfig{}
+			err = d.Decode(&sc)
+			if err != nil {
+				log.Error(err, "unable to parse side car metrics file", "filename", e.Name())
+				continue
+			}
+			for _, m := range sc.SideCarMetrics {
+				if m.Help == "" {
+					m.Help = c.Prefix + "_" + m.Name
+				}
+				d := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+					Name: c.Prefix + "_" + m.Name,
+					Help: m.Help,
+				}, m.LabelNames)
+				for _, v := range m.Values {
+					d.WithLabelValues(v.MetricLabels...).Set(v.Value)
+				}
+				d.Collect(ch)
+			}
+		}
 	}
 
 	log.V(1).Info("all collections complete", "seconds", time.Since(start).Seconds())
