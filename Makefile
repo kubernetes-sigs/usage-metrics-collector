@@ -50,6 +50,8 @@ default: all
 
 all: fmt vet test build
 
+verify: fmt vet verify-licenses
+
 help:			## Show this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
@@ -141,3 +143,22 @@ run-local:
 	docker build . -t usage-metrics-collector:v0.0.0
 	kind load docker-image usage-metrics-collector:v0.0.0
 	kustomize build config | kubectl apply -f -
+
+## --------------------------------------
+## License
+## --------------------------------------
+
+HAS_ADDLICENSE:=$(shell which addlicense)
+.PHONY: verify-licenses
+verify-licenses: addlicense
+	find . -type f -name "*.go" ! -path "*/vendor/*" | xargs $(GOPATH)/bin/addlicense -check || (echo 'Run "make update"' && exit 1)
+
+.PHONY: update-licenses
+update-licenses: addlicense
+	find . -type f -name "*.go" ! -path "*/vendor/*" | xargs $(GOPATH)/bin/addlicense -c "The Kubernetes Authors."
+
+.PHONY: addlicense
+addlicense:
+ifndef HAS_ADDLICENSE
+	go install github.com/google/addlicense@v1.0.0
+endif
