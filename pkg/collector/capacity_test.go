@@ -80,6 +80,8 @@ func TestCollector(t *testing.T) {
 		var spec collectorcontrollerv1alpha1.MetricsPrometheusCollector
 
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_collector_spec.yaml": &spec})
+		spec.SideCarConfigDirectoryPaths = []string{filepath.Dir(tc.ExpectedFilepath)}
+
 		if tc.Inputs["input_ignore_metric_names.txt"] != "" {
 			ignoreMetricNames = strings.Split(tc.Inputs["input_ignore_metric_names.txt"], "\n")
 		}
