@@ -312,7 +312,7 @@ func testSave(t *testing.T, saveJSON, saveProto bool) {
 				sr := m.(*collectorapi.ScrapeResult)
 				b := &bytes.Buffer{}
 				for _, s := range sr.Items {
-					ProtoToJSON(s, b)
+					require.NoError(t, ProtoToJSON(s, b))
 				}
 				require.Equal(t, string(jsonBytes), b.String())
 			}

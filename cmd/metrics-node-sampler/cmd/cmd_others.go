@@ -22,5 +22,4 @@ import (
 
 func initContainerMonitor(rootCmd *cobra.Command) {
 	// Not implemented for Mac
-	return
 }
