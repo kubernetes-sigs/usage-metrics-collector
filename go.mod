@@ -3,7 +3,6 @@ module sigs.k8s.io/usage-metrics-collector
 go 1.19
 
 require (
-	cloud.google.com/go/storage v1.10.0
 	github.com/containerd/cgroups v1.0.1
 	github.com/containerd/containerd v1.5.9
 	github.com/containerd/typeurl v1.0.2
@@ -18,7 +17,6 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.21.0
-	google.golang.org/api v0.57.0
 	google.golang.org/genproto v0.0.0-20220502173005-c8bf987b8c21
 	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
@@ -34,7 +32,6 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.97.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
@@ -43,11 +40,9 @@ require (
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
-	github.com/googleapis/gax-go/v2 v2.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )
 
 require (
