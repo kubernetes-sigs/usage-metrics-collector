@@ -22,3 +22,5 @@ bin/
 #GoReleaser
 dist/
 .DS_Store
+
+artifacts/

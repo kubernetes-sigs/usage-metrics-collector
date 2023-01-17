@@ -58,8 +58,23 @@ help:			## Show this help.
 clean:			## Remove all build and test related artifacts
 	rm -rf ./.out bin
 
-test: $(KUBEBUILDER_ASSETS)          ## Run local tests
+test-local: $(KUBEBUILDER_ASSETS)          ## Run local tests
 	go test -count=1 -v ./...
+
+HAS_GOTESTSUM := $(shell command -v gotestsum)
+.PHONY: test-ci-deps
+test-ci-deps:
+ifndef HAS_GOTESTSUM
+	go install gotest.tools/gotestsum@latest
+endif
+
+KUBE_JUNIT_REPORT_DIR ?= /logs/artifacts
+SORTABLE_DATE := $(shell date "+%Y%m%d-%H%M%S")
+JUNIT_FILENAME_PREFIX := $(KUBE_JUNIT_REPORT_DIR)/junit_$(SORTABLE_DATE)
+JUNIT_XML_FILENAME := $(JUNIT_FILENAME_PREFIX).xml
+test: test-ci-deps $(KUBEBUILDER_ASSETS)
+	mkdir -p $(KUBE_JUNIT_REPORT_DIR)
+	gotestsum --junitfile $(JUNIT_XML_FILENAME)
 
 vet:			## Run go vet on this project
 	go vet ./...
@@ -148,7 +163,7 @@ run-local:
 ## License
 ## --------------------------------------
 
-HAS_ADDLICENSE:=$(shell which addlicense)
+HAS_ADDLICENSE:=$(shell command -v addlicense)
 .PHONY: verify-licenses
 verify-licenses: addlicense
 	find . -type f -name "*.go" ! -path "*/vendor/*" | xargs $(GOPATH)/bin/addlicense -check || (echo 'Run "make update"' && exit 1)
