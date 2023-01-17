@@ -289,7 +289,7 @@ type JSONLine struct {
 	Labels     map[string]string `json:"labels"`
 }
 
-func ProtoToJSON(s *collectorapi.SampleList, b *bytes.Buffer) {
+func ProtoToJSON(s *collectorapi.SampleList, b *bytes.Buffer) error {
 	// shard output files so they are more efficient to read
 	for _, i := range s.Items {
 		for _, v := range i.Values {
@@ -304,10 +304,14 @@ func ProtoToJSON(s *collectorapi.SampleList, b *bytes.Buffer) {
 				line.Labels["cluster_name"] = s.ClusterName
 				e := json.NewEncoder(b)
 				e.SetIndent("", "")
-				e.Encode(line)
+				err := e.Encode(line)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
+	return nil
 }
 
 func (c *Collector) SaveScrapeResultToJSONFile(sr *collectorapi.ScrapeResult) error {
@@ -321,7 +325,9 @@ func (c *Collector) SaveScrapeResultToJSONFile(sr *collectorapi.ScrapeResult) er
 		if am[s.Name] == nil {
 			am[s.Name] = &bytes.Buffer{}
 		}
-		ProtoToJSON(s, am[s.Name])
+		if err := ProtoToJSON(s, am[s.Name]); err != nil {
+			return err
+		}
 	}
 
 	for k, v := range am {

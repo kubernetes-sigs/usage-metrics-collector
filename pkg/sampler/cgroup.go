@@ -262,6 +262,7 @@ func (r *metricsReader) readFile(path metricFilepath) (*bytes.Buffer, error) {
 	return bytes.NewBuffer(b), err
 }
 
+// nolint:unused
 func (r *metricsReader) initCM() error {
 	r.once.Do(func() {
 		if r.readTimeFunc == nil {

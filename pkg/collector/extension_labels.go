@@ -2040,6 +2040,248 @@ func (mask extensionLabelsMask) GetLabelNames() []string {
 	if mask.Label19 {
 		result = append(result, string(mask.keys.Label19))
 	}
+
+	if mask.Label20 {
+		result = append(result, string(mask.keys.Label20))
+	}
+	if mask.Label21 {
+		result = append(result, string(mask.keys.Label21))
+	}
+	if mask.Label22 {
+		result = append(result, string(mask.keys.Label22))
+	}
+	if mask.Label23 {
+		result = append(result, string(mask.keys.Label23))
+	}
+	if mask.Label24 {
+		result = append(result, string(mask.keys.Label24))
+	}
+	if mask.Label25 {
+		result = append(result, string(mask.keys.Label25))
+	}
+	if mask.Label26 {
+		result = append(result, string(mask.keys.Label26))
+	}
+	if mask.Label27 {
+		result = append(result, string(mask.keys.Label27))
+	}
+	if mask.Label28 {
+		result = append(result, string(mask.keys.Label28))
+	}
+	if mask.Label29 {
+		result = append(result, string(mask.keys.Label29))
+	}
+	if mask.Label30 {
+		result = append(result, string(mask.keys.Label30))
+	}
+	if mask.Label31 {
+		result = append(result, string(mask.keys.Label31))
+	}
+	if mask.Label32 {
+		result = append(result, string(mask.keys.Label32))
+	}
+	if mask.Label33 {
+		result = append(result, string(mask.keys.Label33))
+	}
+	if mask.Label34 {
+		result = append(result, string(mask.keys.Label34))
+	}
+	if mask.Label35 {
+		result = append(result, string(mask.keys.Label35))
+	}
+	if mask.Label36 {
+		result = append(result, string(mask.keys.Label36))
+	}
+	if mask.Label37 {
+		result = append(result, string(mask.keys.Label37))
+	}
+	if mask.Label38 {
+		result = append(result, string(mask.keys.Label38))
+	}
+	if mask.Label39 {
+		result = append(result, string(mask.keys.Label39))
+	}
+	if mask.Label40 {
+		result = append(result, string(mask.keys.Label40))
+	}
+	if mask.Label41 {
+		result = append(result, string(mask.keys.Label41))
+	}
+	if mask.Label42 {
+		result = append(result, string(mask.keys.Label42))
+	}
+	if mask.Label43 {
+		result = append(result, string(mask.keys.Label43))
+	}
+	if mask.Label44 {
+		result = append(result, string(mask.keys.Label44))
+	}
+	if mask.Label45 {
+		result = append(result, string(mask.keys.Label45))
+	}
+	if mask.Label46 {
+		result = append(result, string(mask.keys.Label46))
+	}
+	if mask.Label47 {
+		result = append(result, string(mask.keys.Label47))
+	}
+	if mask.Label48 {
+		result = append(result, string(mask.keys.Label48))
+	}
+	if mask.Label49 {
+		result = append(result, string(mask.keys.Label49))
+	}
+	if mask.Label50 {
+		result = append(result, string(mask.keys.Label50))
+	}
+	if mask.Label51 {
+		result = append(result, string(mask.keys.Label51))
+	}
+	if mask.Label52 {
+		result = append(result, string(mask.keys.Label52))
+	}
+	if mask.Label53 {
+		result = append(result, string(mask.keys.Label53))
+	}
+	if mask.Label54 {
+		result = append(result, string(mask.keys.Label54))
+	}
+	if mask.Label55 {
+		result = append(result, string(mask.keys.Label55))
+	}
+	if mask.Label56 {
+		result = append(result, string(mask.keys.Label56))
+	}
+	if mask.Label57 {
+		result = append(result, string(mask.keys.Label57))
+	}
+	if mask.Label58 {
+		result = append(result, string(mask.keys.Label58))
+	}
+	if mask.Label59 {
+		result = append(result, string(mask.keys.Label59))
+	}
+	if mask.Label60 {
+		result = append(result, string(mask.keys.Label60))
+	}
+	if mask.Label61 {
+		result = append(result, string(mask.keys.Label61))
+	}
+	if mask.Label62 {
+		result = append(result, string(mask.keys.Label62))
+	}
+	if mask.Label63 {
+		result = append(result, string(mask.keys.Label63))
+	}
+	if mask.Label64 {
+		result = append(result, string(mask.keys.Label64))
+	}
+	if mask.Label65 {
+		result = append(result, string(mask.keys.Label65))
+	}
+	if mask.Label66 {
+		result = append(result, string(mask.keys.Label66))
+	}
+	if mask.Label67 {
+		result = append(result, string(mask.keys.Label67))
+	}
+	if mask.Label68 {
+		result = append(result, string(mask.keys.Label68))
+	}
+	if mask.Label69 {
+		result = append(result, string(mask.keys.Label69))
+	}
+	if mask.Label70 {
+		result = append(result, string(mask.keys.Label70))
+	}
+	if mask.Label71 {
+		result = append(result, string(mask.keys.Label71))
+	}
+	if mask.Label72 {
+		result = append(result, string(mask.keys.Label72))
+	}
+	if mask.Label73 {
+		result = append(result, string(mask.keys.Label73))
+	}
+	if mask.Label74 {
+		result = append(result, string(mask.keys.Label74))
+	}
+	if mask.Label75 {
+		result = append(result, string(mask.keys.Label75))
+	}
+	if mask.Label76 {
+		result = append(result, string(mask.keys.Label76))
+	}
+	if mask.Label77 {
+		result = append(result, string(mask.keys.Label77))
+	}
+	if mask.Label78 {
+		result = append(result, string(mask.keys.Label78))
+	}
+	if mask.Label79 {
+		result = append(result, string(mask.keys.Label79))
+	}
+	if mask.Label80 {
+		result = append(result, string(mask.keys.Label80))
+	}
+	if mask.Label81 {
+		result = append(result, string(mask.keys.Label81))
+	}
+	if mask.Label82 {
+		result = append(result, string(mask.keys.Label82))
+	}
+	if mask.Label83 {
+		result = append(result, string(mask.keys.Label83))
+	}
+	if mask.Label84 {
+		result = append(result, string(mask.keys.Label84))
+	}
+	if mask.Label85 {
+		result = append(result, string(mask.keys.Label85))
+	}
+	if mask.Label86 {
+		result = append(result, string(mask.keys.Label86))
+	}
+	if mask.Label87 {
+		result = append(result, string(mask.keys.Label87))
+	}
+	if mask.Label88 {
+		result = append(result, string(mask.keys.Label88))
+	}
+	if mask.Label89 {
+		result = append(result, string(mask.keys.Label89))
+	}
+	if mask.Label90 {
+		result = append(result, string(mask.keys.Label90))
+	}
+	if mask.Label91 {
+		result = append(result, string(mask.keys.Label91))
+	}
+	if mask.Label92 {
+		result = append(result, string(mask.keys.Label92))
+	}
+	if mask.Label93 {
+		result = append(result, string(mask.keys.Label93))
+	}
+	if mask.Label94 {
+		result = append(result, string(mask.keys.Label94))
+	}
+	if mask.Label95 {
+		result = append(result, string(mask.keys.Label95))
+	}
+	if mask.Label96 {
+		result = append(result, string(mask.keys.Label96))
+	}
+	if mask.Label97 {
+		result = append(result, string(mask.keys.Label97))
+	}
+	if mask.Label98 {
+		result = append(result, string(mask.keys.Label98))
+	}
+	if mask.Label99 {
+		result = append(result, string(mask.keys.Label99))
+	}
+
 	return result
 }
 
