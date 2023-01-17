@@ -27,6 +27,13 @@ func (c *Collector) init() error {
 	}
 	c.defaultMetricsPrometheusCollector()
 
+	sccfg, err := c.getSideCarConfigs()
+	if err != nil {
+		return err
+	}
+	c.sideCarConfigs = sccfg
+	c.labler.Extension.SideCar = sccfg
+
 	// initialize internal IDs
 	var labelId int
 	for i := range c.MetricsPrometheusCollector.Extensions.Pods {
@@ -56,6 +63,12 @@ func (c *Collector) init() error {
 	for i := range c.MetricsPrometheusCollector.Extensions.PVs {
 		c.MetricsPrometheusCollector.Extensions.PVs[i].ID = collectorcontrollerv1alpha1.LabelId(labelId)
 		labelId++
+	}
+	for i := range c.sideCarConfigs {
+		for j := range c.sideCarConfigs[i].Labels {
+			c.sideCarConfigs[i].Labels[j].ID = collectorcontrollerv1alpha1.LabelId(labelId)
+			labelId++
+		}
 	}
 	var maskId int
 	for i := range c.MetricsPrometheusCollector.Aggregations {

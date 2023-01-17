@@ -8,5 +8,9 @@
             {"labels": ["a"], "value": 7},
             {"labels": ["c"], "value": 8}
         ]}
+    ],
+    "labels": [
+        {"name": "sc_label_1", "value": "l-1"},
+        {"name": "sc_label_2", "value": "l-2"}
     ]
 }

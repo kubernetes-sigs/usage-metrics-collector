@@ -700,6 +700,10 @@ type ExtensionLabel struct {
 	// LabelName is the name of Kubernetes object metadata label
 	LabelKey LabelKey `json:"label,omitempty" yaml:"label,omitempty"`
 
+	// Value is the default value to use if the annotation or label is not present on
+	// the object.
+	Value string `json:"value,omitempty" yaml:"value,omitempty"`
+
 	// ID is internal
 	ID LabelId `json:"-" yaml:"-"`
 }
@@ -792,6 +796,8 @@ const SideCarConfigFileSuffix = "_sidecar_config.json"
 // SideCarConfig stores metrics and labels written by sidecars
 type SideCarConfig struct {
 	SideCarMetrics []SideCarMetric `json:"metrics" yaml:"metrics"`
+
+	Labels []ExtensionLabel `json:"labels" yaml:"labels"`
 }
 
 // SideCarMetric is an external metric that can be published by a side-car

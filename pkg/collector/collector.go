@@ -67,6 +67,8 @@ type Collector struct {
 
 	startTime time.Time
 	metrics   chan *cachedMetrics
+
+	sideCarConfigs []*collectorcontrollerv1alpha1.SideCarConfig
 }
 
 type cachedMetrics struct {
@@ -265,6 +267,36 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	cacheCollectTime.Collect(ch)
 }
 
+func (c *Collector) getSideCarConfigs() ([]*collectorcontrollerv1alpha1.SideCarConfig, error) {
+	var results []*collectorcontrollerv1alpha1.SideCarConfig
+	for _, p := range c.SideCarConfigDirectoryPaths {
+		entries, err := os.ReadDir(p)
+		if err != nil {
+			log.Error(err, "unable to read side car metrics directory", "directory", p)
+			return nil, err
+		}
+		for _, e := range entries {
+			if !strings.HasSuffix(e.Name(), collectorcontrollerv1alpha1.SideCarConfigFileSuffix) {
+				continue
+			}
+			b, err := os.ReadFile(filepath.Join(p, e.Name()))
+			if err != nil {
+				log.Error(err, "unable to read side car metrics file", "filename", e.Name())
+				return nil, err
+			}
+			d := json.NewDecoder(bytes.NewBuffer(b))
+			sc := collectorcontrollerv1alpha1.SideCarConfig{}
+			err = d.Decode(&sc)
+			if err != nil {
+				log.Error(err, "unable to parse side car metrics file", "filename", e.Name())
+				return nil, err
+			}
+			results = append(results, &sc)
+		}
+	}
+	return results, nil
+}
+
 // collect returns the current state of all metrics of the collector.
 func (c *Collector) collect(ch chan<- prometheus.Metric, sCh chan *collectorapi.SampleList) {
 	start := time.Now()
@@ -288,41 +320,19 @@ func (c *Collector) collect(ch chan<- prometheus.Metric, sCh chan *collectorapi.
 		log.Error(err, "failed to collect container metrics")
 	}
 
-	for _, p := range c.SideCarConfigDirectoryPaths {
-		entries, err := os.ReadDir(p)
-		if err != nil {
-			log.Error(err, "unable to read side car metrics directory", "directory", p)
-			continue
-		}
-		for _, e := range entries {
-			if !strings.HasSuffix(e.Name(), collectorcontrollerv1alpha1.SideCarConfigFileSuffix) {
-				continue
+	for _, sc := range c.sideCarConfigs {
+		for _, m := range sc.SideCarMetrics {
+			if m.Help == "" {
+				m.Help = c.Prefix + "_" + m.Name
 			}
-			b, err := os.ReadFile(filepath.Join(p, e.Name()))
-			if err != nil {
-				log.Error(err, "unable to read side car metrics file", "filename", e.Name())
-				continue
+			d := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+				Name: c.Prefix + "_" + m.Name,
+				Help: m.Help,
+			}, m.LabelNames)
+			for _, v := range m.Values {
+				d.WithLabelValues(v.MetricLabels...).Set(v.Value)
 			}
-			d := json.NewDecoder(bytes.NewBuffer(b))
-			sc := collectorcontrollerv1alpha1.SideCarConfig{}
-			err = d.Decode(&sc)
-			if err != nil {
-				log.Error(err, "unable to parse side car metrics file", "filename", e.Name())
-				continue
-			}
-			for _, m := range sc.SideCarMetrics {
-				if m.Help == "" {
-					m.Help = c.Prefix + "_" + m.Name
-				}
-				d := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-					Name: c.Prefix + "_" + m.Name,
-					Help: m.Help,
-				}, m.LabelNames)
-				for _, v := range m.Values {
-					d.WithLabelValues(v.MetricLabels...).Set(v.Value)
-				}
-				d.Collect(ch)
-			}
+			d.Collect(ch)
 		}
 	}
 

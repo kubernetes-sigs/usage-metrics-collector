@@ -12,3 +12,5 @@ aggregations: # aggregate metrics and export them
   levels:
   - mask:
       name: "cluster" # sum all namespaces into cluster metrics
+      extensions:
+        sc_label_1: true

@@ -2592,6 +2592,7 @@ func (mask extensionLabelsMask) GetLabelValues(m extensionLabelsValues) []string
 
 type extensionLabler struct {
 	Extensions collectorcontrollerv1alpha1.Extensions
+	SideCar    []*collectorcontrollerv1alpha1.SideCarConfig
 }
 
 func (l extensionLabler) GetLabelNames() extensionLabelsKeys {
@@ -2622,6 +2623,8 @@ func (l extensionLabler) SetLabelsForPod(
 				labels.SetValue(v.ID, pod.Annotations[string(v.AnnotationKey)])
 			} else if v.LabelKey != "" && pod.Labels[string(v.LabelKey)] != "" {
 				labels.SetValue(v.ID, pod.Labels[string(v.LabelKey)])
+			} else if v.Value != "" {
+				labels.SetValue(v.ID, v.Value)
 			}
 		}
 	}
@@ -2638,6 +2641,8 @@ func (l extensionLabler) SetLabelsForPersistentVolume(labels *extensionLabelsVal
 				labels.SetValue(v.ID, pv.Annotations[string(v.AnnotationKey)])
 			} else if v.LabelKey != "" && pv.Labels[string(v.LabelKey)] != "" {
 				labels.SetValue(v.ID, pv.Labels[string(v.LabelKey)])
+			} else if v.Value != "" {
+				labels.SetValue(v.ID, v.Value)
 			}
 		}
 	}
@@ -2654,6 +2659,8 @@ func (l extensionLabler) SetLabelsForPersistentVolumeClaim(
 				labels.SetValue(v.ID, pvc.Annotations[string(v.AnnotationKey)])
 			} else if v.LabelKey != "" && pv.Labels[string(v.LabelKey)] != "" {
 				labels.SetValue(v.ID, pvc.Labels[string(v.LabelKey)])
+			} else if v.Value != "" {
+				labels.SetValue(v.ID, v.Value)
 			}
 		}
 	}
@@ -2662,6 +2669,7 @@ func (l extensionLabler) SetLabelsForPersistentVolumeClaim(
 }
 
 func (l extensionLabler) SetLabelsForNode(labels *extensionLabelsValues, node *corev1.Node) {
+	l.SetLabelsForSideCars(labels)
 	if node == nil {
 		return
 	}
@@ -2670,6 +2678,8 @@ func (l extensionLabler) SetLabelsForNode(labels *extensionLabelsValues, node *c
 			labels.SetValue(v.ID, node.Annotations[string(v.AnnotationKey)])
 		} else if v.LabelKey != "" && node.Labels[string(v.LabelKey)] != "" {
 			labels.SetValue(v.ID, node.Labels[string(v.LabelKey)])
+		} else if v.Value != "" {
+			labels.SetValue(v.ID, v.Value)
 		}
 	}
 
@@ -2681,20 +2691,23 @@ func (l extensionLabler) SetLabelsForNode(labels *extensionLabelsValues, node *c
 
 func (l extensionLabler) SetLabelsForQuota(labels *extensionLabelsValues,
 	quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor, namespace *corev1.Namespace) {
-	if namespace == nil {
+	l.SetLabelsForNamespace(labels, namespace)
+	if quota == nil {
 		return
 	}
-	for _, v := range l.Extensions.Namespaces {
-		if v.AnnotationKey != "" && namespace.Annotations[string(v.AnnotationKey)] != "" {
-			labels.SetValue(v.ID, namespace.Annotations[string(v.AnnotationKey)])
-		} else if v.LabelKey != "" && namespace.Labels[string(v.LabelKey)] != "" {
-			labels.SetValue(v.ID, namespace.Labels[string(v.LabelKey)])
+	for _, v := range l.Extensions.Quota {
+		if v.AnnotationKey != "" && quota.Annotations[string(v.AnnotationKey)] != "" {
+			labels.SetValue(v.ID, quota.Annotations[string(v.AnnotationKey)])
+		} else if v.LabelKey != "" && quota.Labels[string(v.LabelKey)] != "" {
+			labels.SetValue(v.ID, quota.Labels[string(v.LabelKey)])
+		} else if v.Value != "" {
+			labels.SetValue(v.ID, v.Value)
 		}
-
 	}
 }
 
 func (l extensionLabler) SetLabelsForNamespace(labels *extensionLabelsValues, namespace *corev1.Namespace) {
+	l.SetLabelsForSideCars(labels)
 	if namespace == nil {
 		return
 	}
@@ -2703,8 +2716,18 @@ func (l extensionLabler) SetLabelsForNamespace(labels *extensionLabelsValues, na
 			labels.SetValue(v.ID, namespace.Annotations[string(v.AnnotationKey)])
 		} else if v.LabelKey != "" && namespace.Labels[string(v.LabelKey)] != "" {
 			labels.SetValue(v.ID, namespace.Labels[string(v.LabelKey)])
+		} else if v.Value != "" {
+			labels.SetValue(v.ID, v.Value)
 		}
+	}
+}
 
+func (l extensionLabler) SetLabelsForSideCars(labels *extensionLabelsValues) {
+	for _, sc := range l.SideCar {
+		for _, scl := range sc.Labels {
+			// add these static labels
+			labels.SetValue(scl.ID, scl.Value)
+		}
 	}
 }
 
@@ -2817,5 +2840,14 @@ func (c *Collector) initExtensionLabelIndexes() {
 		c.labelIdsByNames[e.PVs[i].LabelName] = id
 		c.labelNamesByIds[id] = e.PVs[i].LabelName
 		c.labelsById[id] = &e.PVs[i]
+	}
+
+	for _, sc := range c.sideCarConfigs {
+		for i := range sc.Labels {
+			id := sc.Labels[i].ID
+			c.labelIdsByNames[sc.Labels[i].LabelName] = id
+			c.labelNamesByIds[id] = sc.Labels[i].LabelName
+			c.labelsById[id] = &sc.Labels[i]
+		}
 	}
 }
