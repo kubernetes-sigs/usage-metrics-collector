@@ -312,6 +312,10 @@ const (
 	QuotaDescriptorRequestsHardMinusProposedSource = "requests_quota_hard_minus_proposed"
 	// QuotaDescriptorLimitsHardMinusProposedSource is the source for limits hard quota minus proposed (quota to be clawed back).
 	QuotaDescriptorLimitsHardMinusProposedSource = "limits_quota_hard_minus_proposed"
+	// QuotaDescriptorRequestsMaxObservedMinusHardSource is the source for max observed quota minus hard (net clawback applied).
+	QuotaDescriptorRequestsMaxObservedMinusHardSource = "requests_quota_max_observed_minus_hard"
+	// QuotaDescriptorLimitsMaxObservedMinusHardSource is the source for max observed quota minus hard (net clawback applied).
+	QuotaDescriptorLimitsMaxObservedMinusHardSource = "limits_quota_max_observed_minus_hard"
 
 	// NodeAllocatableSource is the source for node allocatable.
 	NodeAllocatableSource = "node_allocatable"

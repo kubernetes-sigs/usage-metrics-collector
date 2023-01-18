@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler/api"
+	"sigs.k8s.io/yaml"
 )
 
 // value contains a metric value. Everything in a value should have the exact
@@ -252,12 +253,29 @@ func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotama
 		Source: collectorcontrollerv1alpha1.QuotaDescriptorRequestsProposedSource,
 	}
 
+	maxObservedQuotaRequestsMinusHard := value{
+		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
+		Source: collectorcontrollerv1alpha1.QuotaDescriptorRequestsMaxObservedMinusHardSource,
+	}
+
+	maxObservedQuotaLimitsMinusHard := value{
+		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
+		Source: collectorcontrollerv1alpha1.QuotaDescriptorLimitsMaxObservedMinusHardSource,
+	}
+
 	if rqd != nil {
 		proposedLimitsQuota.ResourceList =
 			getProposedQuota(rqd.Status.ProposedQuota, collectorcontrollerv1alpha1.LimitsResourcePrefix)
 
 		proposedRequestQuota.ResourceList =
 			getProposedQuota(rqd.Status.ProposedQuota, collectorcontrollerv1alpha1.RequestsResourcePrefix)
+
+		maxObservedQuota, err := getMaxObservedQuota(rqd)
+		if err == nil && maxObservedQuota != nil {
+			maxObservedRequestsQuota, maxObservedLimitsQuota := splitRequestsLimitsQuota(maxObservedQuota)
+			maxObservedQuotaRequestsMinusHard.ResourceList = subLists(maxObservedRequestsQuota, requestsHard.ResourceList)
+			maxObservedQuotaLimitsMinusHard.ResourceList = subLists(maxObservedLimitsQuota, limitsHard.ResourceList)
+		}
 	}
 
 	requestsHardMinusProposed := value{
@@ -281,19 +299,21 @@ func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotama
 	}
 
 	return map[string]value{
-		collectorcontrollerv1alpha1.QuotaRequestsHardSource:                        requestsHard,
-		collectorcontrollerv1alpha1.QuotaLimitsHardSource:                          limitsHard,
-		collectorcontrollerv1alpha1.QuotaRequestsUsedSource:                        requestsUsed,
-		collectorcontrollerv1alpha1.QuotaLimitsUsedSource:                          limitsUsed,
-		collectorcontrollerv1alpha1.QuotaRequestsHardMinusUsed:                     requestsHardMinusUsed,
-		collectorcontrollerv1alpha1.QuotaLimitsHardMinusUsed:                       limitsHardMinusUsed,
-		collectorcontrollerv1alpha1.QuotaItemsSource:                               items,
-		collectorcontrollerv1alpha1.PVCQuotaRequestsHardSource:                     pvcHard,
-		collectorcontrollerv1alpha1.PVCQuotaRequestsUsedSource:                     pvcUsed,
-		collectorcontrollerv1alpha1.QuotaDescriptorLimitsProposedSource:            proposedLimitsQuota,
-		collectorcontrollerv1alpha1.QuotaDescriptorRequestsProposedSource:          proposedRequestQuota,
-		collectorcontrollerv1alpha1.QuotaDescriptorRequestsHardMinusProposedSource: requestsHardMinusProposed,
-		collectorcontrollerv1alpha1.QuotaDescriptorLimitsHardMinusProposedSource:   limitsHardMinusProposed,
+		collectorcontrollerv1alpha1.QuotaRequestsHardSource:                           requestsHard,
+		collectorcontrollerv1alpha1.QuotaLimitsHardSource:                             limitsHard,
+		collectorcontrollerv1alpha1.QuotaRequestsUsedSource:                           requestsUsed,
+		collectorcontrollerv1alpha1.QuotaLimitsUsedSource:                             limitsUsed,
+		collectorcontrollerv1alpha1.QuotaRequestsHardMinusUsed:                        requestsHardMinusUsed,
+		collectorcontrollerv1alpha1.QuotaLimitsHardMinusUsed:                          limitsHardMinusUsed,
+		collectorcontrollerv1alpha1.QuotaItemsSource:                                  items,
+		collectorcontrollerv1alpha1.PVCQuotaRequestsHardSource:                        pvcHard,
+		collectorcontrollerv1alpha1.PVCQuotaRequestsUsedSource:                        pvcUsed,
+		collectorcontrollerv1alpha1.QuotaDescriptorLimitsProposedSource:               proposedLimitsQuota,
+		collectorcontrollerv1alpha1.QuotaDescriptorRequestsProposedSource:             proposedRequestQuota,
+		collectorcontrollerv1alpha1.QuotaDescriptorRequestsHardMinusProposedSource:    requestsHardMinusProposed,
+		collectorcontrollerv1alpha1.QuotaDescriptorLimitsHardMinusProposedSource:      limitsHardMinusProposed,
+		collectorcontrollerv1alpha1.QuotaDescriptorRequestsMaxObservedMinusHardSource: maxObservedQuotaRequestsMinusHard,
+		collectorcontrollerv1alpha1.QuotaDescriptorLimitsMaxObservedMinusHardSource:   maxObservedQuotaLimitsMinusHard,
 	}
 }
 
@@ -401,6 +421,26 @@ func getAllocatableMinusRequests(allocatable, requests corev1.ResourceList) core
 		"cpu":    cpu,
 		"memory": memory,
 	}
+}
+
+func getMaxObservedQuota(rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor) (corev1.ResourceList, error) {
+	if rqd.ObjectMeta.Annotations == nil {
+		return nil, nil
+	}
+
+	serializedMaxQ, ok := rqd.ObjectMeta.Annotations[quotamanagementv1alpha1.MaxObservedQuotaAnnotationKey]
+	if !ok {
+		return nil, nil
+	}
+
+	maxObservedQuota := corev1.ResourceList{}
+
+	err := yaml.UnmarshalStrict([]byte(serializedMaxQ), &maxObservedQuota)
+	if err != nil {
+		return nil, err
+	}
+
+	return maxObservedQuota, nil
 }
 
 // GetValuesForNode returns the metric values for a Node.  pods is the Pods scheduled to this Node.

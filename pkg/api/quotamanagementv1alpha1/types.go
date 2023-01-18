@@ -20,6 +20,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	// MaxObservedQuotaAnnotationKey is the key for an alpha field that stores
+	// the max observed quotas associated with a ResourceQuotaDescriptor. This annotation's value will be a serialized ResourceList.
+	MaxObservedQuotaAnnotationKey = "usagemetricscollector.sigs.k8s.io/maxObservedQuota"
+)
+
 // +kubebuilder:object:root=true
 // +genclient
 // +kubebuilder:resource:scope=Namespace

@@ -18,9 +18,6 @@ limits_quota_hard_minus_used:
   source: limits_quota_hard
 limits_quota_max_observed_minus_hard:
   level: namespace
-  resourceList:
-    cpu: "700"
-    memory: 2643044050Ki
   source: limits_quota_max_observed_minus_hard
 limits_quota_proposed:
   level: namespace
@@ -71,9 +68,6 @@ requests_quota_hard_minus_used:
   source: requests_quota_hard
 requests_quota_max_observed_minus_hard:
   level: namespace
-  resourceList:
-    cpu: "350"
-    memory: 1321522025Ki
   source: requests_quota_max_observed_minus_hard
 requests_quota_proposed:
   level: namespace
