@@ -20,12 +20,6 @@ resourceQuotaDescriptor:
   apiVersion: quotamanagement.usagemetricscollector.sigs.k8s.io/v1alpha1
   kind: ResourceQuotaDescriptor
   metadata:
-    annotations:
-      usagemetricscollector.sigs.k8s.io/maxObservedQuota: |
-        limits.cpu: "1200"
-        limits.memory: 2800Gi
-        requests.cpu: "600"
-        requests.memory: 1400Gi
   spec:
     allocationStrategy:
       allocationStrategyType: "Constant"
