@@ -23,7 +23,7 @@ RUN go mod download
 COPY . .
 RUN make build-docker
 
-FROM alpine:3.14
+FROM alpine:3.17
 EXPOSE 8080
 EXPOSE 8090
 RUN apk --no-cache add curl # install for debugging -- not required to run
