@@ -174,29 +174,6 @@ var now = func() time.Time {
 	return time.Now()
 }
 
-// func (r valueReader) GetValuesForClusterScopedAnnotatedCollection(
-// 	collection *metav1.PartialObjectMetadataList,
-// 	source collectorcontrollerv1alpha1.AnnotatedPriorityClassCollectionSource) map[string]value {
-
-// 	for ii := range list.Items {
-// 		obj := list.Items[ii]
-// 		for k, v := range obj.GetAnnotations() {
-// 			// test key name for prefix
-// 			if strings.HasPrefix(k, source.AnnotationPrefix) {
-// 				// priorityClass should be a label
-// 				priorityClass := k[len(source.AnnotationPrefix)+1:]
-// 				// resources should become a value
-// 				resources := corev1.ResourceList{}
-// 				err := yaml.UnmarshalStrict([]byte(v), &resources)
-// 				if err != nil {
-// 					return nil
-// 				}
-
-// 			}
-// 		}
-// 	}
-// }
-
 // GetValuesForQuota returns the ResourceLists from a namespace quota
 func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor) map[string]value {
 	requestsHard := value{
