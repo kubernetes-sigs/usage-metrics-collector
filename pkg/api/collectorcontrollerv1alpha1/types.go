@@ -763,7 +763,8 @@ var (
 	)
 	PodSources   = sets.NewString(PodItemsSource)
 	QuotaSources = sets.NewString(QuotaItemsSource, QuotaLimitsHardSource, QuotaLimitsUsedSource, QuotaRequestsHardSource, QuotaRequestsUsedSource,
-		PVCQuotaRequestsHardSource, PVCQuotaRequestsUsedSource, QuotaDescriptorLimitsProposedSource, QuotaDescriptorRequestsProposedSource, QuotaRequestsHardMinusUsed, QuotaLimitsHardMinusUsed, QuotaDescriptorRequestsHardMinusProposedSource, QuotaDescriptorLimitsHardMinusProposedSource)
+		PVCQuotaRequestsHardSource, PVCQuotaRequestsUsedSource, QuotaDescriptorLimitsProposedSource, QuotaDescriptorRequestsProposedSource, QuotaRequestsHardMinusUsed,
+		QuotaLimitsHardMinusUsed, QuotaDescriptorRequestsHardMinusProposedSource, QuotaDescriptorLimitsHardMinusProposedSource, QuotaDescriptorRequestsMaxObservedMinusHardSource, QuotaDescriptorLimitsMaxObservedMinusHardSource)
 	NodeSources      = sets.NewString(NodeItemsSource, NodeRequestsSource, NodeLimitsSource, NodeAllocatableSource, NodeCapacitySource, NodeUtilizationSource, NodeAllocatableMinusRequests)
 	PVCSources       = sets.NewString(PVCCapacitySource, PVCItemsSource, PVCLimitsSource, PVCRequestsSource)
 	PVSources        = sets.NewString(PVItemsSource, PVCapacitySource)
