@@ -18,6 +18,10 @@ Why not just use promql and recording rules?
   - Scrape utilization at 1s intervals as raw metrics
   - Perform aggregations on the 1s interval metrics (e.g. get the p95 1s utilization sample for all replicas of a workload)
 
+## Exposed Metrics
+
+A sample of the exposed metrics is available in [METRICS.md].
+
 ## Getting started
 
 ### Installing into a cluster
