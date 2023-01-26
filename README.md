@@ -20,7 +20,7 @@ Why not just use promql and recording rules?
 
 ## Exposed Metrics
 
-A sample of the exposed metrics is available in [METRICS.md].
+A sample of the exposed metrics is available in [METRICS.md](METRICS.md).
 
 ## Getting started
 
