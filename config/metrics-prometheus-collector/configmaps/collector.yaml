@@ -187,6 +187,7 @@ aggregations:
         app: true
         priority_class: true
     operation: "sum"
+    retentionName: workload
   # kube_usage_namespace_sum_utilization_cpu_cores{}
   # kube_usage_namespace_sum_utilization_memory_bytes{}
   - mask:
@@ -226,6 +227,7 @@ aggregations:
         app: true
         priority_class: true
     operation: "p95"
+    retentionName: container
 #
 # Workload Utilization Max Metrics
 #
@@ -250,6 +252,7 @@ aggregations:
         app: true
         priority_class: true
     operation: "max"
+    retentionName: container
 #
 # Workload Utilization Median Metrics
 #
@@ -278,6 +281,7 @@ aggregations:
         app: true
         priority_class: true
     operation: "median"
+    retentionName: container
 #
 # Workload Utilization Avg Metrics
 #
@@ -302,6 +306,7 @@ aggregations:
         app: true
         priority_class: true
     operation: "avg"
+    retentionName: container
 #
 # Workload Capacity Metrics
 #
@@ -319,7 +324,6 @@ aggregations:
   - mask:
       name: "workload"
       builtIn:
-        exported_container: true  # keep the individual container names within each pod, but not the pod names
         exported_namespace: true
         workload_name: true
         workload_kind: true
@@ -328,6 +332,7 @@ aggregations:
         app: true
         priority_class: true
     operation: "sum"
+    retentionName: workload
   # kube_usage_namespace_sum_requests_allocated_cpu_cores{}
   # kube_usage_namespace_sum_requests_allocated_memory_bytes{}
   # kube_usage_namespace_sum_limits_allocated_cpu_cores{}
@@ -389,3 +394,8 @@ aggregations:
         priority_class: true
         storage_class: true
     operation: "sum"
+# saveSamplesLocally:
+#   directoryPath: /metrics-prometheus-collector-samples
+#   timeFormat: "20060102/15:04:05"
+#   saveProto: false
+#   saveJSON: true

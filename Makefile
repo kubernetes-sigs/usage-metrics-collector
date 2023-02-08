@@ -1,14 +1,14 @@
 SHELL := /bin/bash
 
-export BINARIES         ?= $(shell go list ./cmd/... | grep -v integration | grep -v cmds | grep -v metrics-node-sampler/cmd | grep -v metrics-prometheus-collector/cmd)
+export BINARIES         ?= $(shell go list ./cmd/... | grep -v integration | grep -v cmds | grep -v metrics-node-sampler/cmd | grep -v metrics-prometheus-collector/cmd |  grep -v umc-archiver/cmd)
 export GO111MODULE      ?= on
-export GOPATH           ?= $(shell go env $GOPATH)
+export GOPATH           ?= $(shell go env GOPATH)
 export GOOS             ?= $(shell go env GOOS)
 export GOARCH           ?= $(shell go env GOARCH)
 export GIT_BRANCH       ?= $(shell git rev-parse --abbrev-ref HEAD)
 export GIT_COMMIT       ?= $(shell git rev-parse --short HEAD)
 export DATE             ?= $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
-export VERSION          ?= $(shell git tag)
+export VERSION          ?= $(shell git tag --sort=committerdate | tail -1)
 export VERSION_FLAGS    = -X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X main.date="$(DATE)"
 export LD_FLAGS         ?= -ldflags="$(VERSION_FLAGS) -w -s"
 
@@ -124,7 +124,7 @@ $(KUBEBUILDER_ASSETS):
 ## --------------------------------------
 .PHONY: docker
 docker:	## Build the docker image
-	docker build . --progress=plain -t usage-metrics-collector:v$(VERSION)
+	docker build . --progress=plain --platform=linux/amd64 -t usage-metrics-collector:v$(VERSION)
 
 .PHONY: tools
 tools: ## Install dev tools.

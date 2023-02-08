@@ -12,7 +12,7 @@ spec:
         ports:
         - { name: http, containerPort: 9090 }
         resources:
-          requests: { cpu: "500m", memory: 500M }
+          requests: { cpu: "100m", memory: 500M }
           limits: { cpu: "1", memory: 1Gi  }
         volumeMounts:
         - name: config-volume

@@ -10,12 +10,12 @@ spec:
     spec:
       containers:
       - name: metrics-prometheus-collector
-        image: usage-metrics-collector
+        image: metrics-prometheus-collector
         command: [ metrics-prometheus-collector ]
         args:
         - --collector-config-filepath=/config/collector.yaml
         - --log-level-filepath=/log-config/log.level
-        - --leader-election=true
+        - --leader-election=false
         envFrom: [ {configMapRef: { name: metrics-cluster-config } } ]
         env:
         - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
@@ -28,8 +28,8 @@ spec:
         - { name: log-config, mountPath: /log-config, readOnly: true }
         - { name: metrics-prometheus-collector-samples, mountPath: /metrics-prometheus-collector-samples, readOnly: false }
         resources:
-          requests: { cpu: "0.5", memory: 1Gi }
-          limits:   { cpu: "0.5", memory: 1Gi }
+          requests: { cpu: "0.1", memory: 1Gi }
+          limits:   { cpu: "0.1", memory: 1Gi }
         livenessProbe:
           failureThreshold: 3
           httpGet: { path: /v1/healthz, port: 8090 }
@@ -41,6 +41,23 @@ spec:
           httpGet: { path: /v1/is-leader, port: 8090 }
           initialDelaySeconds: 1
           periodSeconds: 1
+      # - name: umc-archiver
+      #   image: umc-archiver
+      #   command: [ umc-archiver ]
+      #   args:
+      #   - "--project=SET_PROJECT"
+      #   - "--bq-dataset=SET_DATASET"
+      #   - "--bq-table=SET_TABLE"
+      #   - "--frequency=30s"
+      #   - "--gcs-bucket=SET_BUCKET"
+      #   - "--gcs-folder=PATH/"
+      #   - "--gcs-keep-folder-parts=2,3"
+      #   - "/metrics-prometheus-collector-samples/*/*/*.json"
+      #   volumeMounts:
+      #   - { name: metrics-prometheus-collector-samples, mountPath: /metrics-prometheus-collector-samples, readOnly: false }
+      #   resources:
+      #     requests: { cpu: "0.05", memory: 1Gi }
+      #     limits:   { cpu: "0.05", memory: 1Gi }
       volumes:
       - name: metrics-prometheus-collector-samples  # location for saving samples locally
         emptyDir: {}
@@ -50,14 +67,11 @@ spec:
         configMap: { items: [ { key: prometheus-collector, path: log.level } ], name: metrics-log-config }
       - name: logs # controls the logging level -- doesn't require push to take affect
         emptyDir: {}
+      serviceAccountName: metrics-prometheus-collector
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values: [ metrics-prometheus-collector ]
-            topologyKey: kubernetes.io/hostname
-      serviceAccountName: metrics-prometheus-collector
+          - topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchExpressions: [ { key: app, operator: In, values: [ metrics-prometheus-collector ] } ]
       terminationGracePeriodSeconds: 1
