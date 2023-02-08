@@ -30,3 +30,4 @@ RUN apk --no-cache add curl # install for debugging -- not required to run
 COPY --from=build /workspace/bin/metrics-node-sampler /bin/metrics-node-sampler
 COPY --from=build /workspace/bin/metrics-prometheus-collector /bin/metrics-prometheus-collector
 COPY --from=build /workspace/bin/container-monitor /bin/container-monitor
+COPY --from=build /workspace/bin/umc-archiver /bin/umc-archiver

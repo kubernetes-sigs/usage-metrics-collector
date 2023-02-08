@@ -1,5 +1,6 @@
 pushAddress: "metrics-prometheus-collector:9090" # push metrics to this service
 pushFrequencyDuration: "1m" # push metrics to the collector every minute
+exitOnConfigChange: true
 buffer:
     pollsPerMinute: 60 # sample every second
     size: 300 # 5 minutes of samples
@@ -13,6 +14,9 @@ reader:
     memoryPaths: [ 'sys/fs/cgroup/memory' ]
     # collect metrics scoped to node cgroups
     nodeAggregationLevelGlobs: [ "",  "*", "system.slice" ]
+    #
+    ## Kind cluster values
+    #
     parents: # ignore pods metrics that don't have parent directories with these names
     - 'kubelet-kubepods.slice'
     - 'kubelet-kubepods-guaranteed.slice'
@@ -29,4 +33,18 @@ reader:
     podReplacements:
       "_": "-"
     podSuffix: [ '.slice' ]
-exitOnConfigChange: true
+    #
+    ## GKE cluster values (1.25)
+    #
+    # parents: # ignore pods metrics that don't have parent directories with these names
+    # - 'kubepods'
+    # - 'guaranteed'
+    # - 'besteffort'
+    # - 'burstable'
+    # containerPrefix: []
+    # containerReplacements: {}
+    # containerSuffix: []
+    # podPrefix: [ 'pod' ]
+    # podReplacements: {}
+    # podSuffix: []
+

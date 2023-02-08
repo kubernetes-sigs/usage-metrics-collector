@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: metrics-node-sampler
-        image: usage-metrics-collector
+        image: metrics-node-sampler
         command: [ metrics-node-sampler ]
         args:
         - --sampler-config-filepath=/config/sampler.yaml
@@ -24,7 +24,7 @@ spec:
         - { name: log-config, mountPath: /log-config, readOnly: true }
         resources:
           requests: { cpu: 100m, memory: 256Mi }
-          limits:   { cpu: 500m, memory: 256Mi }
+          limits:   { cpu: 1, memory: 256Mi }
         livenessProbe:
           failureThreshold: 3
           httpGet: { path: /v1/healthz, port: 8090 }

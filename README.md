@@ -24,11 +24,14 @@ A sample of the exposed metrics is available in [METRICS.md](METRICS.md).
 
 ## Getting started
 
+**Note**: No usage-metrics-collector container image is publicly hosted.  Folks will need to build and publish
+this own until this is resolved.
+
 ### Installing into a cluster
 
 #### Kind cluster
 
-Note only cgroups v1 are currently supported.
+**Note**: only cgroups v1 are currently supported.
 
 1. Create a kind cluster
   - `kind create cluster`
@@ -36,22 +39,25 @@ Note only cgroups v1 are currently supported.
   - `docker build . -t usage-metrics-collector:v0.0.0`
 3. Load the image into kind
   - `kind load docker-image usage-metrics-collector:v0.0.0`
-4. Install the config
+4. Make sure the `Kind cluster values` config portion is uncommented in [config/metrics-prometheus-collector/configmaps/sampler.yaml](config/metrics-node-sampler/configmaps/sampler.yaml)
+5. Install the config
   - `kustomize build config | kubectl apply -f -`
-5. Update your context to use the usage-metrics-collector namespace by default
+6. Update your context to use the usage-metrics-collector namespace by default
   - `kubectl config set-context --current --namespace=usage-metrics-collector`
 
-#### Remote cluster
+#### GKE cluster (cgroups v1: default on 1.25 or lower)
+
+**Note**: Only cgroups v1 is supported for utilization right now.  GKE clusters 1.26+ use cgroups v2 by default.
 
 1. Build the image
   - `docker build . -t my-org/usage-metrics-collector:v0.0.0`
 2. Push the image to a container repo
   - `docker push my-org/usage-metrics-collector:v0.0.0`
-3. Update the sampler config to reflect your cluster cgroup layout
-  - edit [config/metrics-node-sampler/configmaps/sampler.yaml](config/metrics-node-sampler/configmaps/sampler.yaml)
-4. Install the config
+4. Make sure the `GKE cluster values` config portion is uncommented in [config/metrics-prometheus-collector/configmaps/sampler.yaml](config/metrics-node-sampler/configmaps/sampler.yaml)
+  - Other `cluster values` should be commented
+5. Install the config
   - `kustomize build config | kubectl apply -f -`
-5. Update your context to use the usage-metrics-collector namespace by default
+6. Update your context to use the usage-metrics-collector namespace by default
   - `kubectl config set-context --current --namespace=usage-metrics-collector`
 
 ### Kicking the tires
@@ -83,6 +89,16 @@ Note only cgroups v1 are currently supported.
 1. Edit [config/metrics-prometheus-collector/configmaps/collector.yaml](config/metrics-prometheus-collector/configmaps/collector.yaml)
 2. Run `make run-local`
 3. View the updated metrics in grafana
+
+TODO: Write more on this
+
+### Using containerd instead of cgroup walking
+
+TODO: Write this
+
+### Configuring cgroup walking
+
+TODO: Write this
 
 ## Code of conduct
 
