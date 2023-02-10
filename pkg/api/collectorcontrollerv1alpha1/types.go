@@ -592,6 +592,19 @@ type LabelsMask struct {
 // BuiltIn configures built in metrics and labels.
 type BuiltIn struct {
 	UseQuotaNameForPriorityClass bool `json:"useQuotaNameForPriorityClass,omitempty" yaml:"useQuotaNameForPriorityClass,omitempty"`
+
+	// EnableResourceQuotaDescriptor enables features that require the
+	// ResourceQuotaDescriptor (RQD) resource. If this flag is set, the
+	// collector will:
+	// - attempt to list and watch the RQD resource
+	// - expose metrics that rely on RQD:
+	//   - *_hard_minus_proposed_*
+	//   - *_max_observed_*
+	// - expose the "issue" label on quota-type metrics
+	//
+	// If this flag is not set, the collector will not attempt to use the RQD
+	// resource and all associated features will be disabled.
+	EnableResourceQuotaDescriptor bool `json:"enableResourceQuotaDescriptor,omitempty" yaml:"enableResourceQuotaDescriptor,omitempty"`
 }
 
 // BuiltInLabelsMask masks labels that are built in so that metrics may be
