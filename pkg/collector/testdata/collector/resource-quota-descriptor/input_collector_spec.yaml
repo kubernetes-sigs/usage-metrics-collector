@@ -1,6 +1,7 @@
 prefix: "kube_usage"
 builtIn:
   useQuotaNameForPriorityClass: true
+  enableResourceQuotaDescriptor: true
 resources:
   "cpu": "cpu_cores"
   "memory": "memory_bytes"

@@ -1,0 +1,2 @@
+Build info version: dev, commit: none, date: unknown
+collector config specifies a source that requires rqd, but rqd is not enabled; aggregation[3].sources[0] unable to read collector config: exit status 1

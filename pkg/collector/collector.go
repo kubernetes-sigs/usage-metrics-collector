@@ -473,7 +473,7 @@ func (c *Collector) collectQuota(o *capacityObjects, ch chan<- prometheus.Metric
 		c.labler.SetLabelsForQuota(&l, q, o.rqdsByRQDKey[key], o.namespacesByName[q.Namespace])
 		sample := sb.NewSample(l) // For saving locally
 
-		values := c.reader.GetValuesForQuota(q, o.rqdsByRQDKey[key])
+		values := c.reader.GetValuesForQuota(q, o.rqdsByRQDKey[key], c.BuiltIn.EnableResourceQuotaDescriptor)
 
 		// find the sources + resource we care about and add them to the metrics
 		for src, v := range values {
@@ -1358,14 +1358,13 @@ func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*capacityO
 	var o capacityObjects
 	o.clusterScopedByName = map[string]*metav1.PartialObjectMetadataList{}
 
-	err := c.wait(map[string]func() error{
+	waitFor := map[string]func() error{
 		"list_pods":           func() error { return c.Client.List(context.Background(), &o.pods) },
 		"list_nodes":          func() error { return c.Client.List(context.Background(), &o.nodes) },
 		"list_namespaces":     func() error { return c.Client.List(context.Background(), &o.namespaces) },
 		"list_quotas":         func() error { return c.Client.List(context.Background(), &o.quotas) },
 		"list_pvcs":           func() error { return c.Client.List(context.Background(), &o.pvcs) },
 		"list_pvs":            func() error { return c.Client.List(context.Background(), &o.pvs) },
-		"list_rqds":           func() error { return c.Client.List(context.Background(), &o.rqds) },
 		"list_cluster_scoped": func() error { return c.listClusterScoped(&o) },
 		"list_sampler_pods": func() error { // fetch the list of sampler pods
 			return c.Client.List(
@@ -1374,7 +1373,13 @@ func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*capacityO
 				client.InNamespace(c.UtilizationServer.SamplerNamespaceName),
 			)
 		},
-	}, ch)
+	}
+
+	if c.MetricsPrometheusCollector.BuiltIn.EnableResourceQuotaDescriptor {
+		waitFor["list_rqds"] = func() error { return c.Client.List(context.Background(), &o.rqds) }
+	}
+
+	err := c.wait(waitFor, ch)
 	if err != nil {
 		return nil, err
 	}
