@@ -32,7 +32,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
-	"k8s.io/apimachinery/pkg/util/sets"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -241,49 +240,8 @@ func (ms *MetricsServer) ReadCollectorSpec() error {
 			return err
 		}
 	}
-	return ms.validateCollectorSpec()
-}
 
-func (ms *MetricsServer) validateCollectorSpec() error {
-	// validate extension labels
-	totalExtensionLabels := len(ms.Extensions.Pods)
-	totalExtensionLabels += len(ms.Extensions.Namespaces)
-	totalExtensionLabels += len(ms.Extensions.Nodes)
-	totalExtensionLabels += len(ms.Extensions.Quota)
-	totalExtensionLabels += len(ms.Extensions.PVCs)
-	totalExtensionLabels += len(ms.Extensions.PVs)
-	totalExtensionLabels += len(ms.Extensions.NodeTaints)
-
-	if s, m := totalExtensionLabels, collector.MaxExtensionLabels; s > m {
-		return fmt.Errorf("collector config specifies %v extension labels which exceed the max (%v)", s, m)
-	}
-
-	if ms.BuiltIn.EnableResourceQuotaDescriptor {
-		return nil
-	}
-
-	rqdSources := sets.NewString(
-		collectorcontrollerv1alpha1.QuotaDescriptorRequestsProposedSource,
-		collectorcontrollerv1alpha1.QuotaDescriptorRequestsHardMinusProposedSource,
-		collectorcontrollerv1alpha1.QuotaDescriptorRequestsMaxObservedMinusHardSource,
-		collectorcontrollerv1alpha1.QuotaDescriptorLimitsProposedSource,
-		collectorcontrollerv1alpha1.QuotaDescriptorLimitsHardMinusProposedSource,
-		collectorcontrollerv1alpha1.QuotaDescriptorLimitsMaxObservedMinusHardSource,
-	)
-
-	for ii, aggregation := range ms.Aggregations {
-		if aggregation.Sources.Type != collectorcontrollerv1alpha1.QuotaType {
-			continue
-		}
-
-		for jj, source := range aggregation.Sources.GetSources() {
-			if rqdSources.Has(source) {
-				return fmt.Errorf("collector config specifies a source that requires rqd, but rqd is not enabled; aggregation[%v].sources[%v]", ii, jj)
-			}
-		}
-	}
-
-	return nil
+	return collectorcontrollerv1alpha1.ValidateCollectorSpec(&ms.MetricsPrometheusCollector)
 }
 
 // Start starts the metrics server

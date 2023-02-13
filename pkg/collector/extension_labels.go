@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 )
 
-const MaxExtensionLabels = 100
+const MaxExtensionLabels = collectorcontrollerv1alpha1.MaxExtensionLabels
 
 // extensionLabelsKeys defines the label keys for a MetricLabels
 type extensionLabelsKeys struct {
