@@ -175,7 +175,7 @@ var now = func() time.Time {
 }
 
 // GetValuesForQuota returns the ResourceLists from a namespace quota
-func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor) map[string]value {
+func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor, enableRqd bool) map[string]value {
 	requestsHard := value{
 		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
 		Source: collectorcontrollerv1alpha1.QuotaRequestsHardSource,
@@ -220,6 +220,27 @@ func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotama
 	}
 	pvcUsed.ResourceList = getRequestsPVCQuota(quota.Status.Used)
 
+	items := value{
+		ResourceList: map[corev1.ResourceName]resource.Quantity{
+			collectorcontrollerv1alpha1.ItemsResource: *resource.NewQuantity(1, resource.DecimalSI),
+		},
+		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
+		Source: collectorcontrollerv1alpha1.QuotaItemsSource,
+	}
+
+	ret := map[string]value{
+		collectorcontrollerv1alpha1.QuotaRequestsHardSource:    requestsHard,
+		collectorcontrollerv1alpha1.QuotaLimitsHardSource:      limitsHard,
+		collectorcontrollerv1alpha1.QuotaRequestsUsedSource:    requestsUsed,
+		collectorcontrollerv1alpha1.QuotaLimitsUsedSource:      limitsUsed,
+		collectorcontrollerv1alpha1.QuotaRequestsHardMinusUsed: requestsHardMinusUsed,
+		collectorcontrollerv1alpha1.QuotaLimitsHardMinusUsed:   limitsHardMinusUsed,
+		collectorcontrollerv1alpha1.QuotaItemsSource:           items,
+		collectorcontrollerv1alpha1.PVCQuotaRequestsHardSource: pvcHard,
+		collectorcontrollerv1alpha1.PVCQuotaRequestsUsedSource: pvcUsed,
+	}
+
+	// RQD-related metrics
 	proposedLimitsQuota := value{
 		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
 		Source: collectorcontrollerv1alpha1.QuotaDescriptorLimitsProposedSource,
@@ -240,21 +261,6 @@ func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotama
 		Source: collectorcontrollerv1alpha1.QuotaDescriptorLimitsMaxObservedMinusHardSource,
 	}
 
-	if rqd != nil {
-		proposedLimitsQuota.ResourceList =
-			getProposedQuota(rqd.Status.ProposedQuota, collectorcontrollerv1alpha1.LimitsResourcePrefix)
-
-		proposedRequestQuota.ResourceList =
-			getProposedQuota(rqd.Status.ProposedQuota, collectorcontrollerv1alpha1.RequestsResourcePrefix)
-
-		maxObservedQuota, err := getMaxObservedQuota(rqd)
-		if err == nil && maxObservedQuota != nil {
-			maxObservedRequestsQuota, maxObservedLimitsQuota := splitRequestsLimitsQuota(maxObservedQuota)
-			maxObservedQuotaRequestsMinusHard.ResourceList = subLists(maxObservedRequestsQuota, requestsHard.ResourceList)
-			maxObservedQuotaLimitsMinusHard.ResourceList = subLists(maxObservedLimitsQuota, limitsHard.ResourceList)
-		}
-	}
-
 	requestsHardMinusProposed := value{
 		Level:        collectorcontrollerv1alpha1.NamespaceLevel,
 		Source:       collectorcontrollerv1alpha1.QuotaDescriptorLimitsHardMinusProposedSource,
@@ -267,31 +273,34 @@ func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotama
 		ResourceList: subLists(limitsHard.ResourceList, proposedLimitsQuota.ResourceList),
 	}
 
-	items := value{
-		ResourceList: map[corev1.ResourceName]resource.Quantity{
-			collectorcontrollerv1alpha1.ItemsResource: *resource.NewQuantity(1, resource.DecimalSI),
-		},
-		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
-		Source: collectorcontrollerv1alpha1.QuotaItemsSource,
+	if enableRqd {
+		if rqd != nil {
+			proposedLimitsQuota.ResourceList =
+				getProposedQuota(rqd.Status.ProposedQuota, collectorcontrollerv1alpha1.LimitsResourcePrefix)
+
+			proposedRequestQuota.ResourceList =
+				getProposedQuota(rqd.Status.ProposedQuota, collectorcontrollerv1alpha1.RequestsResourcePrefix)
+
+			maxObservedQuota, err := getMaxObservedQuota(rqd)
+			if err == nil && maxObservedQuota != nil {
+				maxObservedRequestsQuota, maxObservedLimitsQuota := splitRequestsLimitsQuota(maxObservedQuota)
+				maxObservedQuotaRequestsMinusHard.ResourceList = subLists(maxObservedRequestsQuota, requestsHard.ResourceList)
+				maxObservedQuotaLimitsMinusHard.ResourceList = subLists(maxObservedLimitsQuota, limitsHard.ResourceList)
+			}
+		}
+
+		requestsHardMinusProposed.ResourceList = subLists(requestsHard.ResourceList, proposedRequestQuota.ResourceList)
+		limitsHardMinusProposed.ResourceList = subLists(limitsHard.ResourceList, proposedLimitsQuota.ResourceList)
+
+		ret[collectorcontrollerv1alpha1.QuotaDescriptorLimitsProposedSource] = proposedLimitsQuota
+		ret[collectorcontrollerv1alpha1.QuotaDescriptorRequestsProposedSource] = proposedRequestQuota
+		ret[collectorcontrollerv1alpha1.QuotaDescriptorRequestsHardMinusProposedSource] = requestsHardMinusProposed
+		ret[collectorcontrollerv1alpha1.QuotaDescriptorLimitsHardMinusProposedSource] = limitsHardMinusProposed
+		ret[collectorcontrollerv1alpha1.QuotaDescriptorRequestsMaxObservedMinusHardSource] = maxObservedQuotaRequestsMinusHard
+		ret[collectorcontrollerv1alpha1.QuotaDescriptorLimitsMaxObservedMinusHardSource] = maxObservedQuotaLimitsMinusHard
 	}
 
-	return map[string]value{
-		collectorcontrollerv1alpha1.QuotaRequestsHardSource:                           requestsHard,
-		collectorcontrollerv1alpha1.QuotaLimitsHardSource:                             limitsHard,
-		collectorcontrollerv1alpha1.QuotaRequestsUsedSource:                           requestsUsed,
-		collectorcontrollerv1alpha1.QuotaLimitsUsedSource:                             limitsUsed,
-		collectorcontrollerv1alpha1.QuotaRequestsHardMinusUsed:                        requestsHardMinusUsed,
-		collectorcontrollerv1alpha1.QuotaLimitsHardMinusUsed:                          limitsHardMinusUsed,
-		collectorcontrollerv1alpha1.QuotaItemsSource:                                  items,
-		collectorcontrollerv1alpha1.PVCQuotaRequestsHardSource:                        pvcHard,
-		collectorcontrollerv1alpha1.PVCQuotaRequestsUsedSource:                        pvcUsed,
-		collectorcontrollerv1alpha1.QuotaDescriptorLimitsProposedSource:               proposedLimitsQuota,
-		collectorcontrollerv1alpha1.QuotaDescriptorRequestsProposedSource:             proposedRequestQuota,
-		collectorcontrollerv1alpha1.QuotaDescriptorRequestsHardMinusProposedSource:    requestsHardMinusProposed,
-		collectorcontrollerv1alpha1.QuotaDescriptorLimitsHardMinusProposedSource:      limitsHardMinusProposed,
-		collectorcontrollerv1alpha1.QuotaDescriptorRequestsMaxObservedMinusHardSource: maxObservedQuotaRequestsMinusHard,
-		collectorcontrollerv1alpha1.QuotaDescriptorLimitsMaxObservedMinusHardSource:   maxObservedQuotaLimitsMinusHard,
-	}
+	return ret
 }
 
 // splitRequestsLimitsQuota normalizes the input ResourceList keys for requests and limits

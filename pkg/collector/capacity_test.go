@@ -449,7 +449,7 @@ func TestValues(t *testing.T) {
 		case strings.Contains(tc.ExpectedFilepath, "node"):
 			values = instance.GetValuesForNode(&inputs.Node, inputs.Pods)
 		case strings.Contains(tc.ExpectedFilepath, "quota"):
-			values = instance.GetValuesForQuota(&inputs.Quota, &inputs.ResourceQuotaDescriptor)
+			values = instance.GetValuesForQuota(&inputs.Quota, &inputs.ResourceQuotaDescriptor, true)
 		}
 
 		result, err := sigsyaml.Marshal(values)

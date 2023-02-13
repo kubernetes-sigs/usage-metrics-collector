@@ -1,7 +1,6 @@
 prefix: "kube_usage"
 builtIn:
   useQuotaNameForPriorityClass: true
-  enableResourceQuotaDescriptor: true
 extensions:
   podLabels:
   # this annotation should be kept when we mask the objects
@@ -14,8 +13,6 @@ extensions:
   namespaceLabels:
   - name: test_3
     annotation: test-3 # should be dropped
-  - name: test_4
-    annotation: test-4
 resources:
   "cpu": "cpu_cores"
   "memory": "memory_bytes"
