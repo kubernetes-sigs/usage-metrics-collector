@@ -15,6 +15,7 @@
 package collectorcontrollerv1alpha1
 
 import (
+	"fmt"
 	"os"
 
 	corev1 "k8s.io/api/core/v1"
@@ -829,4 +830,48 @@ type SideCarMetric struct {
 type SideCarMetricValue struct {
 	MetricLabels []string `json:"labels" yaml:"labels"`
 	Value        float64  `json:"value" yaml:"value"`
+}
+
+const MaxExtensionLabels = 100
+
+func ValidateCollectorSpec(spec *MetricsPrometheusCollector) error {
+	// validate extension labels
+	totalExtensionLabels := len(spec.Extensions.Pods)
+	totalExtensionLabels += len(spec.Extensions.Namespaces)
+	totalExtensionLabels += len(spec.Extensions.Nodes)
+	totalExtensionLabels += len(spec.Extensions.Quota)
+	totalExtensionLabels += len(spec.Extensions.PVCs)
+	totalExtensionLabels += len(spec.Extensions.PVs)
+	totalExtensionLabels += len(spec.Extensions.NodeTaints)
+
+	if s, m := totalExtensionLabels, MaxExtensionLabels; s > m {
+		return fmt.Errorf("collector config specifies %v extension labels which exceed the max (%v)", s, m)
+	}
+
+	if spec.BuiltIn.EnableResourceQuotaDescriptor {
+		return nil
+	}
+
+	rqdSources := sets.NewString(
+		QuotaDescriptorRequestsProposedSource,
+		QuotaDescriptorRequestsHardMinusProposedSource,
+		QuotaDescriptorRequestsMaxObservedMinusHardSource,
+		QuotaDescriptorLimitsProposedSource,
+		QuotaDescriptorLimitsHardMinusProposedSource,
+		QuotaDescriptorLimitsMaxObservedMinusHardSource,
+	)
+
+	for ii, aggregation := range spec.Aggregations {
+		if aggregation.Sources.Type != QuotaType {
+			continue
+		}
+
+		for jj, source := range aggregation.Sources.GetSources() {
+			if rqdSources.Has(source) {
+				return fmt.Errorf("collector config specifies a source that requires rqd, but rqd is not enabled; aggregation[%v].sources[%v]", ii, jj)
+			}
+		}
+	}
+
+	return nil
 }
