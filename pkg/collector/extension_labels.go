@@ -1972,9 +1972,6 @@ func (m extensionLabelsMask) Mask(l extensionLabelsValues) extensionLabelsValues
 	if !m.Label99 {
 		l.Label99 = ""
 	}
-	if !m.Label20 {
-		l.Label20 = ""
-	}
 	return l
 }
 
@@ -2040,7 +2037,6 @@ func (mask extensionLabelsMask) GetLabelNames() []string {
 	if mask.Label19 {
 		result = append(result, string(mask.keys.Label19))
 	}
-
 	if mask.Label20 {
 		result = append(result, string(mask.keys.Label20))
 	}
