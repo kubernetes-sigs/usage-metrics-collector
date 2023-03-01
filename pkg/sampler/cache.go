@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/containerd/containerd"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 )
@@ -65,7 +66,13 @@ func (s *sampleCache) Start(ctx context.Context) error {
 			log.Info("stopping cgroup sampler")
 			return nil
 		case <-ticker.C:
-			_ = s.fetchSample()
+			// retry fetching the sample in case of a failure
+			// if fetch keeps failing return error for graceful shutdown
+			if err := retry.OnError(retry.DefaultRetry, func(err error) bool { return true }, func() error {
+				return s.fetchSample()
+			}); err != nil {
+				return err
+			}
 		}
 	}
 }
