@@ -48,6 +48,8 @@ type sampleInstant struct {
 	CPUCoresNanoSec            uint64
 	CPUThrottledUSec           uint64
 	CPUPercentPeriodsThrottled float64
+	CPUPeriodsSec              uint64
+	CPUThrottledPeriodsSec     uint64
 
 	// MemoryHighEvents uint64
 	// MemoryLowEvents  uint64

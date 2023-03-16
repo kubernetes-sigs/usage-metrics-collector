@@ -27,3 +27,6 @@ responses:
       podUID: 12345
       CPUCoresNanoSec: [1000000000, 2000000000, 3000000000, 4000000000]
       MemoryBytes: [12000000, 18000000, 22000000, 26000000]
+      OOMKillCount: [0, 1, 1, 1]
+      CPUPeriodsSec: [100, 150, 200, 100]
+      CPUThrottledPeriodsSec: [0, 2, 1, 2]

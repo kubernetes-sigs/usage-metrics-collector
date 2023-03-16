@@ -43,8 +43,10 @@ message ContainerMetrics {
     repeated int64 oomKillCount=6;
     repeated int64 cpuThrottledNanoSec=7;
     repeated float cpuPercentPeriodsThrottled=8;
+    repeated int64 cpuPeriodsSec=9;
+    repeated int64 cpuThrottledPeriodsSec=10;
 
-    string nodeName=9;
+    string nodeName=11;
 }
 
 message NodeMetrics {
