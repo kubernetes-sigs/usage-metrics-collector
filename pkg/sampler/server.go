@@ -350,6 +350,8 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			c.MemoryBytes = append(c.MemoryBytes, int64(s.MemoryBytes))
 			c.OomCount = append(c.OomCount, int64(s.CumulativeMemoryOOM))
 			c.OomKillCount = append(c.OomKillCount, int64(s.CumulativeMemoryOOMKill))
+			c.CpuPeriodsSec = append(c.CpuPeriodsSec, int64(s.CPUPeriodsSec))
+			c.CpuThrottledPeriodsSec = append(c.CpuThrottledPeriodsSec, int64(s.CPUThrottledPeriodsSec))
 		}
 		if s.SortResults {
 			// sort the values so the results are stable
@@ -359,6 +361,8 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			sort.Sort(Int64Slice(c.OomCount))
 			sort.Sort(Int64Slice(c.OomKillCount))
 			sort.Sort(Float32Slice(c.CpuPercentPeriodsThrottled))
+			sort.Sort(Int64Slice(c.CpuPeriodsSec))
+			sort.Sort(Int64Slice(c.CpuThrottledPeriodsSec))
 		}
 		result.Containers = append(result.Containers, c)
 	}

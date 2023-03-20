@@ -43,6 +43,9 @@ type valueReader struct{}
 // - limits_allocated
 // - utilization
 // - requests_allocated_minus_utilization
+// - nr_periods
+// - nr_throttled
+// - oom_kill
 func (r valueReader) GetValuesForContainer(
 	container *corev1.Container, pod *corev1.Pod, usage *api.ContainerMetrics) map[string]value {
 	values := map[string]value{}
@@ -139,7 +142,47 @@ func (r valueReader) GetValuesForContainer(
 		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList["memory"] = requestsMinusUtilization
 	}
 
+	if len(usage.CpuPeriodsSec) == 0 || len(usage.CpuThrottledPeriodsSec) == 0 || len(usage.OomKillCount) == 0 {
+		return values
+	}
+
+	// get nr_period values
+	values[collectorcontrollerv1alpha1.NRPeriodsSource] = createValue(pod, usage.CpuPeriodsSec, collectorcontrollerv1alpha1.NRPeriodsSource, "periods")
+	// get nr_period values
+	values[collectorcontrollerv1alpha1.NRThrottledSource] = createValue(pod, usage.CpuThrottledPeriodsSec, collectorcontrollerv1alpha1.NRThrottledSource, "periods")
+	// get oom kill counter values
+	values[collectorcontrollerv1alpha1.OOMKillCountSource] = createValue(pod, usage.OomKillCount, collectorcontrollerv1alpha1.OOMKillCountSource, "items")
+
 	return values
+}
+
+// createValue returns value for a container given the source usage
+func createValue(pod *corev1.Pod, usage []int64, source, resName string) value {
+	val := value{
+		MultiResourceList: map[corev1.ResourceName][]resource.Quantity{},
+		Level:             collectorcontrollerv1alpha1.ContainerLevel,
+		Source:            source,
+	}
+
+	var qty []resource.Quantity
+	last := len(usage)
+	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+		// for completed pods, assume the final 0 utilization values are because the container had
+		// terminated and strip them from the results
+		for last > 0 {
+			if usage[last-1] != 0 {
+				break
+			}
+			last--
+		}
+	}
+	for i := 0; i < last; i++ {
+		qty = append(qty, *resource.NewQuantity(usage[i], resource.DecimalSI))
+	}
+	if len(qty) > 0 {
+		val.MultiResourceList[corev1.ResourceName(resName)] = qty
+	}
+	return val
 }
 
 func (r valueReader) GetValuesForPod(pod *corev1.Pod) map[string]value {

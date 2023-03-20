@@ -5,6 +5,33 @@ limits_allocated:
     extensionResource: "100"
     memory: 20M
   source: limits_allocated
+nr_periods:
+  level: container
+  multiResourceList:
+    periods:
+    - "100"
+    - "150"
+    - "200"
+    - "100"
+  source: nr_periods
+nr_throttled:
+  level: container
+  multiResourceList:
+    periods:
+    - "0"
+    - "2"
+    - "1"
+    - "2"
+  source: nr_throttled
+oom_kill:
+  level: container
+  multiResourceList:
+    items:
+    - "0"
+    - "1"
+    - "1"
+    - "1"
+  source: oom_kill
 requests_allocated:
   level: container
   resourceList:

@@ -1,5 +1,3 @@
-# deployment-1: [1 1 1 2 2 2 2  2 2 3 3 3 3 4 4 4]
-# deployment-2: [1 1 1 1 1.5 2 2 2 2 2 3 3 3 4 4 5]
 responses:
   test-node-1:
     containers:
@@ -37,6 +35,7 @@ responses:
       containerID: app
       cpuCoresNanoSec: [1000000000, 2000000000, 3000000000, 4000000000]
       memoryBytes: [12000000, 18000000, 22000000, 26000000]
+      oomKillCount: [0, 0, 0, 0]
       cpuPeriodsSec: [100, 150, 200, 100]
       cpuThrottledPeriodsSec: [0, 2, 1, 2]
     - podUID: test-pod-2-deployment-1

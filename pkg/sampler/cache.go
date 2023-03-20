@@ -307,8 +307,12 @@ func (s *sampleCache) metricToSample(
 	sec := getSeconds(last, sample)
 	sample.HasCPUData = true
 	sample.CPUCoresNanoSec = normalizeSeconds(last.CumulativeCPUUsec, sample.CumulativeCPUUsec, sec)
-
 	sample.CPUThrottledUSec = normalizeSeconds(last.CumulativeCPUThrottlingUsec, sample.CumulativeCPUThrottlingUsec, sec)
+
+	// normalize total cpu scheduling period and cpu scheduling throttle period
+	sample.CPUPeriodsSec = normalizeSeconds(last.CumulativeCPUPeriods, sample.CumulativeCPUPeriods, sec)
+	sample.CPUThrottledPeriodsSec = normalizeSeconds(last.CPUThrottledPeriodsSec, sample.CPUThrottledPeriodsSec, sec)
+
 	deltaPeriods := float64(sample.CumulativeCPUPeriods) - float64(last.CumulativeCPUPeriods)
 	if deltaPeriods != 0 {
 		// Avoid posting a NaN if no scheduling periods have elapsed

@@ -360,6 +360,17 @@ const (
 	LimitsResourcePrefix = "limits"
 	// RequestsResourceName is the prefix for requests resource name
 	RequestsResourcePrefix = "requests"
+
+	// NRPeriodsSource is the source for nr_periods per sec
+	// nr_periods is number of periods that any thread in the cgroup was runnable
+	NRPeriodsSource = "nr_periods"
+
+	// NRThrottledSource is the source for nr_throttled per sec
+	// throttled_time is the total time individual threads within the cgroup were throttled
+	NRThrottledSource = "nr_throttled"
+
+	// OOMKillCountSource is the source for OOM Kill counter
+	OOMKillCountSource = "oom_kill"
 )
 
 var (
@@ -774,6 +785,7 @@ const (
 var (
 	ContainerSources = sets.NewString(
 		ContainerLimitsAllocatedSource, ContainerRequestsAllocatedSource, ContainerUtilizationSource, ContainerRequestsAllocatedMinusUtilizationSource,
+		NRPeriodsSource, NRThrottledSource, OOMKillCountSource,
 	)
 	PodSources   = sets.NewString(PodItemsSource)
 	QuotaSources = sets.NewString(QuotaItemsSource, QuotaLimitsHardSource, QuotaLimitsUsedSource, QuotaRequestsHardSource, QuotaRequestsUsedSource,
