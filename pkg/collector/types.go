@@ -15,6 +15,8 @@
 package collector
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/pointer"
@@ -134,17 +136,17 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 
 	for i, a := range c.Aggregations {
 		for _, s := range a.Sources.Container {
-			if !collectorcontrollerv1alpha1.ContainerSources.Has(s) {
+			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.ContainerSources.Has(s) {
 				return errors.Errorf("invalid container source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.Pod {
-			if !collectorcontrollerv1alpha1.PodSources.Has(s) {
+			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.PodSources.Has(s) {
 				return errors.Errorf("invalid pod source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.Node {
-			if !collectorcontrollerv1alpha1.NodeSources.Has(s) {
+			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.NodeSources.Has(s) {
 				return errors.Errorf("invalid node source '%s'", s)
 			}
 		}
@@ -165,22 +167,22 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 			}
 		}
 		for _, s := range a.Sources.Quota {
-			if !collectorcontrollerv1alpha1.QuotaSources.Has(s) {
+			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.QuotaSources.Has(s) {
 				return errors.Errorf("invalid quota source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.PV {
-			if !collectorcontrollerv1alpha1.PVSources.Has(s) {
+			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.PVSources.Has(s) {
 				return errors.Errorf("invalid pv source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.PVC {
-			if !collectorcontrollerv1alpha1.PVCSources.Has(s) {
+			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.PVCSources.Has(s) {
 				return errors.Errorf("invalid pvc source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.Namespace {
-			if !collectorcontrollerv1alpha1.NamespaceSources.Has(s) {
+			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.NamespaceSources.Has(s) {
 				return errors.Errorf("invalid namespace source '%s'", s)
 			}
 		}
