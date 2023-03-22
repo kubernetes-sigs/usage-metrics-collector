@@ -86,6 +86,29 @@ func TestCollector(t *testing.T) {
 			ignoreMetricNames = strings.Split(tc.Inputs["input_ignore_metric_names.txt"], "\n")
 		}
 
+		// Read env.yaml, set environment variables accordingly, and revert changes later.
+		if _, ok := tc.Inputs["input_env.yaml"]; ok {
+			var env struct {
+				Env []struct {
+					Name  string `yaml:"name"`
+					Value string `yaml:"value"`
+				} `yaml:"env"`
+			}
+			tc.UnmarshalInputsStrict(map[string]interface{}{"input_env.yaml": &env})
+
+			oldEnv := make(map[string]string)
+			for _, e := range env.Env {
+				oldEnv[e.Name] = os.Getenv(e.Name)
+				os.Setenv(e.Name, e.Value)
+			}
+
+			defer func() {
+				for _, e := range env.Env {
+					os.Setenv(e.Name, oldEnv[e.Name])
+				}
+			}()
+		}
+
 		// This single metric exists as a package var due to it existing outside the normal collection flow.
 		clusterScopedListResultMetric.Reset()
 
