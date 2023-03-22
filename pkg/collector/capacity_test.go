@@ -35,6 +35,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/sets"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -59,6 +60,61 @@ func init() {
 		_ = t.UnmarshalText([]byte("2022-03-23T01:00:30Z"))
 		return t
 	}
+}
+
+// collectPhysicalCores is used to test collector function overriding, it publishes a new
+// metric for physical_cpu_cores corresponding to half of virtual cpu cores.
+func collectPhysicalCores(c *Collector, o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
+	name := metricName{
+		Source:        "ext_physical",
+		ResourceAlias: "cpu_cores",
+		Resource:      "cpu",
+		SourceType:    "quota",
+	}
+
+	metrics := map[metricName]*Metric{}
+
+	for i := range o.Quotas.Items {
+		q := &o.Quotas.Items[i]
+
+		// get the labels for this quota
+		key := resourceQuotaDescriptorKey{
+			name:      q.Name,
+			namespace: q.Namespace,
+		}
+		l := labelsValues{}
+		c.labler.SetLabelsForQuota(&l, q, o.RQDsByRQDKey[key], o.NamespacesByName[q.Namespace])
+		if l.BuiltIn.PriorityClass == "" {
+			continue
+		}
+
+		values := c.reader.GetValuesForQuota(q, o.RQDsByRQDKey[key], c.BuiltIn.EnableResourceQuotaDescriptor)
+		requests, ok := values[collectorcontrollerv1alpha1.QuotaRequestsHardSource]
+		if !ok {
+			continue
+		}
+
+		cpu := requests.ResourceList.Cpu()
+		cpuValue, ok := cpu.AsInt64()
+		if !ok {
+			continue
+		}
+		cpu.Set(cpuValue / 2)
+
+		// initialize the metric
+		m, ok := metrics[name]
+		if !ok {
+			m = &Metric{Name: name, Values: map[labelsValues][]resource.Quantity{}}
+			metrics[name] = m
+		}
+
+		m.Values[l] = []resource.Quantity{*cpu}
+	}
+
+	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.QuotaType) {
+		c.aggregateAndCollect(a, metrics, ch, sCh)
+	}
+	return nil
 }
 
 // Update test data by running with `TESTUTIL_UPDATE_EXPECTED=true`
@@ -115,6 +171,17 @@ func TestCollector(t *testing.T) {
 		instance, err := NewCollector(context.Background(), c, &spec)
 		require.NoError(t, err)
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
+
+		if os.Getenv("TEST_COLLECTOR_FUNCS_OVERRIDE") == "true" {
+			fns := CollectorFuncs()
+			fns["collect_physical_cores"] = collectPhysicalCores
+			SetCollectorFuncs(fns)
+
+			defer func() {
+				delete(fns, "collect_physical_cores")
+				SetCollectorFuncs(fns)
+			}()
+		}
 
 		reg := prometheus.NewPedanticRegistry()
 		require.NoError(t, reg.Register(instance))
