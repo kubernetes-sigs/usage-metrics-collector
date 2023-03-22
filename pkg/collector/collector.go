@@ -297,6 +297,66 @@ func (c *Collector) getSideCarConfigs() ([]*collectorcontrollerv1alpha1.SideCarC
 	return results, nil
 }
 
+// CollectorFunc is the type of the metric collector functions accepted for collector overrides.
+type CollectorFunc func(c *Collector, o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error
+
+// CollectorFuncs returns a copy of the map holding all the collector functions.
+// This function is safe to be used concurrently.
+func CollectorFuncs() map[string]CollectorFunc {
+	collectorFuncs.RLock()
+	defer collectorFuncs.RUnlock()
+
+	m := make(map[string]CollectorFunc)
+	for k, v := range collectorFuncs.values {
+		m[k] = v
+	}
+	return m
+}
+
+// SetCollectorFuncs copies the given map and sets the current collector functions.
+// This function is safe to be used concurrently.
+func SetCollectorFuncs(fns map[string]CollectorFunc) {
+	collectorFuncs.Lock()
+	defer collectorFuncs.Unlock()
+
+	collectorFuncs.values = make(map[string]CollectorFunc)
+	for k, v := range fns {
+		collectorFuncs.values[k] = v
+	}
+}
+
+// collectorFuncs enables the modification of metric collection by adding new metrics or overriding existing ones.
+var collectorFuncs = struct {
+	sync.RWMutex
+	values map[string]CollectorFunc
+}{
+	values: map[string]CollectorFunc{
+		"collect_containers":     (*Collector).collectContainers,
+		"collect_quotas":         (*Collector).collectQuota,
+		"collect_nodes":          (*Collector).collectNodes,
+		"collect_pvs":            (*Collector).collectPVs,
+		"collect_pvcs":           (*Collector).collectPVCs,
+		"collect_namespace":      (*Collector).collectNamespaces,
+		"collect_cgroups":        (*Collector).collectCGroups,
+		"collect_cluster_scoped": (*Collector).collectClusterScoped,
+	},
+}
+
+// bindCollectorFuncs returns a map containing the collector functions in CollectorFuncs
+// bound to the parameters given to this method.
+func (c *Collector) bindCollectorFuncs(o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) map[string]func() error {
+	m := make(map[string]func() error)
+
+	fns := CollectorFuncs()
+	for name := range fns {
+		// This is necessary since `name` escapes this context via the lambda below.
+		fn := fns[name]
+		m[name] = func() error { return fn(c, o, ch, sCh) }
+	}
+
+	return m
+}
+
 // collect returns the current state of all metrics of the collector.
 func (c *Collector) collect(ch chan<- prometheus.Metric, sCh chan *collectorapi.SampleList) {
 	start := time.Now()
@@ -306,16 +366,7 @@ func (c *Collector) collect(ch chan<- prometheus.Metric, sCh chan *collectorapi.
 		return
 	}
 
-	err = c.wait(map[string]func() error{
-		"collect_containers":     func() error { return c.collectContainers(o, ch, sCh) },
-		"collect_quotas":         func() error { return c.collectQuota(o, ch, sCh) },
-		"collect_nodes":          func() error { return c.collectNodes(o, ch, sCh) },
-		"collect_pvs":            func() error { return c.collectPVs(o, ch, sCh) },
-		"collect_pvcs":           func() error { return c.collectPVCs(o, ch, sCh) },
-		"collect_namespace":      func() error { return c.collectNamespaces(o, ch, sCh) },
-		"collect_cgroups":        func() error { return c.collectCGroups(o, ch, sCh) },
-		"collect_cluster_scoped": func() error { return c.collectClusterScoped(o, ch, sCh) },
-	}, ch)
+	err = c.wait(c.bindCollectorFuncs(o, ch, sCh), ch)
 	if err != nil {
 		log.Error(err, "failed to collect container metrics")
 	}
@@ -343,21 +394,21 @@ func (c *Collector) collect(ch chan<- prometheus.Metric, sCh chan *collectorapi.
 		latencyDesc, prometheus.GaugeValue, time.Since(start).Seconds())
 }
 
-func (c *Collector) collectPVs(o *capacityObjects, ch chan<- prometheus.Metric, sCh chan *collectorapi.SampleList) error {
+func (c *Collector) collectPVs(o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
 	metrics := map[metricName]*Metric{}
-	for i := range o.pvs.Items {
-		pv := &o.pvs.Items[i]
+	for i := range o.PVs.Items {
+		pv := &o.PVs.Items[i]
 
 		// find the pvc if the volume has been claimed
 		var pvc *corev1.PersistentVolumeClaim
 		if ref := pv.Spec.ClaimRef; ref != nil {
-			pvc = o.pvcsByName[ref.Namespace+"/"+ref.Name]
+			pvc = o.PVCsByName[ref.Namespace+"/"+ref.Name]
 		}
 
 		// local volumes have a hostname -- try to lookup the node in this case
 		var node *corev1.Node
 		if nodeName, ok := pv.Annotations["kubernetes.io/hostname"]; ok {
-			node = o.nodesByName[nodeName]
+			node = o.NodesByName[nodeName]
 		}
 
 		l := labelsValues{}
@@ -394,29 +445,29 @@ func (c *Collector) collectPVs(o *capacityObjects, ch chan<- prometheus.Metric, 
 		c.aggregateAndCollect(a, metrics, ch, sCh)
 	}
 
-	c.UtilizationServer.Collect(ch, o.utilizationByNode) // metrics on the utilization data health
+	c.UtilizationServer.Collect(ch, o.UtilizationByNode) // metrics on the utilization data health
 
 	return nil
 }
 
-func (c *Collector) collectPVCs(o *capacityObjects, ch chan<- prometheus.Metric, sCh chan *collectorapi.SampleList) error {
+func (c *Collector) collectPVCs(o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
 	metrics := map[metricName]*Metric{}
 	// each PVC
-	for i := range o.pvcs.Items {
-		pvc := &o.pvcs.Items[i]
+	for i := range o.PVCs.Items {
+		pvc := &o.PVCs.Items[i]
 		l := labelsValues{}
-		n := o.namespacesByName[pvc.Namespace]
-		pv := o.pvsByName[pvc.Spec.VolumeName]
+		n := o.NamespacesByName[pvc.Namespace]
+		pv := o.PVsByName[pvc.Spec.VolumeName]
 
 		var p *corev1.Pod
-		if pods := o.podsByPVC[pvc.Namespace+"/"+pvc.Name]; len(pods) == 1 {
-			p = o.podsByPVC[pvc.Namespace+"/"+pvc.Name][0]
+		if pods := o.PodsByPVC[pvc.Namespace+"/"+pvc.Name]; len(pods) == 1 {
+			p = o.PodsByPVC[pvc.Namespace+"/"+pvc.Name][0]
 		}
 		wl := workload{}
 		var node *corev1.Node
 		if p != nil {
 			wl = getWorkloadForPod(c.Client, p)
-			node = o.nodesByName[p.Spec.NodeName]
+			node = o.NodesByName[p.Spec.NodeName]
 		}
 		c.labler.SetLabelsForPersistentVolumeClaim(&l, pvc, pv, n, p, wl, node)
 
@@ -456,13 +507,13 @@ func (c *Collector) collectPVCs(o *capacityObjects, ch chan<- prometheus.Metric,
 	return nil
 }
 
-func (c *Collector) collectQuota(o *capacityObjects, ch chan<- prometheus.Metric, sCh chan *collectorapi.SampleList) error {
+func (c *Collector) collectQuota(o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
 	sb := c.NewSampleListBuilder(collectorcontrollerv1alpha1.QuotaType) // For saving locally
 
 	metrics := map[metricName]*Metric{}
 
-	for i := range o.quotas.Items {
-		q := &o.quotas.Items[i]
+	for i := range o.Quotas.Items {
+		q := &o.Quotas.Items[i]
 
 		// get the labels for this quota
 		key := resourceQuotaDescriptorKey{
@@ -470,10 +521,10 @@ func (c *Collector) collectQuota(o *capacityObjects, ch chan<- prometheus.Metric
 			namespace: q.Namespace,
 		}
 		l := labelsValues{}
-		c.labler.SetLabelsForQuota(&l, q, o.rqdsByRQDKey[key], o.namespacesByName[q.Namespace])
+		c.labler.SetLabelsForQuota(&l, q, o.RQDsByRQDKey[key], o.NamespacesByName[q.Namespace])
 		sample := sb.NewSample(l) // For saving locally
 
-		values := c.reader.GetValuesForQuota(q, o.rqdsByRQDKey[key], c.BuiltIn.EnableResourceQuotaDescriptor)
+		values := c.reader.GetValuesForQuota(q, o.RQDsByRQDKey[key], c.BuiltIn.EnableResourceQuotaDescriptor)
 
 		// find the sources + resource we care about and add them to the metrics
 		for src, v := range values {
@@ -539,8 +590,8 @@ func (c *Collector) getCGroupMetricSource(cgroup string) string {
 	return c.CGroupMetrics.Sources[filepath.Dir("/"+cgroup)].Name
 }
 
-func (c *Collector) collectCGroups(o *capacityObjects, ch chan<- prometheus.Metric,
-	sCh chan *collectorapi.SampleList) error {
+func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metric,
+	sCh chan<- *collectorapi.SampleList) error {
 	sb := c.NewSampleListBuilder(collectorcontrollerv1alpha1.CGroupType) // Save locally
 
 	resultMetric := prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -548,18 +599,18 @@ func (c *Collector) collectCGroups(o *capacityObjects, ch chan<- prometheus.Metr
 		Help: "The number of containers missing usage information",
 	}, []string{"exported_node", "sampler_pod", "sampler_phase", "found", "reason"})
 
-	utilization := o.utilizationByNode
+	utilization := o.UtilizationByNode
 	metrics := map[metricName]*Metric{}
 
 	// get metrics from each node
-	for i := range o.nodes.Items {
-		n := &o.nodes.Items[i]
+	for i := range o.Nodes.Items {
+		n := &o.Nodes.Items[i]
 
 		l := labelsValues{}
 		c.labler.SetLabelsForNode(&l, n)
 
 		var samplerPodName, samplerPodPhase string
-		if p, ok := o.samplersByNode[n.Name]; ok {
+		if p, ok := o.SamplersByNode[n.Name]; ok {
 			samplerPodName = p.Name
 			samplerPodPhase = string(p.Status.Phase)
 		} else {
@@ -644,13 +695,13 @@ func (c *Collector) collectCGroups(o *capacityObjects, ch chan<- prometheus.Metr
 	return nil
 }
 
-func (c *Collector) collectNodes(o *capacityObjects, ch chan<- prometheus.Metric, sCh chan *collectorapi.SampleList) error {
+func (c *Collector) collectNodes(o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
 	sb := c.NewSampleListBuilder(collectorcontrollerv1alpha1.NodeType) // For saving locally
 
 	metrics := map[metricName]*Metric{}
 
-	for i := range o.nodes.Items {
-		n := &o.nodes.Items[i]
+	for i := range o.Nodes.Items {
+		n := &o.Nodes.Items[i]
 
 		// get the labels for this quota
 		l := labelsValues{}
@@ -658,7 +709,7 @@ func (c *Collector) collectNodes(o *capacityObjects, ch chan<- prometheus.Metric
 		sample := sb.NewSample(l) // For saving locally
 
 		// get the values for this quota
-		values := c.reader.GetValuesForNode(n, o.podsByNodeName[n.Name])
+		values := c.reader.GetValuesForNode(n, o.PodsByNodeName[n.Name])
 
 		// find the sources + resource we care about and add them to the metrics
 		for src, v := range values {
@@ -698,10 +749,10 @@ func (c *Collector) collectNodes(o *capacityObjects, ch chan<- prometheus.Metric
 	return nil
 }
 
-func (c *Collector) collectNamespaces(o *capacityObjects, ch chan<- prometheus.Metric, sCh chan *collectorapi.SampleList) error {
+func (c *Collector) collectNamespaces(o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
 	metrics := map[metricName]*Metric{}
-	for i := range o.namespaces.Items {
-		n := &o.namespaces.Items[i]
+	for i := range o.Namespaces.Items {
+		n := &o.Namespaces.Items[i]
 
 		// get the labels for this quota
 		l := labelsValues{}
@@ -777,16 +828,15 @@ func normalizeContainerID(id string) string {
 
 const maxWaitTimeForUtilization = time.Minute
 
-func (c *Collector) collectContainers(o *capacityObjects, ch chan<- prometheus.Metric,
+func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.Metric,
 	sCh chan<- *collectorapi.SampleList) error {
-
 	sb := c.NewSampleListBuilder(collectorcontrollerv1alpha1.ContainerType) // Save locally
 
 	start := time.Now()
 	running := time.Since(c.startTime)
 
 	log := log.WithValues("start", start.Local().Format("2006-01-02 15:04:05"))
-	utilization := c.UtilizationServer.GetContainerUsageSummary(o.utilizationByNode)
+	utilization := c.UtilizationServer.GetContainerUsageSummary(o.UtilizationByNode)
 
 	// metrics
 	containerMetrics := map[metricName]*Metric{}
@@ -808,15 +858,15 @@ func (c *Collector) collectContainers(o *capacityObjects, ch chan<- prometheus.M
 		Help: "The nodes that we are missing utilization data from.",
 	}, []string{"exported_node", "sampler_pod", "sampler_phase"})
 
-	for i := range o.pods.Items {
-		pod := &o.pods.Items[i]
+	for i := range o.Pods.Items {
+		pod := &o.Pods.Items[i]
 
 		// compute the metric labels for this pod
 		podLabels := labelsValues{}
 
 		wl := getWorkloadForPod(c.Client, pod)
-		namespace := o.namespacesByName[pod.Namespace]
-		node := o.nodesByName[pod.Spec.NodeName]
+		namespace := o.NamespacesByName[pod.Namespace]
+		node := o.NodesByName[pod.Spec.NodeName]
 		c.labler.SetLabelsForPod(&podLabels, pod, wl, node, namespace)
 
 		// collect pod values
@@ -851,7 +901,7 @@ func (c *Collector) collectContainers(o *capacityObjects, ch chan<- prometheus.M
 		containerNameToID, podUID := getContainerNameToID(pod)
 
 		var samplerPodName, samplerPodPhase string
-		if samplerPod, ok := o.samplersByNode[pod.Spec.NodeName]; ok {
+		if samplerPod, ok := o.SamplersByNode[pod.Spec.NodeName]; ok {
 			samplerPodName = samplerPod.Name
 			samplerPodPhase = string(samplerPod.Status.Phase)
 		}
@@ -894,7 +944,7 @@ func (c *Collector) collectContainers(o *capacityObjects, ch chan<- prometheus.M
 					log.Info("unable to find usage for container",
 						"reason", reason,
 						"node", pod.Spec.NodeName,
-						"sampler_pod", o.samplersByNode[pod.Spec.NodeName],
+						"sampler_pod", o.SamplersByNode[pod.Spec.NodeName],
 						"id", id,
 						"namespace", pod.Namespace,
 						"pod", pod.Name,
@@ -981,7 +1031,7 @@ func (c *Collector) collectContainers(o *capacityObjects, ch chan<- prometheus.M
 
 		log.V(1).Info("finished container collection",
 			"latency-seconds", time.Since(start).Seconds(),
-			"pod-count", len(o.pods.Items),
+			"pod-count", len(o.Pods.Items),
 			"container-count", allContainers.Len(),
 			"containers-missing-usage-count", len(containersWithoutUsage),
 			"usage-without-containers-count", len(usageWithoutContainers),
@@ -1005,13 +1055,13 @@ func (c *Collector) collectContainers(o *capacityObjects, ch chan<- prometheus.M
 		Name: "metrics_prometheus_collector_pods_collected",
 		Help: "The number of pods collected during the last collect",
 	})
-	podCountMetric.Set(float64(len(o.pods.Items)))
+	podCountMetric.Set(float64(len(o.Pods.Items)))
 	podCountMetric.Collect(ch)
 	return nil
 }
 
-func (c *Collector) nodeMissingReason(node *corev1.Node, o *capacityObjects) string {
-	if _, ok := o.utilizationByNode[node.Name]; ok {
+func (c *Collector) nodeMissingReason(node *corev1.Node, o *CapacityObjects) string {
+	if _, ok := o.UtilizationByNode[node.Name]; ok {
 		// make sure it is actually missing
 		return "found"
 	}
@@ -1025,7 +1075,7 @@ func (c *Collector) nodeMissingReason(node *corev1.Node, o *capacityObjects) str
 	}
 
 	// check if the sampler pod is healthy
-	p, ok := o.samplersByNode[node.Name]
+	p, ok := o.SamplersByNode[node.Name]
 	if !ok {
 		// no sampler pod for this node found -- unexpected
 		return "sampler-pod-missing"
@@ -1065,7 +1115,7 @@ func (c *Collector) nodeMissingReason(node *corev1.Node, o *capacityObjects) str
 // on (true if found)
 func (c *Collector) containerMissingReason(
 	pod *corev1.Pod, container *corev1.Container,
-	id sampler.ContainerKey, o *capacityObjects) (string, bool) {
+	id sampler.ContainerKey, o *CapacityObjects) (string, bool) {
 
 	// microvms aren't supported yet
 	if pod.Spec.RuntimeClassName != nil && *pod.Spec.RuntimeClassName == "microvm" {
@@ -1098,7 +1148,7 @@ func (c *Collector) containerMissingReason(
 		break
 	}
 
-	if _, ok := o.utilizationByNode[pod.Spec.NodeName]; !ok {
+	if _, ok := o.UtilizationByNode[pod.Spec.NodeName]; !ok {
 		// no metrics found for the node this container is on
 		return "no-metrics-for-node", false
 	}
@@ -1121,7 +1171,7 @@ var clusterScopedListResultMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 // listClusterScoped lists the configured cluster-scoped collections into the
 // given capacityObjects or returns an error.
-func (c *Collector) listClusterScoped(o *capacityObjects) error {
+func (c *Collector) listClusterScoped(o *CapacityObjects) error {
 	for ii := range c.ClusterScopedMetrics.AnnotatedCollectionSources {
 		source := c.ClusterScopedMetrics.AnnotatedCollectionSources[ii]
 
@@ -1141,14 +1191,14 @@ func (c *Collector) listClusterScoped(o *capacityObjects) error {
 		}
 
 		clusterScopedListResultMetric.WithLabelValues(source.Name, "").Add(1)
-		o.clusterScopedByName[source.Name] = list
+		o.ClusterScopedByName[source.Name] = list
 	}
 
 	return nil
 }
 
 // collectClusterScoped collects the configured cluster-scoped metrics.
-func (c *Collector) collectClusterScoped(o *capacityObjects, ch chan<- prometheus.Metric, sCh chan *collectorapi.SampleList) error {
+func (c *Collector) collectClusterScoped(o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
 	sb := c.NewSampleListBuilder(collectorcontrollerv1alpha1.ClusterScopedType) // Save locally
 
 	itemsMetric := prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -1167,7 +1217,7 @@ func (c *Collector) collectClusterScoped(o *capacityObjects, ch chan<- prometheu
 		source := c.ClusterScopedMetrics.AnnotatedCollectionSources[ii]
 		log := log.WithValues("source", source.Name)
 
-		list, ok := o.clusterScopedByName[source.Name]
+		list, ok := o.ClusterScopedByName[source.Name]
 		if !ok {
 			log.V(2).Info("list items", "items", 0)
 			itemsMetric.WithLabelValues(source.Name, "objects not found").Add(1)
@@ -1326,49 +1376,49 @@ type resourceQuotaDescriptorKey struct {
 	namespace string
 }
 
-// capacityObjects are the capacityObjects used for computing metrics
-type capacityObjects struct {
-	pods       corev1.PodList
-	nodes      corev1.NodeList
-	namespaces corev1.NamespaceList
-	quotas     corev1.ResourceQuotaList
-	rqds       quotamanagementv1alpha1.ResourceQuotaDescriptorList
-	pvcs       corev1.PersistentVolumeClaimList
-	pvs        corev1.PersistentVolumeList
-	samplers   corev1.PodList
+// CapacityObjects are the CapacityObjects used for computing metrics
+type CapacityObjects struct {
+	Pods       corev1.PodList
+	Nodes      corev1.NodeList
+	Namespaces corev1.NamespaceList
+	Quotas     corev1.ResourceQuotaList
+	RQDs       quotamanagementv1alpha1.ResourceQuotaDescriptorList
+	PVCs       corev1.PersistentVolumeClaimList
+	PVs        corev1.PersistentVolumeList
+	Samplers   corev1.PodList
 
-	namespacesByName map[string]*corev1.Namespace
-	podsByNodeName   map[string][]*corev1.Pod
-	podsByPVC        map[string][]*corev1.Pod
-	pvsByName        map[string]*corev1.PersistentVolume
-	pvcsByName       map[string]*corev1.PersistentVolumeClaim
-	nodesByName      map[string]*corev1.Node
-	rqdsByRQDKey     map[resourceQuotaDescriptorKey]*quotamanagementv1alpha1.ResourceQuotaDescriptor
-	samplersByNode   map[string]*corev1.Pod
+	NamespacesByName map[string]*corev1.Namespace
+	PodsByNodeName   map[string][]*corev1.Pod
+	PodsByPVC        map[string][]*corev1.Pod
+	PVsByName        map[string]*corev1.PersistentVolume
+	PVCsByName       map[string]*corev1.PersistentVolumeClaim
+	NodesByName      map[string]*corev1.Node
+	RQDsByRQDKey     map[resourceQuotaDescriptorKey]*quotamanagementv1alpha1.ResourceQuotaDescriptor
+	SamplersByNode   map[string]*corev1.Pod
 
-	clusterScopedByName map[string]*metav1.PartialObjectMetadataList
+	ClusterScopedByName map[string]*metav1.PartialObjectMetadataList
 
-	utilizationByNode map[string]*samplerapi.ListMetricsResponse
+	UtilizationByNode map[string]*samplerapi.ListMetricsResponse
 }
 
 // listCapacityObjects gets all the objects used for computing metrics
-func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*capacityObjects, error) {
+func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*CapacityObjects, error) {
 	// read the objects in parallel
 
-	var o capacityObjects
-	o.clusterScopedByName = map[string]*metav1.PartialObjectMetadataList{}
+	var o CapacityObjects
+	o.ClusterScopedByName = map[string]*metav1.PartialObjectMetadataList{}
 
 	waitFor := map[string]func() error{
-		"list_pods":           func() error { return c.Client.List(context.Background(), &o.pods) },
-		"list_nodes":          func() error { return c.Client.List(context.Background(), &o.nodes) },
-		"list_namespaces":     func() error { return c.Client.List(context.Background(), &o.namespaces) },
-		"list_quotas":         func() error { return c.Client.List(context.Background(), &o.quotas) },
-		"list_pvcs":           func() error { return c.Client.List(context.Background(), &o.pvcs) },
-		"list_pvs":            func() error { return c.Client.List(context.Background(), &o.pvs) },
+		"list_pods":           func() error { return c.Client.List(context.Background(), &o.Pods) },
+		"list_nodes":          func() error { return c.Client.List(context.Background(), &o.Nodes) },
+		"list_namespaces":     func() error { return c.Client.List(context.Background(), &o.Namespaces) },
+		"list_quotas":         func() error { return c.Client.List(context.Background(), &o.Quotas) },
+		"list_pvcs":           func() error { return c.Client.List(context.Background(), &o.PVCs) },
+		"list_pvs":            func() error { return c.Client.List(context.Background(), &o.PVs) },
 		"list_cluster_scoped": func() error { return c.listClusterScoped(&o) },
 		"list_sampler_pods": func() error { // fetch the list of sampler pods
 			return c.Client.List(
-				context.Background(), &o.samplers,
+				context.Background(), &o.Samplers,
 				client.MatchingLabels(c.UtilizationServer.SamplerPodLabels),
 				client.InNamespace(c.UtilizationServer.SamplerNamespaceName),
 			)
@@ -1376,7 +1426,7 @@ func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*capacityO
 	}
 
 	if c.MetricsPrometheusCollector.BuiltIn.EnableResourceQuotaDescriptor {
-		waitFor["list_rqds"] = func() error { return c.Client.List(context.Background(), &o.rqds) }
+		waitFor["list_rqds"] = func() error { return c.Client.List(context.Background(), &o.RQDs) }
 	}
 
 	err := c.wait(waitFor, ch)
@@ -1384,63 +1434,63 @@ func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*capacityO
 		return nil, err
 	}
 
-	o.pvsByName = make(map[string]*corev1.PersistentVolume, len(o.pvs.Items))
-	for i := range o.pvs.Items {
-		pv := &o.pvs.Items[i]
-		o.pvsByName[pv.Name] = pv
+	o.PVsByName = make(map[string]*corev1.PersistentVolume, len(o.PVs.Items))
+	for i := range o.PVs.Items {
+		pv := &o.PVs.Items[i]
+		o.PVsByName[pv.Name] = pv
 	}
 
-	o.pvcsByName = make(map[string]*corev1.PersistentVolumeClaim, len(o.pvcs.Items))
-	for i := range o.pvcs.Items {
-		pvc := &o.pvcs.Items[i]
-		o.pvcsByName[pvc.Namespace+"/"+pvc.Name] = pvc
+	o.PVCsByName = make(map[string]*corev1.PersistentVolumeClaim, len(o.PVCs.Items))
+	for i := range o.PVCs.Items {
+		pvc := &o.PVCs.Items[i]
+		o.PVCsByName[pvc.Namespace+"/"+pvc.Name] = pvc
 	}
 
 	// index the namespaces by name
-	o.namespacesByName = make(map[string]*corev1.Namespace, len(o.namespaces.Items))
-	for i := range o.namespaces.Items {
-		o.namespacesByName[o.namespaces.Items[i].Name] = &o.namespaces.Items[i]
+	o.NamespacesByName = make(map[string]*corev1.Namespace, len(o.Namespaces.Items))
+	for i := range o.Namespaces.Items {
+		o.NamespacesByName[o.Namespaces.Items[i].Name] = &o.Namespaces.Items[i]
 	}
 
 	// index the nodes by name
-	o.nodesByName = make(map[string]*corev1.Node, len(o.nodes.Items))
-	for i := range o.nodes.Items {
-		o.nodesByName[o.nodes.Items[i].Name] = &o.nodes.Items[i]
+	o.NodesByName = make(map[string]*corev1.Node, len(o.Nodes.Items))
+	for i := range o.Nodes.Items {
+		o.NodesByName[o.Nodes.Items[i].Name] = &o.Nodes.Items[i]
 	}
 
 	// index the resource quota descriptors by name
-	o.rqdsByRQDKey = make(map[resourceQuotaDescriptorKey]*quotamanagementv1alpha1.ResourceQuotaDescriptor,
-		len(o.rqds.Items))
-	for i := range o.rqds.Items {
+	o.RQDsByRQDKey = make(map[resourceQuotaDescriptorKey]*quotamanagementv1alpha1.ResourceQuotaDescriptor,
+		len(o.RQDs.Items))
+	for i := range o.RQDs.Items {
 		key := resourceQuotaDescriptorKey{
-			name:      o.rqds.Items[i].Name,
-			namespace: o.rqds.Items[i].Namespace,
+			name:      o.RQDs.Items[i].Name,
+			namespace: o.RQDs.Items[i].Namespace,
 		}
-		o.rqdsByRQDKey[key] = &o.rqds.Items[i]
+		o.RQDsByRQDKey[key] = &o.RQDs.Items[i]
 	}
 
 	// index the pods by node name
-	o.podsByNodeName = make(map[string][]*corev1.Pod, len(o.nodes.Items))
-	o.podsByPVC = make(map[string][]*corev1.Pod, len(o.pvcs.Items))
-	for i := range o.pods.Items {
-		p := &o.pods.Items[i]
-		o.podsByNodeName[p.Spec.NodeName] = append(
-			o.podsByNodeName[p.Spec.NodeName], p)
+	o.PodsByNodeName = make(map[string][]*corev1.Pod, len(o.Nodes.Items))
+	o.PodsByPVC = make(map[string][]*corev1.Pod, len(o.PVCs.Items))
+	for i := range o.Pods.Items {
+		p := &o.Pods.Items[i]
+		o.PodsByNodeName[p.Spec.NodeName] = append(
+			o.PodsByNodeName[p.Spec.NodeName], p)
 		for j := range p.Spec.Volumes {
 			if p.Spec.Volumes[j].PersistentVolumeClaim == nil {
 				continue
 			}
 			c := p.Namespace + "/" + p.Spec.Volumes[j].PersistentVolumeClaim.ClaimName
-			o.podsByPVC[c] = append(o.podsByPVC[c], &o.pods.Items[i])
+			o.PodsByPVC[c] = append(o.PodsByPVC[c], &o.Pods.Items[i])
 		}
 	}
 
 	// index the sampler pods
-	o.samplersByNode = make(map[string]*corev1.Pod, len(o.samplers.Items))
-	for i := range o.samplers.Items {
-		p := &o.samplers.Items[i]
+	o.SamplersByNode = make(map[string]*corev1.Pod, len(o.Samplers.Items))
+	for i := range o.Samplers.Items {
+		p := &o.Samplers.Items[i]
 		if p.Spec.NodeName != "" {
-			o.samplersByNode[p.Spec.NodeName] = p
+			o.SamplersByNode[p.Spec.NodeName] = p
 			continue
 		}
 
@@ -1454,14 +1504,14 @@ func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*capacityO
 			continue
 		}
 		nodeName := p.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchFields[0].Values[0]
-		if _, ok := o.samplersByNode[nodeName]; ok && p.DeletionTimestamp != nil {
+		if _, ok := o.SamplersByNode[nodeName]; ok && p.DeletionTimestamp != nil {
 			continue // keep the non-deleted pod
 		}
-		o.samplersByNode[nodeName] = p
+		o.SamplersByNode[nodeName] = p
 	}
 
 	// get this once since it requires locking the cache
-	o.utilizationByNode = c.UtilizationServer.GetMetrics()
+	o.UtilizationByNode = c.UtilizationServer.GetMetrics()
 	return &o, nil
 }
 
