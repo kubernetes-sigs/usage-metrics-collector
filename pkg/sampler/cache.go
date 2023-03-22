@@ -311,7 +311,7 @@ func (s *sampleCache) metricToSample(
 
 	// normalize total cpu scheduling period and cpu scheduling throttle period
 	sample.CPUPeriodsSec = normalizeSeconds(last.CumulativeCPUPeriods, sample.CumulativeCPUPeriods, sec)
-	sample.CPUThrottledPeriodsSec = normalizeSeconds(last.CPUThrottledPeriodsSec, sample.CPUThrottledPeriodsSec, sec)
+	sample.CPUThrottledPeriodsSec = normalizeSeconds(last.CumulativeCPUThrottledPeriods, sample.CumulativeCPUThrottledPeriods, sec)
 
 	deltaPeriods := float64(sample.CumulativeCPUPeriods) - float64(last.CumulativeCPUPeriods)
 	if deltaPeriods != 0 {
