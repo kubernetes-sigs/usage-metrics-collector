@@ -32,9 +32,9 @@ aggregations: # aggregate metrics and export them
         scheduled: true
       extensions:
         include: true
-      # filters:
-      # - present: true
-      #   labelNames: [ "include" ]
+      filters:
+      - present: true
+        labelNames: [ "include" ]
   - mask:
       name: "workload" # sum all containers / pods into workload metrics
       builtIn:

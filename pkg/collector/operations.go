@@ -73,7 +73,36 @@ func (c *Collector) aggregateMetric(op collectorcontrollerv1alpha1.AggregationOp
 	for k, v := range m.Values {
 		// apply the mask to get the new key of the aggregated value and add to that slice
 		labels := c.mask(mask, k)
-		indexed[labels] = append(indexed[labels], v...)
+
+		// compute the labels for this instance of the metric so we can drop metrics appropriately
+		names := c.getLabelNames(mask)
+		values := c.getLabelValues(mask, labels, names)
+		index := map[string]string{}
+		for i := range names {
+			if values[i] != "" {
+				index[names[i]] = values[i]
+			}
+		}
+		// check if we should include this metric or not based on its label values
+		ok := func() bool {
+			for _, f := range mask.Filters {
+				for _, k := range f.LabelNames {
+					if f.Present == nil {
+						continue
+					}
+					if !*f.Present && index[k] != "" {
+						return false // label is supposed to be missing, but isn't
+					}
+					if *f.Present && index[k] == "" {
+						return false // label is supposed to be present, but isn't
+					}
+				}
+			}
+			return true
+		}()
+		if ok {
+			indexed[labels] = append(indexed[labels], v...)
+		}
 	}
 
 	// reduce by applying the aggregation operation to each slice

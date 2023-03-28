@@ -209,6 +209,14 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 			if l.Mask.Level == "" {
 				return errors.Errorf("level missing name %v", l)
 			}
+			for _, f := range l.Mask.Filters {
+				if f.Present == nil {
+					return errors.Errorf("present missing from filter")
+				}
+				if len(f.LabelNames) == 0 {
+					return errors.Errorf("label names missing from filter")
+				}
+			}
 			for k := range l.HistogramBuckets {
 				if !resourceAlias.Has(k) {
 					return errors.Errorf("unknown histogramBucket key %v, must be one of %v", k, resourceAlias.List())
