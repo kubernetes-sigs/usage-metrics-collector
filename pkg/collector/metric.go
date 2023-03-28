@@ -27,15 +27,15 @@ type Metric struct {
 	// Mask contains the set of labels that apply to this metric
 	Mask collectorcontrollerv1alpha1.LabelsMask
 
-	Name metricName
+	Name MetricName
 
 	Buckets map[string][]float64
 
 	// Values contains the metric values for each unique set of labels
-	Values map[labelsValues][]resource.Quantity
+	Values map[LabelsValues][]resource.Quantity
 }
 
-type metricName struct {
+type MetricName struct {
 	Prefix string
 
 	Level string // e.g. cluster
@@ -51,7 +51,7 @@ type metricName struct {
 	SourceType string // e.g. quota
 }
 
-func (m metricName) String() string {
+func (m MetricName) String() string {
 	return strings.Join([]string{m.Prefix, m.Level, m.Operation, m.Source, m.ResourceAlias}, "_")
 }
 

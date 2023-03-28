@@ -65,30 +65,30 @@ func init() {
 // collectPhysicalCores is used to test collector function overriding, it publishes a new
 // metric for physical_cpu_cores corresponding to half of virtual cpu cores.
 func collectPhysicalCores(c *Collector, o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
-	name := metricName{
+	name := MetricName{
 		Source:        "ext_physical",
 		ResourceAlias: "cpu_cores",
 		Resource:      "cpu",
 		SourceType:    "quota",
 	}
 
-	metrics := map[metricName]*Metric{}
+	metrics := map[MetricName]*Metric{}
 
 	for i := range o.Quotas.Items {
 		q := &o.Quotas.Items[i]
 
 		// get the labels for this quota
-		key := resourceQuotaDescriptorKey{
-			name:      q.Name,
-			namespace: q.Namespace,
+		key := ResourceQuotaDescriptorKey{
+			Name:      q.Name,
+			Namespace: q.Namespace,
 		}
-		l := labelsValues{}
-		c.labler.SetLabelsForQuota(&l, q, o.RQDsByRQDKey[key], o.NamespacesByName[q.Namespace])
+		l := LabelsValues{}
+		c.Labeler.SetLabelsForQuota(&l, q, o.RQDsByRQDKey[key], o.NamespacesByName[q.Namespace])
 		if l.BuiltIn.PriorityClass == "" {
 			continue
 		}
 
-		values := c.reader.GetValuesForQuota(q, o.RQDsByRQDKey[key], c.BuiltIn.EnableResourceQuotaDescriptor)
+		values := c.Reader.GetValuesForQuota(q, o.RQDsByRQDKey[key], c.BuiltIn.EnableResourceQuotaDescriptor)
 		requests, ok := values[collectorcontrollerv1alpha1.QuotaRequestsHardSource]
 		if !ok {
 			continue
@@ -104,7 +104,7 @@ func collectPhysicalCores(c *Collector, o *CapacityObjects, ch chan<- prometheus
 		// initialize the metric
 		m, ok := metrics[name]
 		if !ok {
-			m = &Metric{Name: name, Values: map[labelsValues][]resource.Quantity{}}
+			m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
 			metrics[name] = m
 		}
 
@@ -112,7 +112,7 @@ func collectPhysicalCores(c *Collector, o *CapacityObjects, ch chan<- prometheus
 	}
 
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.QuotaType) {
-		c.aggregateAndCollect(a, metrics, ch, sCh)
+		c.AggregateAndCollect(a, metrics, ch, sCh)
 	}
 	return nil
 }
@@ -451,7 +451,7 @@ func TestLabels(t *testing.T) {
 	}
 	p.TestDir(t, func(tc *testutil.TestCase) error {
 		t := tc.T
-		var l labelsValues
+		var l LabelsValues
 		var inputs LabelInputs
 
 		tc.UnmarshalInputsStrict(map[string]interface{}{
@@ -461,7 +461,7 @@ func TestLabels(t *testing.T) {
 		c := Collector{MetricsPrometheusCollector: &inputs.Spec}
 		require.NoError(t, c.init())
 
-		instance := labler{
+		instance := Labeler{
 			BuiltIn: builtInLabler{
 				UseQuotaNameForPriorityClass: inputs.Spec.BuiltIn.UseQuotaNameForPriorityClass},
 			Extension: extensionLabler{Extensions: inputs.Spec.Extensions},
@@ -525,7 +525,7 @@ func TestValues(t *testing.T) {
 			scraper.CacheMetrics(v)
 		}
 
-		var instance valueReader
+		var instance ValueReader
 		var values map[string]value
 		switch {
 		case strings.Contains(tc.ExpectedFilepath, "container"):
