@@ -35,8 +35,8 @@ type value struct {
 	Source            string                                      `json:"source" yaml:"source"`
 }
 
-// RequestsValueReader reads the requests value as a ResourceList
-type valueReader struct{}
+// ValueReader reads the requests value as a ResourceList
+type ValueReader struct{}
 
 // GetValuesForContainer returns the ResourceLists from a container for:
 // - requests_allocated
@@ -46,7 +46,7 @@ type valueReader struct{}
 // - nr_periods
 // - nr_throttled
 // - oom_kill
-func (r valueReader) GetValuesForContainer(
+func (r ValueReader) GetValuesForContainer(
 	container *corev1.Container, pod *corev1.Pod, usage *api.ContainerMetrics) map[string]value {
 	values := map[string]value{}
 
@@ -185,7 +185,7 @@ func createValue(pod *corev1.Pod, usage []int64, source, resName string) value {
 	return val
 }
 
-func (r valueReader) GetValuesForPod(pod *corev1.Pod) map[string]value {
+func (r ValueReader) GetValuesForPod(pod *corev1.Pod) map[string]value {
 	count := value{
 		ResourceList: map[corev1.ResourceName]resource.Quantity{
 			collectorcontrollerv1alpha1.ItemsResource: *resource.NewQuantity(1, resource.DecimalSI),
@@ -218,7 +218,7 @@ var now = func() time.Time {
 }
 
 // GetValuesForQuota returns the ResourceLists from a namespace quota
-func (r valueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor, enableRqd bool) map[string]value {
+func (r ValueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor, enableRqd bool) map[string]value {
 	requestsHard := value{
 		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
 		Source: collectorcontrollerv1alpha1.QuotaRequestsHardSource,
@@ -473,7 +473,7 @@ func getMaxObservedQuota(rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor) (
 }
 
 // GetValuesForNode returns the metric values for a Node.  pods is the Pods scheduled to this Node.
-func (r valueReader) GetValuesForNode(node *corev1.Node, pods []*corev1.Pod) map[string]value {
+func (r ValueReader) GetValuesForNode(node *corev1.Node, pods []*corev1.Pod) map[string]value {
 	allocatable := value{
 		ResourceList: node.Status.Allocatable,
 		Level:        collectorcontrollerv1alpha1.NodeLevel,
@@ -518,7 +518,7 @@ func (r valueReader) GetValuesForNode(node *corev1.Node, pods []*corev1.Pod) map
 		collectorcontrollerv1alpha1.NodeAllocatableMinusRequests: allocatableMinusRequests}
 }
 
-func (r valueReader) GetValuesForPVC(pvc *corev1.PersistentVolumeClaim) map[string]value {
+func (r ValueReader) GetValuesForPVC(pvc *corev1.PersistentVolumeClaim) map[string]value {
 	requests := value{
 		ResourceList: pvc.Spec.Resources.Requests,
 		Level:        collectorcontrollerv1alpha1.PVCLevel,
@@ -550,7 +550,7 @@ func (r valueReader) GetValuesForPVC(pvc *corev1.PersistentVolumeClaim) map[stri
 	}
 }
 
-func (r valueReader) GetValuesForPV(pv *corev1.PersistentVolume) map[string]value {
+func (r ValueReader) GetValuesForPV(pv *corev1.PersistentVolume) map[string]value {
 	capacity := value{
 		ResourceList: pv.Spec.Capacity,
 		Level:        collectorcontrollerv1alpha1.PVLevel,

@@ -22,8 +22,8 @@ import (
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler/api"
 )
 
-// labler parses labels from Kubernetes objects and sets them on Values
-type labler struct {
+// Labeler parses labels from Kubernetes objects and sets them on Values
+type Labeler struct {
 	// BuiltIn contains compiled in metric labels
 	BuiltIn builtInLabler
 	// Extension contains extension metric labels
@@ -31,55 +31,55 @@ type labler struct {
 }
 
 // SetLabelsForContainer parses metric labels from a container and pod
-func (l labler) SetLabelsForContainer(
-	labels *labelsValues, container *corev1.Container) {
+func (l Labeler) SetLabelsForContainer(
+	labels *LabelsValues, container *corev1.Container) {
 	l.BuiltIn.SetLabelsForContainer(&labels.BuiltIn, container)
 	// no extension labels for containers
 }
 
-func (l labler) SetLabelsForPod(
-	labels *labelsValues, pod *corev1.Pod, w workload,
+func (l Labeler) SetLabelsForPod(
+	labels *LabelsValues, pod *corev1.Pod, w workload,
 	node *corev1.Node, namespace *corev1.Namespace) {
 	l.BuiltIn.SetLabelsForPod(&labels.BuiltIn, pod, w, node, namespace)
 	l.Extension.SetLabelsForPod(&labels.Extension, pod, w, node, namespace)
 }
 
 // SetLabelsForNode parses metric labels from a node
-func (l labler) SetLabelsForNode(labels *labelsValues, node *corev1.Node) {
+func (l Labeler) SetLabelsForNode(labels *LabelsValues, node *corev1.Node) {
 	l.BuiltIn.SetLabelsForNode(&labels.BuiltIn, node)
 	l.Extension.SetLabelsForNode(&labels.Extension, node)
 }
 
-func (l labler) SetLabelsFoCGroup(labels *labelsValues, u *api.NodeAggregatedMetrics) {
+func (l Labeler) SetLabelsFoCGroup(labels *LabelsValues, u *api.NodeAggregatedMetrics) {
 	l.BuiltIn.SetLabelsForCGroup(&labels.BuiltIn, u)
 }
 
 // SetLabelsForQuota parses metric labels from a namespace
-func (l labler) SetLabelsForQuota(labels *labelsValues,
+func (l Labeler) SetLabelsForQuota(labels *LabelsValues,
 	quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor, namespace *corev1.Namespace) {
 	l.BuiltIn.SetLabelsForQuota(&labels.BuiltIn, quota, rqd, namespace)
 	l.Extension.SetLabelsForQuota(&labels.Extension, quota, rqd, namespace)
 }
 
 // SetLabelsForNamespace parses metric labels from a namespace
-func (l labler) SetLabelsForNamespaces(labels *labelsValues, namespace *corev1.Namespace) {
+func (l Labeler) SetLabelsForNamespaces(labels *LabelsValues, namespace *corev1.Namespace) {
 	l.BuiltIn.SetLabelsForNamespace(&labels.BuiltIn, namespace)
 	l.Extension.SetLabelsForNamespace(&labels.Extension, namespace)
 }
 
 // SetLabelsForPVCQuota set storage class label from resource and quota spec
-func (l labler) SetLabelsForPVCQuota(labels *labelsValues,
+func (l Labeler) SetLabelsForPVCQuota(labels *LabelsValues,
 	quota *corev1.ResourceQuota, resource string) {
 	l.BuiltIn.SetLabelsForPVCQuota(&labels.BuiltIn, quota, resource)
 }
 
-func (l labler) SetLabelsForPersistentVolume(labels *labelsValues,
+func (l Labeler) SetLabelsForPersistentVolume(labels *LabelsValues,
 	pv *corev1.PersistentVolume, pvc *corev1.PersistentVolumeClaim, node *corev1.Node) {
 	l.BuiltIn.SetLabelsForPersistentVolume(&labels.BuiltIn, pv, pvc, node)
 	l.Extension.SetLabelsForPersistentVolume(&labels.Extension, pv, pvc, node)
 }
 
-func (l labler) SetLabelsForPersistentVolumeClaim(labels *labelsValues,
+func (l Labeler) SetLabelsForPersistentVolumeClaim(labels *LabelsValues,
 	pvc *corev1.PersistentVolumeClaim,
 	pv *corev1.PersistentVolume, namespace *corev1.Namespace,
 	pod *corev1.Pod, w workload, node *corev1.Node) {
@@ -87,13 +87,13 @@ func (l labler) SetLabelsForPersistentVolumeClaim(labels *labelsValues,
 	l.Extension.SetLabelsForPersistentVolumeClaim(&labels.Extension, pvc, pv, namespace, pod, w, node)
 }
 
-func (l labler) SetLabelsForClusterScoped(labels *labelsValues, discoveredLabels map[string]string) {
+func (l Labeler) SetLabelsForClusterScoped(labels *LabelsValues, discoveredLabels map[string]string) {
 	l.BuiltIn.SetLabelsForClusterScoped(&labels.BuiltIn, discoveredLabels)
 	// TODO: extension labels
 }
 
-// labelsValues contains metric label values
-type labelsValues struct {
+// LabelsValues contains metric label values
+type LabelsValues struct {
 	BuiltIn builtInLabelsValues
 
 	Extension extensionLabelsValues
@@ -520,7 +520,7 @@ func (c *Collector) initInternalLabelsMask(mask *collectorcontrollerv1alpha1.Lab
 }
 
 // mask masks labels by clearing them
-func (c *Collector) mask(mask collectorcontrollerv1alpha1.LabelsMask, m labelsValues) labelsValues {
+func (c *Collector) mask(mask collectorcontrollerv1alpha1.LabelsMask, m LabelsValues) LabelsValues {
 	m.BuiltIn = builtInMask(mask.BuiltIn, m.BuiltIn)
 
 	// get the internal version that maps label names to fields
@@ -563,7 +563,7 @@ func overrideValues(values, names []string) {
 }
 
 // getLabelValues returns the set of label values for this mask
-func (c *Collector) getLabelValues(mask collectorcontrollerv1alpha1.LabelsMask, m labelsValues, names []string) []string {
+func (c *Collector) getLabelValues(mask collectorcontrollerv1alpha1.LabelsMask, m LabelsValues, names []string) []string {
 	if mask.BuiltIn.Level {
 		// set the level from the mask level name
 		m.BuiltIn.Level = mask.Level

@@ -74,7 +74,7 @@ func (c *Collector) newSampleListBuilder(src string, createIfNoMatch bool) *Samp
 }
 
 // NewSample creates a new Sample for an object
-func (sb *SampleListBuilder) NewSample(labels labelsValues) *collectorapi.Sample {
+func (sb *SampleListBuilder) NewSample(labels LabelsValues) *collectorapi.Sample {
 	if sb == nil {
 		return nil
 	}

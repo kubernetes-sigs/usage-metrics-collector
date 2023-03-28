@@ -34,7 +34,7 @@ func (c *Collector) init() error {
 		return err
 	}
 	c.sideCarConfigs = sccfg
-	c.labler.Extension.SideCar = sccfg
+	c.Labeler.Extension.SideCar = sccfg
 
 	// initialize internal IDs
 	var labelId int
@@ -96,8 +96,8 @@ func (c *Collector) init() error {
 		return err
 	}
 
-	c.labler.BuiltIn.UseQuotaNameForPriorityClass = c.BuiltIn.UseQuotaNameForPriorityClass
-	c.labler.Extension.Extensions = c.Extensions
+	c.Labeler.BuiltIn.UseQuotaNameForPriorityClass = c.BuiltIn.UseQuotaNameForPriorityClass
+	c.Labeler.Extension.Extensions = c.Extensions
 	return nil
 }
 

@@ -64,12 +64,12 @@ func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quant
 func (c *Collector) aggregateMetric(op collectorcontrollerv1alpha1.AggregationOperation, m Metric, mask collectorcontrollerv1alpha1.LabelsMask) Metric {
 	result := Metric{
 		Mask:   mask,
-		Values: map[labelsValues][]resource.Quantity{},
+		Values: map[LabelsValues][]resource.Quantity{},
 	}
 
 	// map the values so they are mappedValues by the new level rather than the old
 	// e.g. map multiple "containers" in the same "pod" to that "pod" key
-	indexed := map[labelsValues][]resource.Quantity{}
+	indexed := map[LabelsValues][]resource.Quantity{}
 	for k, v := range m.Values {
 		// apply the mask to get the new key of the aggregated value and add to that slice
 		labels := c.mask(mask, k)
