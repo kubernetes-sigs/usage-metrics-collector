@@ -597,8 +597,24 @@ type LabelsMask struct {
 	// Extensions defines the mask for user defined labels pulled from object metadata.
 	Extensions ExtensionsLabelMask `json:"extensions" yaml:"extensions"`
 
+	// Filters excludes metrics from aggregation based on some conditions.
+	// If multiple filters that contradict each other then all metrics
+	// will be excluded -- e.g. only include metrics with label foo, and
+	// exclude all metrics with label foo.
+	Filters []Filter `json:"filters" yaml:"filters"`
+
 	// ID is internal
 	ID LabelsMaskId `json:"-" yaml:"-"`
+}
+
+// Filter removes metrics based on their label values.
+type Filter struct {
+	// Present if set to true will only include metrics where the metric label is present (not empty).  If set
+	// to false it will only include metrics where the metric is not present (empty).
+	Present *bool `json:"present,omitempty" yaml:"present,omitempty"`
+	// LabelNames are the names of the labels the filter applies to
+	// LabelNames are the names of the labels the filter applies to
+	LabelNames []string `json:"labelNames,omitempty" yaml:"labelNames,omitempty"`
 }
 
 // BuiltIn configures built in metrics and labels.

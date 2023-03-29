@@ -1,0 +1,62 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+extensions:
+  podLabels:
+  - name: include
+    label: include
+aggregations: # aggregate metrics and export them
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "requests_allocated"
+    - "limits_allocated"
+  levels:
+  - mask:
+      name: "container" # base level -- no aggregations
+      extensions:
+        include: true
+      builtIn:
+        exported_container: true
+        exported_pod: true
+        exported_namespace: true
+        exported_node: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+        scheduled: true
+      filters:
+      - present: false
+        labelNames: [ "include" ]
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_namespace: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+  - mask:
+      name: "app" # sum all workloads into app metrics
+      builtIn:
+        exported_namespace: true
+        app: true
+        priority_class: true
+  - mask:
+      name: "namespace" # sum all apps into namespace metrics
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+  - mask:
+      name: "cluster" # sum all namespaces into cluster metrics
+      builtIn:
+        priority_class: true
