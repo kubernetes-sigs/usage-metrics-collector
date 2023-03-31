@@ -17,7 +17,6 @@ package collector
 import (
 	"math"
 	"sort"
-	"sync"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
@@ -106,20 +105,9 @@ func (c *Collector) aggregateMetric(op collectorcontrollerv1alpha1.AggregationOp
 		}
 	}
 
-	// do metric values aggregation concurrently
-	wg := &sync.WaitGroup{}
-	mu := &sync.Mutex{}
 	// reduce by applying the aggregation operation to each slice
 	for k := range indexed {
-		wg.Add(1)
-		go func(lVals LabelsValues) {
-			qty := aggregate(op, indexed[lVals])
-			mu.Lock()
-			result.Values[lVals] = qty
-			mu.Unlock()
-			wg.Done()
-		}(k)
+		result.Values[k] = aggregate(op, indexed[k])
 	}
-	wg.Wait()
 	return result
 }
