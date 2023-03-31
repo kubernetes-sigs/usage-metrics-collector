@@ -688,9 +688,17 @@ func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metr
 		log.Error(err, "unable to save metrics locally")
 	}
 
+	// aggregate all cgroup sources concurrently
+	wg := &sync.WaitGroup{}
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.CGroupType) {
-		c.AggregateAndCollect(a, metrics, ch, sCh)
+		wg.Add(1)
+		go func (agg *collectorcontrollerv1alpha1.Aggregation) {
+			c.AggregateAndCollect(agg, metrics, ch, sCh)
+			wg.Done()
+		} (a)
 	}
+	wg.Wait()
+
 	resultMetric.Collect(ch)
 	return nil
 }
@@ -1013,9 +1021,17 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 		log.Error(err, "unable to save metrics locally")
 	}
 
+	// aggregate all container sources concurrently
+	wg := &sync.WaitGroup{}
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.ContainerType) {
-		c.AggregateAndCollect(a, containerMetrics, ch, sCh)
+		wg.Add(1)
+		go func(agg *collectorcontrollerv1alpha1.Aggregation) {
+			c.AggregateAndCollect(agg, containerMetrics, ch, sCh)
+			wg.Done()
+		} (a)
 	}
+	wg.Wait()
+
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.PodType) {
 		c.AggregateAndCollect(a, podMetrics, ch, sCh)
 	}
