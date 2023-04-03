@@ -1976,7 +1976,7 @@ func (m extensionLabelsMask) Mask(l extensionLabelsValues) extensionLabelsValues
 }
 
 func (mask extensionLabelsMask) GetLabelNames() []string {
-	result := []string{}
+	result := make([]string, 0, collectorcontrollerv1alpha1.MaxExtensionLabels)
 	if mask.Label00 {
 		result = append(result, string(mask.keys.Label00))
 	}
@@ -2282,7 +2282,7 @@ func (mask extensionLabelsMask) GetLabelNames() []string {
 }
 
 func (mask extensionLabelsMask) GetLabelValues(m extensionLabelsValues) []string {
-	result := []string{}
+	result := make([]string, 0, collectorcontrollerv1alpha1.MaxExtensionLabels)
 	if mask.Label00 {
 		result = append(result, m.Label00)
 	}
