@@ -653,7 +653,7 @@ func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metr
 					metrics[name] = metric
 				}
 				// get the values for this metric
-				var cpuValues []resource.Quantity
+				cpuValues := make([]resource.Quantity, 0, len(m.CpuCoresNanoSec))
 				for _, v := range m.CpuCoresNanoSec {
 					cpuValues = append(cpuValues, *resource.NewScaledQuantity(v, resource.Nano))
 				}
@@ -672,7 +672,7 @@ func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metr
 					metrics[name] = metric
 				}
 				// get the values for this metric
-				var memoryValues []resource.Quantity
+				memoryValues := make([]resource.Quantity, 0, len(m.MemoryBytes))
 				for _, v := range m.MemoryBytes {
 					memoryValues = append(memoryValues, *resource.NewQuantity(v, resource.DecimalSI))
 				}
@@ -688,16 +688,9 @@ func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metr
 		log.Error(err, "unable to save metrics locally")
 	}
 
-	// aggregate all cgroup sources concurrently
-	wg := &sync.WaitGroup{}
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.CGroupType) {
-		wg.Add(1)
-		go func (agg *collectorcontrollerv1alpha1.Aggregation) {
-			c.AggregateAndCollect(agg, metrics, ch, sCh)
-			wg.Done()
-		} (a)
+		c.AggregateAndCollect(a, metrics, ch, sCh)
 	}
-	wg.Wait()
 
 	resultMetric.Collect(ch)
 	return nil
@@ -1021,16 +1014,9 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 		log.Error(err, "unable to save metrics locally")
 	}
 
-	// aggregate all container sources concurrently
-	wg := &sync.WaitGroup{}
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.ContainerType) {
-		wg.Add(1)
-		go func(agg *collectorcontrollerv1alpha1.Aggregation) {
-			c.AggregateAndCollect(agg, containerMetrics, ch, sCh)
-			wg.Done()
-		} (a)
+		c.AggregateAndCollect(a, containerMetrics, ch, sCh)
 	}
-	wg.Wait()
 
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.PodType) {
 		c.AggregateAndCollect(a, podMetrics, ch, sCh)

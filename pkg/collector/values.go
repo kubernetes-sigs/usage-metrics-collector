@@ -84,7 +84,6 @@ func (r ValueReader) GetValuesForContainer(
 	}
 
 	// get utilization values
-	var cpuValues []resource.Quantity
 	last := len(usage.CpuCoresNanoSec)
 	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
 		// for completed pods, assume the final 0 utilization values are because the container had
@@ -96,6 +95,8 @@ func (r ValueReader) GetValuesForContainer(
 			last--
 		}
 	}
+
+	cpuValues := make([]resource.Quantity, 0, last)
 	for i := 0; i < last; i++ {
 		cpuValues = append(cpuValues, *resource.NewScaledQuantity(usage.CpuCoresNanoSec[i], resource.Nano))
 	}
@@ -124,7 +125,8 @@ func (r ValueReader) GetValuesForContainer(
 			last--
 		}
 	}
-	var memoryValues []resource.Quantity
+
+	memoryValues := make([]resource.Quantity, 0, last)
 	for i := 0; i < last; i++ {
 		memoryValues = append(memoryValues, *resource.NewQuantity(usage.MemoryBytes[i], resource.DecimalSI))
 	}
@@ -164,7 +166,6 @@ func createValue(pod *corev1.Pod, usage []int64, source, resName string) value {
 		Source:            source,
 	}
 
-	var qty []resource.Quantity
 	last := len(usage)
 	if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
 		// for completed pods, assume the final 0 utilization values are because the container had
@@ -176,6 +177,9 @@ func createValue(pod *corev1.Pod, usage []int64, source, resName string) value {
 			last--
 		}
 	}
+
+	qty := make([]resource.Quantity, 0, last)
+
 	for i := 0; i < last; i++ {
 		qty = append(qty, *resource.NewQuantity(usage[i], resource.DecimalSI))
 	}
