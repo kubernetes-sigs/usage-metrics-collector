@@ -572,6 +572,9 @@ type Level struct {
 	// labels after the mask is applied. If unspecified, this field defaults to
 	// "sum".
 	Operation AggregationOperation `json:"operation" yaml:"operation"`
+
+	Operations []AggregationOperation `json:"operations" yaml:"operations"`
+
 	// NoExport indicates that a level should not be exported as a metric.
 	NoExport bool `json:"noExport,omitempty" yaml:"noExport,omitempty"`
 	// HistogramBuckets describes the histograms and their associated buckets

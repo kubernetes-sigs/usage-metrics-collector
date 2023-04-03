@@ -24,7 +24,7 @@ import (
 
 // aggregate aggregates the ResourceLists
 // If no ResourceName is specified, all resources are aggregated.
-func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quantities) []resource.Quantity {
+func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quantities, sorted bool) []resource.Quantity {
 	result := resource.Quantity{}
 	// nolint: exhaustive
 	switch op {
@@ -33,10 +33,14 @@ func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quant
 			result.Add(values[i])
 		}
 	case collectorcontrollerv1alpha1.MaxOperation:
-		for i := range values {
-			// result is less than next
-			if result.Cmp(values[i]) < 0 {
-				result = values[i]
+		if sorted {
+			result = values[len(values)-1]
+		} else {
+			for i := range values {
+				// result is less than next
+				if result.Cmp(values[i]) < 0 {
+					result = values[i]
+				}
 			}
 		}
 	case collectorcontrollerv1alpha1.AvgOperation:
@@ -45,11 +49,15 @@ func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quant
 		}
 		result = divideQtyInt64(result, int64(len(values)), AveragePrecision)
 	case collectorcontrollerv1alpha1.P95Operation:
-		sort.Sort(values)
+		if !sorted {
+			sort.Sort(values)
+		}
 		percentileIndex := int(math.Floor(float64(len(values)-1) * 0.95))
 		return []resource.Quantity{values[percentileIndex]}
 	case collectorcontrollerv1alpha1.MedianOperation:
-		sort.Sort(values)
+		if !sorted {
+			sort.Sort(values)
+		}
 		index := (len(values) - 1) / 2
 		return []resource.Quantity{values[index]}
 	case collectorcontrollerv1alpha1.HistogramOperation:
@@ -61,12 +69,7 @@ func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quant
 
 // aggregateMetric performs an aggregation on the metrics by mapping metrics to common keys using the provided mask.
 // If resources is not defined then all ResourceNames are aggregated.
-func (c *Collector) aggregateMetric(op collectorcontrollerv1alpha1.AggregationOperation, m Metric, mask collectorcontrollerv1alpha1.LabelsMask) Metric {
-	result := Metric{
-		Mask:   mask,
-		Values: map[LabelsValues][]resource.Quantity{},
-	}
-
+func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.AggregationOperation, m Metric, mask collectorcontrollerv1alpha1.LabelsMask) map[collectorcontrollerv1alpha1.AggregationOperation]*Metric{} {
 	// map the values so they are mappedValues by the new level rather than the old
 	// e.g. map multiple "containers" in the same "pod" to that "pod" key
 	indexed := map[LabelsValues][]resource.Quantity{}
@@ -105,9 +108,34 @@ func (c *Collector) aggregateMetric(op collectorcontrollerv1alpha1.AggregationOp
 		}
 	}
 
-	// reduce by applying the aggregation operation to each slice
-	for k := range indexed {
-		result.Values[k] = aggregate(op, indexed[k])
+	results := map[collectorcontrollerv1alpha1.AggregationOperation]*Metric{}
+	// optimization to sort the metrics only once for multiple operations
+	sorted := false
+	for i := range ops {
+		op := ops[i]
+		if op == collectorcontrollerv1alpha1.P95Operation || op == collectorcontrollerv1alpha1.MedianOperation {
+			for k := range indexed {
+				sort.Sort(quantities(indexed[k]))
+			}
+			sorted = true
+			break
+		}
+	}
+
+	for _, op := range ops {
+		// TODO: Wait Group
+
+		// calculate the operations in parallel
+		go func() {
+			m := map[collectorcontrollerv1alpha1.AggregationOperation]*Metric{}
+			// reduce by applying the aggregation operation to each slice
+			for k := range indexed {
+				// go routine with wait group
+				m[k] = aggregate(op, indexed[k], sorted)
+			}
+		}()
+
+		// results[op].Values[k]
 	}
 	return result
 }

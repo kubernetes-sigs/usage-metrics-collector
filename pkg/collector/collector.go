@@ -1320,7 +1320,7 @@ func (c *Collector) AggregateAndCollect(
 		wg.Add(1)
 		go func(name MetricName, metric Metric) {
 			// aggregate and collect the metric for each level
-			for _, l := range levels {
+			for i, l := range levels {
 				// aggregate at this level
 				aggregatedName := MetricName{
 					Prefix:        c.Prefix,
@@ -1332,7 +1332,11 @@ func (c *Collector) AggregateAndCollect(
 					SourceType:    name.SourceType,
 				}
 
-				aggregatedMetric := c.aggregateMetric(l.Operation, metric, l.Mask)
+				if len(l.Operations) > 0 && i == len(levels)-1 {
+					// Error -- only support terminal levels with operations
+				}
+
+				aggregatedMetric := c.aggregateMetric(append(l.Operations, l.Operation), metric, l.Mask)
 				aggregatedMetric.Name = aggregatedName
 				metric = aggregatedMetric
 
