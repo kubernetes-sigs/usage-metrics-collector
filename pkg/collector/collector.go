@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
@@ -1320,49 +1321,60 @@ func (c *Collector) AggregateAndCollect(
 		wg.Add(1)
 		go func(name MetricName, metric Metric) {
 			// aggregate and collect the metric for each level
-			for _, l := range levels {
-				// aggregate at this level
-				aggregatedName := MetricName{
-					Prefix:        c.Prefix,
-					Level:         l.Mask.Level,
-					Operation:     string(l.Operation),
-					Source:        name.Source,
-					ResourceAlias: name.ResourceAlias,
-					Resource:      name.Resource,
-					SourceType:    name.SourceType,
-				}
-
-				aggregatedMetric := c.aggregateMetric(l.Operation, metric, l.Mask)
-				aggregatedMetric.Name = aggregatedName
-				metric = aggregatedMetric
-
-				if l.RetentionName != "" && c.SaveSamplesLocally != nil { // export this metric to a local file for retention
-					slb := c.NewAggregatedSampleListBuilder(aggregatedName.SourceType)
-					slb.SampleList.MetricName = aggregatedName.String()
-					slb.SampleList.Name = l.RetentionName
-					slb.Mask = l.Mask
-					for mk, mv := range metric.Values {
-						s := slb.NewSample(mk)
-						s.Operation = aggregatedName.Operation
-						s.Level = aggregatedName.Level
-						slb.AddQuantityValues(s,
-							aggregatedName.Resource,
-							aggregatedName.Source, mv...)
-					}
-					sCh <- slb.SampleList
-				}
-
-				if l.NoExport {
-					// aggregate the metric, but don't export it
+			for i, l := range levels {
+				if len(l.Operations) > 0 && i != len(levels)-1 {
+					log.Error(errors.Errorf("too many operations for level"),
+						"only terminal levels are supported with multiple operations")
 					continue
 				}
 
-				// export the metric
-				if l.Operation == collectorcontrollerv1alpha1.HistogramOperation {
-					metric.Buckets = l.HistogramBuckets
-					c.collectHistogramMetric(metric, ch)
-				} else {
-					c.collectMetric(metric, ch)
+				if l.Operation != "" {
+					l.Operations = append(l.Operations, l.Operation)
+				}
+				aggregatedMetricOps := c.aggregateMetric(l.Operations, metric, l.Mask)
+
+				for op, aggregatedMetric := range aggregatedMetricOps {
+					// aggregate at this level for all operations
+					aggregatedName := MetricName{
+						Prefix:        c.Prefix,
+						Level:         l.Mask.Level,
+						Operation:     string(op),
+						Source:        name.Source,
+						ResourceAlias: name.ResourceAlias,
+						Resource:      name.Resource,
+						SourceType:    name.SourceType,
+					}
+					aggregatedMetric.Name = aggregatedName
+					metric = *aggregatedMetric
+
+					if l.RetentionName != "" && c.SaveSamplesLocally != nil { // export this metric to a local file for retention
+						slb := c.NewAggregatedSampleListBuilder(aggregatedName.SourceType)
+						slb.SampleList.MetricName = aggregatedName.String()
+						slb.SampleList.Name = l.RetentionName
+						slb.Mask = l.Mask
+						for mk, mv := range metric.Values {
+							s := slb.NewSample(mk)
+							s.Operation = aggregatedName.Operation
+							s.Level = aggregatedName.Level
+							slb.AddQuantityValues(s,
+								aggregatedName.Resource,
+								aggregatedName.Source, mv...)
+						}
+						sCh <- slb.SampleList
+					}
+
+					if l.NoExport {
+						// aggregate the metric, but don't export it
+						continue
+					}
+
+					// export the metric
+					if op == collectorcontrollerv1alpha1.HistogramOperation {
+						metric.Buckets = l.HistogramBuckets
+						c.collectHistogramMetric(metric, ch)
+					} else {
+						c.collectMetric(metric, ch)
+					}
 				}
 			}
 			wg.Done()
