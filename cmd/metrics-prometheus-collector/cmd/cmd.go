@@ -20,11 +20,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
+
+	_ "net/http/pprof"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/logr"
@@ -51,8 +54,8 @@ var (
 	commit  = "none"
 	date    = "unknown"
 
-	logPath                     string
-	profileMemory               bool
+	logPath, pprofPort          string
+	profileMemory, pprof        bool
 	exitAfterLeaderElectionLoss time.Duration
 
 	options = Options{Options: ctrl.Options{
@@ -104,6 +107,10 @@ func init() {
 
 	RootCmd.Flags().BoolVar(&profileMemory, "profile-memory", false, "set to true to enable memory profiling")
 
+	RootCmd.Flags().BoolVar(&pprof, "pprof", false, "set to true to enable pprof profiling")
+
+	RootCmd.Flags().StringVar(&pprofPort, "pprof-port", "6060", "pprof port")
+
 	RootCmd.Flags().DurationVar(&exitAfterLeaderElectionLoss, "exit-after-leader-election-loss", time.Second*15, "if set to a non-zero durtion, exit after leader election loss + duration")
 
 	// Add the go `flag` package flags -- e.g. `--kubeconfig`
@@ -114,6 +121,13 @@ func init() {
 
 // RunE this application and return error if any
 func RunE(_ *cobra.Command, _ []string) error {
+	if pprof {
+		// Server for pprof
+		go func() {
+			http.ListenAndServe(fmt.Sprintf(":%s", pprofPort), nil)
+		}()
+	}
+	
 	electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
 	if profileMemory {
 		defer profile.Start(profile.MemProfile).Stop()

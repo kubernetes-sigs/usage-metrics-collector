@@ -106,7 +106,7 @@ func (c *Collector) defaultMetricsPrometheusCollector() {
 	c.APIVersion = "v1alpha1"
 	for i := range c.Aggregations {
 		for j := range c.Aggregations[i].Levels {
-			if c.Aggregations[i].Levels[j].Operation == "" {
+			if c.Aggregations[i].Levels[j].Operation == "" && len(c.Aggregations[i].Levels[j].Operations) == 0 {
 				c.Aggregations[i].Levels[j].Operation = collectorcontrollerv1alpha1.SumOperation
 			}
 		}
@@ -196,16 +196,23 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 		if a.Sources.Type == "container" {
 			// the container utilization source has multiple values over time which should never be summed
 			sources := sets.NewString(a.Sources.GetSources()...)
-			if sources.Has(collectorcontrollerv1alpha1.ContainerUtilizationSource) &&
+			if len(a.Levels[0].Operations) == 0 && sources.Has(collectorcontrollerv1alpha1.ContainerUtilizationSource) &&
 				InvalidContainerUtilizationInitialLevelOperations.Has(string(a.Levels[0].Operation)) {
 				return errors.Errorf("initial operation for aggregation %v must not be 'sum' if utilization source is used", i)
 			}
 		}
 
 		for _, l := range a.Levels {
-			if !collectorcontrollerv1alpha1.Operations.Has(string(l.Operation)) {
+			if len(l.Operations) == 0 && !collectorcontrollerv1alpha1.Operations.Has(string(l.Operation)) {
 				return errors.Errorf("invalid aggregation level operation '%s'", l.Operation)
 			}
+
+			for _, op := range l.Operations {
+				if !collectorcontrollerv1alpha1.Operations.Has(string(op)) {
+					return errors.Errorf("invalid aggregation level operation '%s'", l.Operation)
+				}
+			}
+
 			if l.Mask.Level == "" {
 				return errors.Errorf("level missing name %v", l)
 			}
