@@ -17,7 +17,6 @@ package collector
 import (
 	"math"
 	"sort"
-	"sync"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
@@ -123,28 +122,32 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 		}
 	}
 
-	wg := &sync.WaitGroup{}
-	mu := &sync.Mutex{}
+	l := len(ops)
+	resChan := make(chan map[collectorcontrollerv1alpha1.AggregationOperation]*Metric, l)
+	defer close(resChan)
 	for _, op := range ops {
-		res := &Metric{
-			Mask:   mask,
-			Values: map[LabelsValues][]resource.Quantity{},
-		}
-		wg.Add(1)
 		go func(o collectorcontrollerv1alpha1.AggregationOperation) {
 			// calculate the operations in parallel
 			// reduce by applying the aggregation operation to each slice
-			for k := range indexed {
-				// go routine with wait group
-				res.Values[k] = aggregate(o, indexed[k], sorted)
+			res := map[collectorcontrollerv1alpha1.AggregationOperation]*Metric{
+				o: {
+					Mask:   mask,
+					Values: map[LabelsValues][]resource.Quantity{},
+				},
 			}
-			mu.Lock()
-			results[o] = res
-			mu.Unlock()
-			wg.Done()
+			for k := range indexed {
+				res[o].Values[k] = aggregate(o, indexed[k], sorted)
+			}
+			resChan <- res
 		}(op)
 	}
-	wg.Wait()
+
+	// get results from channel
+	for i := 0; i < l; i++ {
+		for k, v := range <-resChan {
+			results[k] = v
+		}
+	}
 
 	return results
 }
