@@ -17,6 +17,7 @@ package collectorcontrollerv1alpha1
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -65,7 +66,7 @@ type MetricsPrometheusCollector struct {
 	// the exported prometheus metric. e.g. the follow will export metrics for
 	// "cpu" and have the metric name have "cpu_cores"
 	//  {"cpu": "cpu_cores"}
-	Resources map[string]string `json:"resources" yaml:"resources"`
+	Resources map[ResourceName]ResourceAlias `json:"resources" yaml:"resources"`
 
 	// Aggregations define how metrics are aggregated and exported.
 	Aggregations Aggregations `json:"aggregations,omitempty" yaml:"aggregations,omitempty"`
@@ -162,12 +163,54 @@ type SamplerEndPoint struct {
 const (
 	// DefaultMetricNamePrefix is a prefix applied to all metrics if no other is specified.
 	DefaultMetricNamePrefix = "kube_usage"
+)
 
-	// ItemsResource is the resource name for object counts
-	ItemsResource = "items"
+// ResourceName is the name of a type of resource.
+type ResourceName = corev1.ResourceName
 
-	ScheduleResource     = "schedule_time"
-	ScheduleWaitResource = "schedule_wait_time"
+const (
+	// ResourceCPU is the resource name for CPUs.
+	ResourceCPU = corev1.ResourceCPU
+
+	// ResourceMemory is the resource name for memory.
+	ResourceMemory = corev1.ResourceMemory
+
+	// ResourceStorage is the resource name for storage.
+	ResourceStorage = corev1.ResourceStorage
+
+	// ResourceItems is the resource name for object counts
+	ResourceItems = ResourceName("items")
+
+	// ResourcePeriods is the resource name for CPU periods.
+	ResourcePeriods = ResourceName("periods")
+
+	// ResourceScheduleTime is the resource name for schedule time.
+	ResourceScheduleTime = ResourceName("schedule_time")
+
+	// ResourceScheduleWaitTime is the resource name for schedule wait time.
+	ResourceScheduleWaitTime = ResourceName("schedule_wait_time")
+)
+
+// ResourceNames defines a set of the supported ResourceName values.
+var ResourceNames = sets.New(ResourceCPU, ResourceMemory, ResourceStorage, ResourceItems)
+
+// ResourceAlias is an alias for a resource, it normally includes units (e.g. cpu_cores, memory_bytes)
+type ResourceAlias string
+
+func (a ResourceAlias) String() string { return string(a) }
+
+const (
+	// ResourceAliasCPU is the resource alias for CPUs.
+	ResourceAliasCPU ResourceAlias = "cpu_cores"
+
+	// ResourceAliasMemory is the resource alias for memory.
+	ResourceAliasMemory ResourceAlias = "memory_bytes"
+
+	// ResourceAliasStorage is the resource alias for storage.
+	ResourceAliasStorage ResourceAlias = "storage_bytes"
+
+	// ResourceAliasItems is the resource alias for object counts
+	ResourceAliasItems ResourceAlias = "items"
 )
 
 // Built in prometheus metric labels
@@ -175,43 +218,58 @@ const (
 	// ExportedContainerLabel is the label name of the name for a container in a pod
 	// Defined by the pod spec
 	ExportedContainerLabel = "exported_container"
+
 	// ExportedNamespaceLabel is the label name of the namespace for a pod
 	// Defined by the pod namespace
 	ExportedNamespaceLabel = "exported_namespace"
+
 	// ExportedPodLabel is the label name of the name for a pod
 	// Defined by the pod name
 	ExportedPodLabel = "exported_pod"
+
 	// ExportedNodeLabel is the label name of the name of a node for a pod
 	// Defined by the pod spec
 	ExportedNodeLabel = "exported_node"
+
 	// NodeUnschedulableLabel is the label name corresponding to node.spec.unschedulable
 	NodeUnschedulableLabel = "node_unschedulable"
+
 	// WorkloadNameLabel is the label name of the workload a pod is owned by
 	// Defined by pod owners references
 	WorkloadNameLabel = "workload_name"
+
 	// WorkloadKindLabel is the label kind of the workload a pod is owned by
 	// Defined by pod owners references
 	WorkloadKindLabel = "workload_kind"
+
 	// WorkloadAPIGroupLabel is the label api group of the workload a pod is owned by
 	// Defined by pod owners references
 	WorkloadAPIGroupLabel = "workload_api_group"
+
 	// WorkloadAPIVersionLabel is the label api version of the workload a pod is owned by
 	// Defined by pod owners references
 	WorkloadAPIVersionLabel = "workload_api_version"
+
 	// AppLabel is the label name of the application a pod is part of
 	// Defined by the pod `app` label
 	AppLabel = "app"
+
 	// QuotaLabel is the label name of the quota for a namespace
 	QuotaLabel = "quota_name"
+
 	// AllocationStrategyLabel is the label name of allocation strategy
 	AllocationStrategyLabel = "allocation_strategy"
+
 	// PriorityClassLabel is the label name of the name of the priority class for a pod
 	// Defined by the pod spec
 	PriorityClassLabel = "priority_class"
+
 	// ScheduledLabel is the label that indicates of the capacity has been
 	// scheduled to a Node.
 	ScheduledLabel = "scheduled"
 
+	// LevelLabel is the aggregation level name.  This is useful when querying to
+	// find all metrics at a level.
 	LevelLabel = "level"
 
 	// PVCNameLabel is the label of the PersistentVolumeClaim name
@@ -230,152 +288,300 @@ const (
 	PhaseLabel = "phase"
 )
 
+// AggregationLevel represents the different levels at which metrics can be aggregated.
+type AggregationLevel string
+
+// String makes AggregationLevel a Stringer.
+func (a AggregationLevel) String() string { return string(a) }
+
 // Built in aggregation level names
 const (
 	// ContainerLevel is the lowest aggregation level for metrics pulled from containers
 	// e.g. container requests, limits and utilization.
-	ContainerLevel = "container"
+	ContainerLevel AggregationLevel = "container"
+
 	// PodLevel is the lowest aggregation level for metrics pulled from pods.
 	// e.g. count
-	PodLevel = "pod"
+	PodLevel AggregationLevel = "pod"
+
 	// Namespacelevel is the lowest aggregation level for metrics pulled from quota.
-	NamespaceLevel = "namespace"
+	NamespaceLevel AggregationLevel = "namespace"
+
 	// NodeLevel is the lowest aggregation level for metrics pulled from nodes.
-	NodeLevel = "node"
+	NodeLevel AggregationLevel = "node"
 
 	// PVC level is the lowest aggregation level for metrics for PVCs
-	PVCLevel = "pvc"
+	PVCLevel AggregationLevel = "pvc"
 
 	// PVC level is the lowest aggregation level for metrics for PVs
-	PVLevel = "pv"
+	PVLevel AggregationLevel = "pv"
 )
+
+// SourceType represents the different Kubernetes resources that metrics are sourced from.
+type SourceType string
+
+// String makes SourceType a Stringer.
+func (s SourceType) String() string { return string(s) }
 
 // Built in metric source types.  These define the types of Kubernetes resources
 // that metrics are sourced from.
 const (
 	// QuotaType is the type for metrics pulled from resource quota objets
-	QuotaType = "quota"
+	QuotaType SourceType = "quota"
+
 	// ContainerType is the type for metrics pulled from containers running in pods
-	ContainerType = "container"
+	ContainerType SourceType = "container"
+
 	// PodType is the type for metrics pulled from pods themselves
-	PodType = "pod"
+	PodType SourceType = "pod"
+
 	// NodeType is the type for metrics pulled from nodes
-	NodeType = "node"
+	NodeType SourceType = "node"
+
 	// PVCType is the type for metrics pulled from PersistentVolumeClaims
-	PVCType = "pvc"
+	PVCType SourceType = "pvc"
+
 	// PVType is the type for metrics pulled from PersistentVolumes
-	PVType = "pv"
+	PVType SourceType = "pv"
+
 	// NamespaceType is the type for metrics pulled from Namespace
-	NamespaceType = "namespace"
+	NamespaceType SourceType = "namespace"
+
 	// CgroupType is the type for metrics pulled from a cgroup
-	CGroupType = "cgroup"
+	CGroupType SourceType = "cgroup"
+
 	// ClusterScopedType is the type for metrics pulled from the cluster scope.
-	ClusterScopedType = "cluster_scoped"
+	ClusterScopedType SourceType = "cluster_scoped"
 )
+
+// SourceTypes is a set of all of the valid SourceType values.
+var SourceTypes = sets.New(
+	QuotaType,
+	PodType,
+	CGroupType,
+	NodeType,
+	ContainerType,
+	PVType,
+	PVCType,
+	NamespaceType,
+	ClusterScopedType,
+)
+
+// Source is one of the sources of metrics for different types.
+type Source string
+
+// String makes Source a Stringer.
+func (s Source) String() string { return string(s) }
+
+// IsExtension returns true if the source name is a valid extension name, i.e. starts with ext_.
+func (s Source) IsExtension() bool { return strings.HasPrefix(string(s), "ext_") }
 
 // Built in metric sources.  These define the sources of metrics for different types.
 const (
 	// ContainerRequestsAllocatedSource is the source for container requests.  (type: container)
-	ContainerRequestsAllocatedSource = "requests_allocated"
+	ContainerRequestsAllocatedSource Source = "requests_allocated"
+
 	// ContainerLimitsAllocatedSource is the source for container limits.  (type: container)
-	ContainerLimitsAllocatedSource = "limits_allocated"
+	ContainerLimitsAllocatedSource Source = "limits_allocated"
+
 	// ContainerUtilizationSource is the source for container utilization.  (type: container)
 	// Note: this source contains multiple samples over-time for each container
 	// And must have a non-sum operation applied before being summed.
-	ContainerUtilizationSource = "utilization"
+	ContainerUtilizationSource Source = "utilization"
+
 	// ContainerRequestsAllocatedMinusUtilizationSource is the source for
 	// container requests allocated minus utilization. (type: container) Note:
 	// this source contains multiple samples over-time for each container and
 	// must have a non-sum operation applied before being summed.
-	ContainerRequestsAllocatedMinusUtilizationSource = "requests_allocated_minus_utilization"
+	ContainerRequestsAllocatedMinusUtilizationSource Source = "requests_allocated_minus_utilization"
+
+	// NRPeriodsSource is the source for nr_periods per sec
+	// nr_periods is number of periods that any thread in the cgroup was runnable
+	NRPeriodsSource Source = "nr_periods"
+
+	// NRThrottledSource is the source for nr_throttled per sec
+	// throttled_time is the total time individual threads within the cgroup were throttled
+	NRThrottledSource Source = "nr_throttled"
+
+	// OOMKillCountSource is the source for OOM Kill counter
+	OOMKillCountSource Source = "oom_kill"
+)
+
+// ContainerSources contains all of the Source values of SourceType ContainerType.
+var ContainerSources = sets.New(
+	ContainerRequestsAllocatedSource,
+	ContainerLimitsAllocatedSource,
+	ContainerUtilizationSource,
+	ContainerRequestsAllocatedMinusUtilizationSource,
+	NRPeriodsSource,
+	NRThrottledSource,
+	OOMKillCountSource,
+)
+
+const (
+	// PodItemsSource the source for pod object count
+	PodItemsSource Source = "pod"
+)
+
+// PodSources contains all of the Source values of SourceType PodType.
+var PodSources = sets.New(PodItemsSource)
+
+const (
+	// QuotaItemsSourceis the source for resource quota object count
+	QuotaItemsSource Source = "quota"
 
 	// QuotaRequestsHardSource is the source for resource quota requests (hard).  (type: quota)
-	QuotaRequestsHardSource = "requests_quota_hard"
+	QuotaRequestsHardSource Source = "requests_quota_hard"
+
 	// QuotaLimitsHardSource is the source for resource quota limits (hard).  (type: quota)
-	QuotaLimitsHardSource = "limits_quota_hard"
+	QuotaLimitsHardSource Source = "limits_quota_hard"
+
 	// QuotaRequestsHardSource is the source for resource quota requests (used).  (type: quota)
-	QuotaRequestsUsedSource = "requests_quota_used"
+	QuotaRequestsUsedSource Source = "requests_quota_used"
+
 	// QuotaLimitsHardSource is the source for resource quota limits (used).  (type: quota)
-	QuotaLimitsUsedSource = "limits_quota_used"
+	QuotaLimitsUsedSource Source = "limits_quota_used"
+
 	// QuotaRequestsHardMinusUsed is the source for resource quota requests - used (ie, unused requests). (type: quota)
-	QuotaRequestsHardMinusUsed = "requests_quota_hard_minus_used"
+	QuotaRequestsHardMinusUsed Source = "requests_quota_hard_minus_used"
+
 	// QuotaLimitsHardMinusUsed is the source for resource quota requests - used (ie, unused limits). (type: quota)
-	QuotaLimitsHardMinusUsed = "limits_quota_hard_minus_used"
+	QuotaLimitsHardMinusUsed Source = "limits_quota_hard_minus_used"
+
 	// PVCQuotaLimitsHardSource is the source for resource quota limits (hard).  (type: quota)
-	PVCQuotaRequestsHardSource = "pvc_requests_quota_hard"
+	PVCQuotaRequestsHardSource Source = "pvc_requests_quota_hard"
+
 	// PVCQuotaRequestsUsedSource is the source for resource quota requests (used).  (type: quota)
-	PVCQuotaRequestsUsedSource = "pvc_requests_quota_used"
+	PVCQuotaRequestsUsedSource Source = "pvc_requests_quota_used"
+
 	// QuotaDescriptorRequetsProposedSource is the source for proposed requests quota
-	QuotaDescriptorRequestsProposedSource = "requests_quota_proposed"
+	QuotaDescriptorRequestsProposedSource Source = "requests_quota_proposed"
+
 	// QuotaDescriptorLimitsProposedSource is the source for proposed limits quota
-	QuotaDescriptorLimitsProposedSource = "limits_quota_proposed"
+	QuotaDescriptorLimitsProposedSource Source = "limits_quota_proposed"
+
 	// QuotaDescriptorRequestsHardMinusProposedSource is the source for requests hard quota minus proposed (quota to be clawed back).
-	QuotaDescriptorRequestsHardMinusProposedSource = "requests_quota_hard_minus_proposed"
+	QuotaDescriptorRequestsHardMinusProposedSource Source = "requests_quota_hard_minus_proposed"
+
 	// QuotaDescriptorLimitsHardMinusProposedSource is the source for limits hard quota minus proposed (quota to be clawed back).
-	QuotaDescriptorLimitsHardMinusProposedSource = "limits_quota_hard_minus_proposed"
+	QuotaDescriptorLimitsHardMinusProposedSource Source = "limits_quota_hard_minus_proposed"
+
 	// QuotaDescriptorRequestsMaxObservedMinusHardSource is the source for max observed quota minus hard (net clawback applied).
-	QuotaDescriptorRequestsMaxObservedMinusHardSource = "requests_quota_max_observed_minus_hard"
+	QuotaDescriptorRequestsMaxObservedMinusHardSource Source = "requests_quota_max_observed_minus_hard"
+
 	// QuotaDescriptorLimitsMaxObservedMinusHardSource is the source for max observed quota minus hard (net clawback applied).
-	QuotaDescriptorLimitsMaxObservedMinusHardSource = "limits_quota_max_observed_minus_hard"
+	QuotaDescriptorLimitsMaxObservedMinusHardSource Source = "limits_quota_max_observed_minus_hard"
+)
+
+// QuotaSources contains all of the Source values of SourceType QuotaType.
+var QuotaSources = sets.New(
+	QuotaItemsSource,
+	QuotaLimitsHardMinusUsed,
+	QuotaLimitsHardSource,
+	QuotaLimitsUsedSource,
+	QuotaRequestsHardMinusUsed,
+	QuotaRequestsHardSource,
+	QuotaRequestsUsedSource,
+	PVCQuotaRequestsHardSource,
+	PVCQuotaRequestsUsedSource,
+	QuotaDescriptorLimitsHardMinusProposedSource,
+	QuotaDescriptorLimitsMaxObservedMinusHardSource,
+	QuotaDescriptorLimitsProposedSource,
+	QuotaDescriptorRequestsHardMinusProposedSource,
+	QuotaDescriptorRequestsMaxObservedMinusHardSource,
+	QuotaDescriptorRequestsProposedSource,
+)
+
+// RQDSources contains all of the Source values related to resource quota descriptors.
+var RQDSources = sets.New(
+	QuotaDescriptorLimitsHardMinusProposedSource,
+	QuotaDescriptorLimitsMaxObservedMinusHardSource,
+	QuotaDescriptorLimitsProposedSource,
+	QuotaDescriptorRequestsHardMinusProposedSource,
+	QuotaDescriptorRequestsMaxObservedMinusHardSource,
+	QuotaDescriptorRequestsProposedSource,
+)
+
+const (
+	// NodeItemsSource the source for node object count
+	NodeItemsSource Source = "node"
 
 	// NodeAllocatableSource is the source for node allocatable.
-	NodeAllocatableSource = "node_allocatable"
+	NodeAllocatableSource Source = "node_allocatable"
+
 	// NodeCapacitySource is the source for node capacity.
-	NodeCapacitySource = "node_capacity"
+	NodeCapacitySource Source = "node_capacity"
+
 	// NodeRequestsSource is the source for node requests.
-	NodeRequestsSource = "node_requests"
+	NodeRequestsSource Source = "node_requests"
+
 	// NodeLimitsSource is the source for node limits.
-	NodeLimitsSource = "node_limits"
+	NodeLimitsSource Source = "node_limits"
+
 	// NodeUtilizationSource is the source for node utilization.
-	NodeUtilizationSource = "node_utilization"
+	NodeUtilizationSource Source = "node_utilization"
+
 	// NodeAllocatableMinusRequests is a source that exposes metrics valued as (allocatable - requests).
-	NodeAllocatableMinusRequests = "node_allocatable_minus_requests"
+	NodeAllocatableMinusRequests Source = "node_allocatable_minus_requests"
+)
 
+// NodeSources contains all of the Source values of SourceType NodeType.
+var NodeSources = sets.New(
+	NodeItemsSource,
+	NodeAllocatableSource,
+	NodeCapacitySource,
+	NodeRequestsSource,
+	NodeLimitsSource,
+	NodeUtilizationSource,
+	NodeAllocatableMinusRequests,
+)
+
+const (
 	// PVCRequestsSource is the source for PersistentVolumeClaim requests
-	PVCRequestsSource = "pvc_requests_allocated"
-	// PVCLimitsSource is the source for PersistentVolumeClaim limits
-	PVCLimitsSource = "pvc_limits_allocated"
-	// PVCCapacitySource is the source for PersistentVolumeClaim capacity
-	PVCCapacitySource = "pvc_capacity"
-	// PVCapacitySource is the sources for PersistentVolume capacity
-	PVCapacitySource = "pv_capacity"
+	PVCRequestsSource Source = "pvc_requests_allocated"
 
-	// QuotaItemsSourceis the source for resource quota object count
-	QuotaItemsSource = "quota"
-	// NodeItemsSource the source for node object count
-	NodeItemsSource = "node"
-	// PodItemsSource the source for pod object count
-	PodItemsSource = "pod"
+	// PVCLimitsSource is the source for PersistentVolumeClaim limits
+	PVCLimitsSource Source = "pvc_limits_allocated"
+
+	// PVCCapacitySource is the source for PersistentVolumeClaim capacity
+	PVCCapacitySource Source = "pvc_capacity"
 
 	// PVCItemSource is the source for PersistentVolumeClaim object count
-	PVCItemsSource = "pvc"
+	PVCItemsSource Source = "pvc"
+)
+
+// PVCSources contains all of the Source values of SourceType PVCType.
+var PVCSources = sets.New(
+	PVCCapacitySource,
+	PVCItemsSource,
+	PVCLimitsSource,
+	PVCRequestsSource,
+)
+
+const (
+	// PVCapacitySource is the sources for PersistentVolume capacity
+	PVCapacitySource Source = "pv_capacity"
 
 	// PVItemsSource is the source for PersistentVolume object count
-	PVItemsSource = "pv"
+	PVItemsSource Source = "pv"
+)
 
+// PVSources contains all of the Source values of SourceType PVType.
+var PVSources = sets.New(PVItemsSource, PVCapacitySource)
+
+const (
 	// NamespaceItemsSource is the source for the namespace count
-	NamespaceItemsSource = "namespace"
+	NamespaceItemsSource Source = "namespace"
+)
 
+// NamespaceSources all of the Source values of SourceType NamespaceType.
+var NamespaceSources = sets.New(NamespaceItemsSource)
+
+const (
 	// LimitsResourcePrefix is the prefix for limits resource name
 	LimitsResourcePrefix = "limits"
 	// RequestsResourceName is the prefix for requests resource name
 	RequestsResourcePrefix = "requests"
-
-	// NRPeriodsSource is the source for nr_periods per sec
-	// nr_periods is number of periods that any thread in the cgroup was runnable
-	NRPeriodsSource = "nr_periods"
-
-	// NRThrottledSource is the source for nr_throttled per sec
-	// throttled_time is the total time individual threads within the cgroup were throttled
-	NRThrottledSource = "nr_throttled"
-
-	// OOMKillCountSource is the source for OOM Kill counter
-	OOMKillCountSource = "oom_kill"
-)
-
-var (
-	// ResourceTypes defines a list of the supported resource types
-	ResourceTypes = []string{"cpu", "memory", "items", "storage"}
 )
 
 // AggregationOperation is used to combine metrics at a level.  Each aggregation
@@ -391,20 +597,30 @@ var (
 // within that workload.
 type AggregationOperation string
 
+func (op AggregationOperation) String() string { return string(op) }
+
 const (
 	// SumOperation defines the sum operation for aggregating metrics to a level
 	SumOperation AggregationOperation = "sum"
+
 	// MaxOperation defines the max operation for aggregating metrics to a level
 	MaxOperation AggregationOperation = "max"
+
 	// P95Operation defines the p95 operation for aggregating metrics to a level
 	P95Operation AggregationOperation = "p95"
+
 	// AvgOperation defines the average operation for aggregating metrics to a level
 	AvgOperation AggregationOperation = "avg"
+
 	// MedianOperation defines the median operation for aggregating metrics to a level
 	MedianOperation AggregationOperation = "median"
+
 	// HistogramOperation defines the histogram operation for aggregating metrics to a level
 	HistogramOperation AggregationOperation = "hist"
 )
+
+// AggregationOperation is a set of all of the known AggregationOperation values.
+var AggregationOperations = sets.New(SumOperation, MaxOperation, P95Operation, AvgOperation, MedianOperation, HistogramOperation)
 
 // Sources defines sources for metric data.
 type Sources struct {
@@ -412,54 +628,57 @@ type Sources struct {
 	// See the *Type constants.
 	//
 	//  "type": "container"
-	Type string `json:"type" yaml:"type"`
+	Type SourceType `json:"type" yaml:"type"`
 
 	// Quota are sources from resource quota objects.
-	Quota []string `json:"quota,omitempty" yaml:"quota,omitempty"`
+	Quota []Source `json:"quota,omitempty" yaml:"quota,omitempty"`
 
 	// Node are sources from node objects.
-	Node []string `json:"node,omitempty" yaml:"node,omitempty"`
+	Node []Source `json:"node,omitempty" yaml:"node,omitempty"`
+
 	// CGroup sources are from the cgroups on node objects.
-	CGroup []string `json:"cgroup,omitempty" yaml:"cgroup,omitempty"`
+	CGroup []Source `json:"cgroup,omitempty" yaml:"cgroup,omitempty"`
 
 	// Container are sources from container objects. Each container source
 	// exposes metrics "cpu_cores" and "memory_bytes".
-	Container []string `json:"container,omitempty" yaml:"container,omitempty"`
+	Container []Source `json:"container,omitempty" yaml:"container,omitempty"`
+
 	// Pod are sources from pod objects.
-	Pod []string `json:"pod,omitempty" yaml:"pod,omitempty"`
+	Pod []Source `json:"pod,omitempty" yaml:"pod,omitempty"`
 
 	// PV are sources from persistent volume objects.
-	PV []string `json:"pv,omitempty" yaml:"pv,omitempty"`
+	PV []Source `json:"pv,omitempty" yaml:"pv,omitempty"`
+
 	// PVC are sources from persistent volume claim objects.
-	PVC []string `json:"pvc,omitempty" yaml:"pvc,omitempty"`
+	PVC []Source `json:"pvc,omitempty" yaml:"pvc,omitempty"`
 
 	// Namespace are sources for namespace objects.
-	Namespace []string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Namespace []Source `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 
 	// ClusterScoped are sources for cluster-scoped resources in the Kubernetes
 	// control plane.
-	ClusterScoped []string `json:"cluster_scoped" yaml:"cluster_scoped"`
+	ClusterScoped []Source `json:"cluster_scoped" yaml:"cluster_scoped"`
 }
 
-func (s *Sources) GetSources() []string {
+func (s *Sources) GetSources() []Source {
 	switch s.Type {
-	case "container":
+	case ContainerType:
 		return s.Container
-	case "quota":
+	case QuotaType:
 		return s.Quota
-	case "node":
+	case NodeType:
 		return s.Node
-	case "pod":
+	case PodType:
 		return s.Pod
-	case "pv":
+	case PVType:
 		return s.PV
-	case "pvc":
+	case PVCType:
 		return s.PVC
-	case "namespace":
+	case NamespaceType:
 		return s.Namespace
-	case "cgroup":
+	case CGroupType:
 		return s.CGroup
-	case "cluster_scoped":
+	case ClusterScopedType:
 		return s.ClusterScoped
 	}
 	return nil
@@ -481,7 +700,7 @@ type CGroupMetrics struct {
 
 type CGroupMetric struct {
 	// Name is the source name that is used for CGroup metrics under a path
-	Name string `json:"name" yaml:"name"`
+	Name Source `json:"name" yaml:"name"`
 }
 
 // ClusterScopedMetrics configures how values collected from the cluster control
@@ -507,7 +726,7 @@ type ClusterScopedMetrics struct {
 type AnnotatedPriorityClassCollectionSource struct {
 	// Name is the name for the source part of the metrics emitted for this
 	// collection.
-	Name string `json:"name" yaml:"name"`
+	Name Source `json:"name" yaml:"name"`
 
 	// Group is the API group.
 	Group string `json:"group" yaml:"group"`
@@ -526,7 +745,7 @@ type AnnotatedPriorityClassCollectionSource struct {
 // Aggregations is a list of aggregations to perform
 type Aggregations []Aggregation
 
-func (a Aggregations) ByType(t string) []*Aggregation {
+func (a Aggregations) ByType(t SourceType) []*Aggregation {
 	var result []*Aggregation
 	for i := range a {
 		if a[i].Sources.Type == t {
@@ -591,7 +810,7 @@ type Level struct {
 type LabelsMask struct {
 	// Level is the name of the level.  Must be unique within the levels for the
 	// enclosing Aggregation.
-	Level string `json:"name" yaml:"name"`
+	Level AggregationLevel `json:"name" yaml:"name"`
 
 	// BuiltIn defines the mask for built in labels -- e.g. exported_namespace
 	BuiltIn BuiltInLabelsMask `json:"builtIn" yaml:"builtIn"`
@@ -800,25 +1019,6 @@ const (
 	NodeTaintOperatorOpNotIn NodeTaintOperator = "NotIn"
 )
 
-var (
-	ContainerSources = sets.NewString(
-		ContainerLimitsAllocatedSource, ContainerRequestsAllocatedSource, ContainerUtilizationSource, ContainerRequestsAllocatedMinusUtilizationSource,
-		NRPeriodsSource, NRThrottledSource, OOMKillCountSource,
-	)
-	PodSources   = sets.NewString(PodItemsSource)
-	QuotaSources = sets.NewString(QuotaItemsSource, QuotaLimitsHardSource, QuotaLimitsUsedSource, QuotaRequestsHardSource, QuotaRequestsUsedSource,
-		PVCQuotaRequestsHardSource, PVCQuotaRequestsUsedSource, QuotaDescriptorLimitsProposedSource, QuotaDescriptorRequestsProposedSource, QuotaRequestsHardMinusUsed,
-		QuotaLimitsHardMinusUsed, QuotaDescriptorRequestsHardMinusProposedSource, QuotaDescriptorLimitsHardMinusProposedSource, QuotaDescriptorRequestsMaxObservedMinusHardSource, QuotaDescriptorLimitsMaxObservedMinusHardSource)
-	NodeSources      = sets.NewString(NodeItemsSource, NodeRequestsSource, NodeLimitsSource, NodeAllocatableSource, NodeCapacitySource, NodeUtilizationSource, NodeAllocatableMinusRequests)
-	PVCSources       = sets.NewString(PVCCapacitySource, PVCItemsSource, PVCLimitsSource, PVCRequestsSource)
-	PVSources        = sets.NewString(PVItemsSource, PVCapacitySource)
-	NamespaceSources = sets.NewString(NamespaceItemsSource)
-
-	Types      = sets.NewString(QuotaType, PodType, CGroupType, NodeType, ContainerType, PVType, PVCType, NamespaceType, ClusterScopedType)
-	Operations = sets.NewString(string(SumOperation), string(MaxOperation), string(P95Operation), string(AvgOperation), string(MedianOperation),
-		string(HistogramOperation))
-)
-
 // AnnotationKey is a kubernetes object metadata annotation name
 type AnnotationKey string
 
@@ -882,22 +1082,13 @@ func ValidateCollectorSpec(spec *MetricsPrometheusCollector) error {
 		return nil
 	}
 
-	rqdSources := sets.NewString(
-		QuotaDescriptorRequestsProposedSource,
-		QuotaDescriptorRequestsHardMinusProposedSource,
-		QuotaDescriptorRequestsMaxObservedMinusHardSource,
-		QuotaDescriptorLimitsProposedSource,
-		QuotaDescriptorLimitsHardMinusProposedSource,
-		QuotaDescriptorLimitsMaxObservedMinusHardSource,
-	)
-
 	for ii, aggregation := range spec.Aggregations {
 		if aggregation.Sources.Type != QuotaType {
 			continue
 		}
 
 		for jj, source := range aggregation.Sources.GetSources() {
-			if rqdSources.Has(source) {
+			if RQDSources.Has(source) {
 				return fmt.Errorf("collector config specifies a source that requires rqd, but rqd is not enabled; aggregation[%v].sources[%v]", ii, jj)
 			}
 		}

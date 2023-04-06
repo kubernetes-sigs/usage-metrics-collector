@@ -84,7 +84,7 @@ type builtInLabelsValues struct {
 	Phase string `json:"phase,omitempty" yaml:"phase,omitempty"`
 
 	// level is the aggregation level for the metrics
-	Level string `json:"level,omitempty" yaml:"level,omitempty"`
+	Level collectorcontrollerv1alpha1.AggregationLevel `json:"level,omitempty" yaml:"level,omitempty"`
 }
 
 // GetLabelNames returns the set of label names the mask keeps
@@ -281,7 +281,7 @@ func getBuiltInLabelValues(mask collectorcontrollerv1alpha1.BuiltInLabelsMask, m
 		labels = append(labels, m.Scheduled)
 	}
 	if mask.Level {
-		labels = append(labels, m.Level)
+		labels = append(labels, m.Level.String())
 	}
 
 	if mask.QuotaName {
@@ -412,10 +412,10 @@ func (l builtInLabler) SetLabelsForNamespace(labels *builtInLabelsValues, namesp
 	labels.NamespaceName = namespace.Name
 }
 
-func (l builtInLabler) SetLabelsForPVCQuota(labels *builtInLabelsValues, quota *corev1.ResourceQuota, resourceName string) {
+func (l builtInLabler) SetLabelsForPVCQuota(labels *builtInLabelsValues, quota *corev1.ResourceQuota, resource collectorcontrollerv1alpha1.ResourceName) {
 	// set pvc storage class label
 	for rsName := range quota.Spec.Hard {
-		if resourceName == rsName.String() {
+		if resource == rsName {
 			s := strings.Split(rsName.String(), ".")
 			labels.StorageClass = s[0]
 		}

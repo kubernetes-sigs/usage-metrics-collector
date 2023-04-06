@@ -67,9 +67,9 @@ func init() {
 func collectPhysicalCores(c *Collector, o *CapacityObjects, ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) error {
 	name := MetricName{
 		Source:        "ext_physical",
-		ResourceAlias: "cpu_cores",
-		Resource:      "cpu",
-		SourceType:    "quota",
+		ResourceAlias: collectorcontrollerv1alpha1.ResourceAliasCPU,
+		Resource:      collectorcontrollerv1alpha1.ResourceCPU,
+		SourceType:    collectorcontrollerv1alpha1.QuotaType,
 	}
 
 	metrics := map[MetricName]*Metric{}
@@ -526,7 +526,7 @@ func TestValues(t *testing.T) {
 		}
 
 		var instance ValueReader
-		var values map[string]value
+		var values map[collectorcontrollerv1alpha1.Source]value
 		switch {
 		case strings.Contains(tc.ExpectedFilepath, "container"):
 			pod := inputs.Pods[0]
