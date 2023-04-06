@@ -199,20 +199,6 @@ func (r ValueReader) GetValuesForPod(pod *corev1.Pod) map[collectorcontrollerv1a
 		Source: collectorcontrollerv1alpha1.PodItemsSource,
 	}
 
-	if pod.Spec.NodeName != "" {
-		for _, c := range pod.Status.Conditions {
-			if c.Type != corev1.PodScheduled || c.Status != corev1.ConditionTrue {
-				continue
-			}
-			scheduleTime := c.LastTransitionTime.Time.Sub(pod.CreationTimestamp.Time)
-			count.ResourceList[collectorcontrollerv1alpha1.ResourceScheduleTime] = *resource.NewQuantity(int64(scheduleTime.Seconds()), resource.DecimalSI)
-			break
-		}
-	} else if !pod.CreationTimestamp.IsZero() {
-		waitTime := now().Sub(pod.CreationTimestamp.Time)
-		count.ResourceList[collectorcontrollerv1alpha1.ResourceScheduleWaitTime] = *resource.NewQuantity(int64(waitTime.Seconds()), resource.DecimalSI)
-	}
-
 	return map[collectorcontrollerv1alpha1.Source]value{
 		collectorcontrollerv1alpha1.PodItemsSource: count,
 	}

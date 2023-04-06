@@ -183,12 +183,6 @@ const (
 
 	// ResourcePeriods is the resource name for CPU periods.
 	ResourcePeriods = ResourceName("periods")
-
-	// ResourceScheduleTime is the resource name for schedule time.
-	ResourceScheduleTime = ResourceName("schedule_time")
-
-	// ResourceScheduleWaitTime is the resource name for schedule wait time.
-	ResourceScheduleWaitTime = ResourceName("schedule_wait_time")
 )
 
 // ResourceNames defines a set of the supported ResourceName values.
