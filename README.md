@@ -94,7 +94,7 @@ TODO: Write more on this
 
 ### Using containerd instead of cgroup walking
 
-TODO: Write this
+TODO: Write more on this
 
 ### Configuring cgroup walking
 
