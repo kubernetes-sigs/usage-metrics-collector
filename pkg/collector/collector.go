@@ -425,7 +425,7 @@ func (c *Collector) collectPVs(o *CapacityObjects, ch chan<- prometheus.Metric, 
 				}
 
 				// initialize the metric
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: "pv"}
+				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.PVType}
 				m, ok := metrics[name]
 				if !ok {
 					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -485,7 +485,7 @@ func (c *Collector) collectPVCs(o *CapacityObjects, ch chan<- prometheus.Metric,
 				}
 
 				// initialize the metric
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: "pvc"}
+				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.PVCType}
 				m, ok := metrics[name]
 				if !ok {
 					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -531,9 +531,9 @@ func (c *Collector) collectQuota(o *CapacityObjects, ch chan<- prometheus.Metric
 		for src, v := range values {
 			if src == collectorcontrollerv1alpha1.QuotaItemsSource {
 				name := MetricName{Source: collectorcontrollerv1alpha1.QuotaItemsSource,
-					ResourceAlias: collectorcontrollerv1alpha1.ItemsResource,
-					Resource:      collectorcontrollerv1alpha1.ItemsResource,
-					SourceType:    "quota"}
+					ResourceAlias: collectorcontrollerv1alpha1.ResourceAliasItems,
+					Resource:      collectorcontrollerv1alpha1.ResourceItems,
+					SourceType:    collectorcontrollerv1alpha1.QuotaType}
 				m, ok := metrics[name]
 				if !ok {
 					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -549,11 +549,11 @@ func (c *Collector) collectQuota(o *CapacityObjects, ch chan<- prometheus.Metric
 					continue
 				}
 				// if this is a storage resource, set pvc storage class label here
-				if strings.Contains(r, "storageclass.storage.k8s.io") {
+				if strings.Contains(string(r), "storageclass.storage.k8s.io") {
 					c.Labeler.SetLabelsForPVCQuota(&l, q, r)
 				}
 				// initialize the metric
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: "quota"}
+				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.QuotaType}
 				m, ok := metrics[name]
 				if !ok {
 					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -583,7 +583,7 @@ func (c *Collector) collectQuota(o *CapacityObjects, ch chan<- prometheus.Metric
 }
 
 // getCGroupMetricSource find the name of the metric for this level
-func (c *Collector) getCGroupMetricSource(cgroup string) string {
+func (c *Collector) getCGroupMetricSource(cgroup string) collectorcontrollerv1alpha1.Source {
 	if cgroup == "" {
 		// special case root cgroup -- there is no parent directory
 		return c.CGroupMetrics.RootSource.Name
@@ -640,14 +640,14 @@ func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metr
 				}
 
 				// record cpu
-				alias := c.Resources["cpu"]
+				alias := c.Resources[collectorcontrollerv1alpha1.ResourceCPU]
 				if alias == "" {
-					alias = "cpu_cores"
+					alias = collectorcontrollerv1alpha1.ResourceAliasCPU
 				}
 				// find the metric, initialize if necessary
 				// the metric source is a function of the cgroup parent directory (filepath.Dir) while
 				// the metric cgroup label is a function of the cgroup base directory (filepath.Base)
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: "cpu", SourceType: "cgroup"}
+				name := MetricName{Source: src, ResourceAlias: alias, Resource: collectorcontrollerv1alpha1.ResourceCPU, SourceType: collectorcontrollerv1alpha1.CGroupType}
 				metric, ok := metrics[name]
 				if !ok {
 					metric = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -661,12 +661,12 @@ func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metr
 				metric.Values[l] = cpuValues
 
 				// record memory
-				alias = c.Resources["memory"]
+				alias = c.Resources[collectorcontrollerv1alpha1.ResourceMemory]
 				if alias == "" {
-					alias = "memory_bytes"
+					alias = collectorcontrollerv1alpha1.ResourceAliasMemory
 				}
 				// find the metric, initialize if necessary
-				name = MetricName{Source: src, ResourceAlias: alias, Resource: "memory", SourceType: "cgroup"}
+				name = MetricName{Source: src, ResourceAlias: alias, Resource: collectorcontrollerv1alpha1.ResourceMemory, SourceType: collectorcontrollerv1alpha1.CGroupType}
 				metric, ok = metrics[name]
 				if !ok {
 					metric = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -679,8 +679,8 @@ func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metr
 				}
 				metric.Values[l] = memoryValues
 
-				sb.AddIntValues(sample, "memory", src, m.MemoryBytes...)  // For saving locally
-				sb.AddIntValues(sample, "cpu", src, m.CpuCoresNanoSec...) // For saving locally
+				sb.AddIntValues(sample, collectorcontrollerv1alpha1.ResourceMemory, src, m.MemoryBytes...)  // For saving locally
+				sb.AddIntValues(sample, collectorcontrollerv1alpha1.ResourceCPU, src, m.CpuCoresNanoSec...) // For saving locally
 			}(l)
 		}
 	}
@@ -723,7 +723,7 @@ func (c *Collector) collectNodes(o *CapacityObjects, ch chan<- prometheus.Metric
 				}
 
 				// initialize the metric
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: "node"}
+				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.NodeType}
 				m, ok := metrics[name]
 				if !ok {
 					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -761,9 +761,9 @@ func (c *Collector) collectNamespaces(o *CapacityObjects, ch chan<- prometheus.M
 		c.Labeler.SetLabelsForNamespaces(&l, n)
 
 		name := MetricName{Source: collectorcontrollerv1alpha1.NamespaceItemsSource,
-			ResourceAlias: collectorcontrollerv1alpha1.ItemsResource,
-			Resource:      collectorcontrollerv1alpha1.ItemsResource,
-			SourceType:    "namespace",
+			ResourceAlias: collectorcontrollerv1alpha1.ResourceAliasItems,
+			Resource:      collectorcontrollerv1alpha1.ResourceItems,
+			SourceType:    collectorcontrollerv1alpha1.NamespaceType,
 		}
 		m, ok := metrics[name]
 		if !ok {
@@ -883,7 +883,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 				}
 
 				// get the metric for this level + source + resource + operation
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: "pod"}
+				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.PodType}
 				m, ok := podMetrics[name]
 				if !ok {
 					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -970,7 +970,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 						}
 
 						// get the metric for this level + source + resource + operation
-						name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: "container"}
+						name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.ContainerType}
 						m, ok := containerMetrics[name]
 						if !ok {
 							m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -992,7 +992,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 						}
 
 						// get the metric for this level + source + resource + operation
-						name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: "container"}
+						name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.ContainerType}
 						m, ok := containerMetrics[name]
 						if !ok {
 							m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
@@ -1189,11 +1189,11 @@ func (c *Collector) listClusterScoped(o *CapacityObjects) error {
 		err := c.Client.List(context.Background(), list)
 		if err != nil {
 			log.Error(err, "error listing cluster-scoped resource", "group", source.Group, "kind", source.Kind)
-			clusterScopedListResultMetric.WithLabelValues(source.Name, err.Error()).Add(1)
+			clusterScopedListResultMetric.WithLabelValues(source.Name.String(), err.Error()).Add(1)
 			continue
 		}
 
-		clusterScopedListResultMetric.WithLabelValues(source.Name, "").Add(1)
+		clusterScopedListResultMetric.WithLabelValues(source.Name.String(), "").Add(1)
 		o.ClusterScopedByName[source.Name] = list
 	}
 
@@ -1223,11 +1223,11 @@ func (c *Collector) collectClusterScoped(o *CapacityObjects, ch chan<- prometheu
 		list, ok := o.ClusterScopedByName[source.Name]
 		if !ok {
 			log.V(2).Info("list items", "items", 0)
-			itemsMetric.WithLabelValues(source.Name, "objects not found").Add(1)
+			itemsMetric.WithLabelValues(source.Name.String(), "objects not found").Add(1)
 			continue
 		}
 		log.V(2).Info("list items", "items", len(list.Items))
-		itemsMetric.WithLabelValues(source.Name, "").Add(float64(len(list.Items)))
+		itemsMetric.WithLabelValues(source.Name.String(), "").Add(float64(len(list.Items)))
 
 		for jj := range list.Items {
 			obj := list.Items[jj]
@@ -1243,10 +1243,10 @@ func (c *Collector) collectClusterScoped(o *CapacityObjects, ch chan<- prometheu
 				err := yaml.UnmarshalStrict([]byte(v), &labeledResources)
 				if err != nil {
 					log.V(2).Error(err, "error unmarshalling annotation")
-					resultMetric.WithLabelValues(source.Name, obj.GetName(), err.Error()).Add(1)
+					resultMetric.WithLabelValues(source.Name.String(), obj.GetName(), err.Error()).Add(1)
 					continue
 				}
-				resultMetric.WithLabelValues(source.Name, obj.GetName(), "").Add(1)
+				resultMetric.WithLabelValues(source.Name.String(), obj.GetName(), "").Add(1)
 
 				log.V(2).Info("examining labeled resources", "count", len(labeledResources))
 				for ii := range labeledResources {
@@ -1305,7 +1305,7 @@ func (c *Collector) AggregateAndCollect(
 	ch chan<- prometheus.Metric, sCh chan<- *collectorapi.SampleList) {
 
 	levels := a.Levels
-	sources := sets.NewString(a.Sources.GetSources()...)
+	sources := sets.New(a.Sources.GetSources()...)
 
 	// filter the sources we aggregate
 	metrics := make(map[MetricName]*Metric, len(m))
@@ -1338,7 +1338,7 @@ func (c *Collector) AggregateAndCollect(
 					aggregatedName := MetricName{
 						Prefix:        c.Prefix,
 						Level:         l.Mask.Level,
-						Operation:     string(op),
+						Operation:     op,
 						Source:        name.Source,
 						ResourceAlias: name.ResourceAlias,
 						Resource:      name.Resource,
@@ -1354,8 +1354,8 @@ func (c *Collector) AggregateAndCollect(
 						slb.Mask = l.Mask
 						for mk, mv := range metric.Values {
 							s := slb.NewSample(mk)
-							s.Operation = aggregatedName.Operation
-							s.Level = aggregatedName.Level
+							s.Operation = aggregatedName.Operation.String()
+							s.Level = aggregatedName.Level.String()
 							slb.AddQuantityValues(s,
 								aggregatedName.Resource,
 								aggregatedName.Source, mv...)
@@ -1410,7 +1410,7 @@ type CapacityObjects struct {
 	RQDsByRQDKey     map[ResourceQuotaDescriptorKey]*quotamanagementv1alpha1.ResourceQuotaDescriptor
 	SamplersByNode   map[string]*corev1.Pod
 
-	ClusterScopedByName map[string]*metav1.PartialObjectMetadataList
+	ClusterScopedByName map[collectorcontrollerv1alpha1.Source]*metav1.PartialObjectMetadataList
 
 	UtilizationByNode map[string]*samplerapi.ListMetricsResponse
 }
@@ -1420,7 +1420,7 @@ func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*CapacityO
 	// read the objects in parallel
 
 	var o CapacityObjects
-	o.ClusterScopedByName = map[string]*metav1.PartialObjectMetadataList{}
+	o.ClusterScopedByName = map[collectorcontrollerv1alpha1.Source]*metav1.PartialObjectMetadataList{}
 
 	waitFor := map[string]func() error{
 		"list_pods":           func() error { return c.Client.List(context.Background(), &o.Pods) },

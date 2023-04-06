@@ -69,7 +69,7 @@ func (l Labeler) SetLabelsForNamespaces(labels *LabelsValues, namespace *corev1.
 
 // SetLabelsForPVCQuota set storage class label from resource and quota spec
 func (l Labeler) SetLabelsForPVCQuota(labels *LabelsValues,
-	quota *corev1.ResourceQuota, resource string) {
+	quota *corev1.ResourceQuota, resource collectorcontrollerv1alpha1.ResourceName) {
 	l.BuiltIn.SetLabelsForPVCQuota(&labels.BuiltIn, quota, resource)
 }
 

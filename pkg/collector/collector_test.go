@@ -44,7 +44,7 @@ func TestGetCGroupMetricSource(t *testing.T) {
 			},
 		},
 	}
-	expected := map[string]string{
+	expected := map[string]collectorcontrollerv1alpha1.Source{
 		"system.slice/foo/bar": "", // not present
 		"system.slice/foo":     "system",
 		"kubepods/besteffort":  "kubelet",

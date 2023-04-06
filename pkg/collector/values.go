@@ -20,6 +20,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler/api"
@@ -29,10 +30,10 @@ import (
 // value contains a metric value. Everything in a value should have the exact
 // same set of labels.
 type value struct {
-	ResourceList      corev1.ResourceList                         `json:"resourceList,omitempty" yaml:"resourceList,omitempty"`
-	MultiResourceList map[corev1.ResourceName][]resource.Quantity `json:"multiResourceList,omitempty" yaml:"multiResourceList,omitempty"`
-	Level             string                                      `json:"level" yaml:"level"`
-	Source            string                                      `json:"source" yaml:"source"`
+	ResourceList      corev1.ResourceList                          `json:"resourceList,omitempty" yaml:"resourceList,omitempty"`
+	MultiResourceList map[corev1.ResourceName][]resource.Quantity  `json:"multiResourceList,omitempty" yaml:"multiResourceList,omitempty"`
+	Level             collectorcontrollerv1alpha1.AggregationLevel `json:"level" yaml:"level"`
+	Source            collectorcontrollerv1alpha1.Source           `json:"source" yaml:"source"`
 }
 
 // ValueReader reads the requests value as a ResourceList
@@ -47,8 +48,8 @@ type ValueReader struct{}
 // - nr_throttled
 // - oom_kill
 func (r ValueReader) GetValuesForContainer(
-	container *corev1.Container, pod *corev1.Pod, usage *api.ContainerMetrics) map[string]value {
-	values := map[string]value{}
+	container *corev1.Container, pod *corev1.Pod, usage *api.ContainerMetrics) map[collectorcontrollerv1alpha1.Source]value {
+	values := map[collectorcontrollerv1alpha1.Source]value{}
 
 	// get requests and limits values
 	if pod.Status.Phase != corev1.PodSucceeded && pod.Status.Phase != corev1.PodFailed {
@@ -101,17 +102,17 @@ func (r ValueReader) GetValuesForContainer(
 		cpuValues = append(cpuValues, *resource.NewScaledQuantity(usage.CpuCoresNanoSec[i], resource.Nano))
 	}
 	if len(cpuValues) > 0 {
-		values[collectorcontrollerv1alpha1.ContainerUtilizationSource].MultiResourceList["cpu"] = cpuValues
+		values[collectorcontrollerv1alpha1.ContainerUtilizationSource].MultiResourceList[collectorcontrollerv1alpha1.ResourceCPU] = cpuValues
 
 		// get requests-utilization values
-		requestsAllocated := values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedSource].ResourceList["cpu"]
+		requestsAllocated := values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedSource].ResourceList[collectorcontrollerv1alpha1.ResourceCPU]
 		requestsMinusUtilization := make([]resource.Quantity, len(cpuValues))
 		for ii := 0; ii < len(cpuValues); ii++ {
 			var requestMinusUtilization resource.Quantity = requestsAllocated.DeepCopy()
 			requestMinusUtilization.Sub(cpuValues[ii])
 			requestsMinusUtilization[ii] = requestMinusUtilization
 		}
-		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList["cpu"] = requestsMinusUtilization
+		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList[collectorcontrollerv1alpha1.ResourceCPU] = requestsMinusUtilization
 	}
 
 	last = len(usage.MemoryBytes)
@@ -131,17 +132,17 @@ func (r ValueReader) GetValuesForContainer(
 		memoryValues = append(memoryValues, *resource.NewQuantity(usage.MemoryBytes[i], resource.DecimalSI))
 	}
 	if len(memoryValues) > 0 {
-		values[collectorcontrollerv1alpha1.ContainerUtilizationSource].MultiResourceList["memory"] = memoryValues
+		values[collectorcontrollerv1alpha1.ContainerUtilizationSource].MultiResourceList[collectorcontrollerv1alpha1.ResourceMemory] = memoryValues
 
 		// get requests-utilization values
-		requestsAllocated := values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedSource].ResourceList["memory"]
+		requestsAllocated := values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedSource].ResourceList[collectorcontrollerv1alpha1.ResourceMemory]
 		requestsMinusUtilization := make([]resource.Quantity, len(memoryValues))
 		for ii := 0; ii < len(memoryValues); ii++ {
 			var requestMinusUtilization resource.Quantity = requestsAllocated.DeepCopy()
 			requestMinusUtilization.Sub(memoryValues[ii])
 			requestsMinusUtilization[ii] = requestMinusUtilization
 		}
-		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList["memory"] = requestsMinusUtilization
+		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList[collectorcontrollerv1alpha1.ResourceMemory] = requestsMinusUtilization
 	}
 
 	if len(usage.CpuPeriodsSec) == 0 || len(usage.CpuThrottledPeriodsSec) == 0 || len(usage.OomKillCount) == 0 {
@@ -149,17 +150,17 @@ func (r ValueReader) GetValuesForContainer(
 	}
 
 	// get nr_period values
-	values[collectorcontrollerv1alpha1.NRPeriodsSource] = createValue(pod, usage.CpuPeriodsSec, collectorcontrollerv1alpha1.NRPeriodsSource, "periods")
+	values[collectorcontrollerv1alpha1.NRPeriodsSource] = createValue(pod, usage.CpuPeriodsSec, collectorcontrollerv1alpha1.NRPeriodsSource, collectorcontrollerv1alpha1.ResourcePeriods)
 	// get nr_period values
-	values[collectorcontrollerv1alpha1.NRThrottledSource] = createValue(pod, usage.CpuThrottledPeriodsSec, collectorcontrollerv1alpha1.NRThrottledSource, "periods")
+	values[collectorcontrollerv1alpha1.NRThrottledSource] = createValue(pod, usage.CpuThrottledPeriodsSec, collectorcontrollerv1alpha1.NRThrottledSource, collectorcontrollerv1alpha1.ResourcePeriods)
 	// get oom kill counter values
-	values[collectorcontrollerv1alpha1.OOMKillCountSource] = createValue(pod, usage.OomKillCount, collectorcontrollerv1alpha1.OOMKillCountSource, "items")
+	values[collectorcontrollerv1alpha1.OOMKillCountSource] = createValue(pod, usage.OomKillCount, collectorcontrollerv1alpha1.OOMKillCountSource, collectorcontrollerv1alpha1.ResourceItems)
 
 	return values
 }
 
 // createValue returns value for a container given the source usage
-func createValue(pod *corev1.Pod, usage []int64, source, resName string) value {
+func createValue(pod *corev1.Pod, usage []int64, source collectorcontrollerv1alpha1.Source, resName collectorcontrollerv1alpha1.ResourceName) value {
 	val := value{
 		MultiResourceList: map[corev1.ResourceName][]resource.Quantity{},
 		Level:             collectorcontrollerv1alpha1.ContainerLevel,
@@ -184,15 +185,15 @@ func createValue(pod *corev1.Pod, usage []int64, source, resName string) value {
 		qty = append(qty, *resource.NewQuantity(usage[i], resource.DecimalSI))
 	}
 	if len(qty) > 0 {
-		val.MultiResourceList[corev1.ResourceName(resName)] = qty
+		val.MultiResourceList[resName] = qty
 	}
 	return val
 }
 
-func (r ValueReader) GetValuesForPod(pod *corev1.Pod) map[string]value {
+func (r ValueReader) GetValuesForPod(pod *corev1.Pod) map[collectorcontrollerv1alpha1.Source]value {
 	count := value{
 		ResourceList: map[corev1.ResourceName]resource.Quantity{
-			collectorcontrollerv1alpha1.ItemsResource: *resource.NewQuantity(1, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceItems: *resource.NewQuantity(1, resource.DecimalSI),
 		},
 		Level:  collectorcontrollerv1alpha1.PodLevel,
 		Source: collectorcontrollerv1alpha1.PodItemsSource,
@@ -204,15 +205,15 @@ func (r ValueReader) GetValuesForPod(pod *corev1.Pod) map[string]value {
 				continue
 			}
 			scheduleTime := c.LastTransitionTime.Time.Sub(pod.CreationTimestamp.Time)
-			count.ResourceList[collectorcontrollerv1alpha1.ScheduleResource] = *resource.NewQuantity(int64(scheduleTime.Seconds()), resource.DecimalSI)
+			count.ResourceList[collectorcontrollerv1alpha1.ResourceScheduleTime] = *resource.NewQuantity(int64(scheduleTime.Seconds()), resource.DecimalSI)
 			break
 		}
 	} else if !pod.CreationTimestamp.IsZero() {
 		waitTime := now().Sub(pod.CreationTimestamp.Time)
-		count.ResourceList[collectorcontrollerv1alpha1.ScheduleWaitResource] = *resource.NewQuantity(int64(waitTime.Seconds()), resource.DecimalSI)
+		count.ResourceList[collectorcontrollerv1alpha1.ResourceScheduleWaitTime] = *resource.NewQuantity(int64(waitTime.Seconds()), resource.DecimalSI)
 	}
 
-	return map[string]value{
+	return map[collectorcontrollerv1alpha1.Source]value{
 		collectorcontrollerv1alpha1.PodItemsSource: count,
 	}
 }
@@ -222,7 +223,7 @@ var now = func() time.Time {
 }
 
 // GetValuesForQuota returns the ResourceLists from a namespace quota
-func (r ValueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor, enableRqd bool) map[string]value {
+func (r ValueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor, enableRqd bool) map[collectorcontrollerv1alpha1.Source]value {
 	requestsHard := value{
 		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
 		Source: collectorcontrollerv1alpha1.QuotaRequestsHardSource,
@@ -269,13 +270,13 @@ func (r ValueReader) GetValuesForQuota(quota *corev1.ResourceQuota, rqd *quotama
 
 	items := value{
 		ResourceList: map[corev1.ResourceName]resource.Quantity{
-			collectorcontrollerv1alpha1.ItemsResource: *resource.NewQuantity(1, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceItems: *resource.NewQuantity(1, resource.DecimalSI),
 		},
 		Level:  collectorcontrollerv1alpha1.NamespaceLevel,
 		Source: collectorcontrollerv1alpha1.QuotaItemsSource,
 	}
 
-	ret := map[string]value{
+	ret := map[collectorcontrollerv1alpha1.Source]value{
 		collectorcontrollerv1alpha1.QuotaRequestsHardSource:    requestsHard,
 		collectorcontrollerv1alpha1.QuotaLimitsHardSource:      limitsHard,
 		collectorcontrollerv1alpha1.QuotaRequestsUsedSource:    requestsUsed,
@@ -391,10 +392,10 @@ func subLists(a, b corev1.ResourceList) corev1.ResourceList {
 func getProposedQuota(proposed corev1.ResourceList, resourcePrefix string) corev1.ResourceList {
 	rlQuota := make(map[corev1.ResourceName]resource.Quantity)
 
-	for _, resourceType := range collectorcontrollerv1alpha1.ResourceTypes {
-		name := corev1.ResourceName(resourcePrefix + "." + resourceType)
+	for _, resourceName := range sets.List(collectorcontrollerv1alpha1.ResourceNames) {
+		name := corev1.ResourceName(resourcePrefix + "." + resourceName.String())
 		if _, ok := proposed[name]; ok {
-			rlQuota[corev1.ResourceName(resourceType)] = proposed[name]
+			rlQuota[resourceName] = proposed[name]
 		}
 	}
 
@@ -434,12 +435,12 @@ func getNodeRequestsLimits(pods []*corev1.Pod) (corev1.ResourceList, corev1.Reso
 	}
 
 	return corev1.ResourceList{
-			"cpu":    cpuRequests,
-			"memory": memoryRequests,
+			collectorcontrollerv1alpha1.ResourceCPU:    cpuRequests,
+			collectorcontrollerv1alpha1.ResourceMemory: memoryRequests,
 		},
 		corev1.ResourceList{
-			"cpu":    cpuLimits,
-			"memory": memoryLimits,
+			collectorcontrollerv1alpha1.ResourceCPU:    cpuLimits,
+			collectorcontrollerv1alpha1.ResourceMemory: memoryLimits,
 		}
 }
 
@@ -451,8 +452,8 @@ func getAllocatableMinusRequests(allocatable, requests corev1.ResourceList) core
 	memory.Sub(*requests.Memory())
 
 	return corev1.ResourceList{
-		"cpu":    cpu,
-		"memory": memory,
+		collectorcontrollerv1alpha1.ResourceCPU:    cpu,
+		collectorcontrollerv1alpha1.ResourceMemory: memory,
 	}
 }
 
@@ -477,7 +478,7 @@ func getMaxObservedQuota(rqd *quotamanagementv1alpha1.ResourceQuotaDescriptor) (
 }
 
 // GetValuesForNode returns the metric values for a Node.  pods is the Pods scheduled to this Node.
-func (r ValueReader) GetValuesForNode(node *corev1.Node, pods []*corev1.Pod) map[string]value {
+func (r ValueReader) GetValuesForNode(node *corev1.Node, pods []*corev1.Pod) map[collectorcontrollerv1alpha1.Source]value {
 	allocatable := value{
 		ResourceList: node.Status.Allocatable,
 		Level:        collectorcontrollerv1alpha1.NodeLevel,
@@ -490,7 +491,7 @@ func (r ValueReader) GetValuesForNode(node *corev1.Node, pods []*corev1.Pod) map
 	}
 	count := value{
 		ResourceList: map[corev1.ResourceName]resource.Quantity{
-			collectorcontrollerv1alpha1.ItemsResource: *resource.NewQuantity(1, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceItems: *resource.NewQuantity(1, resource.DecimalSI),
 		},
 		Level:  collectorcontrollerv1alpha1.NodeLevel,
 		Source: collectorcontrollerv1alpha1.NodeItemsSource,
@@ -513,7 +514,7 @@ func (r ValueReader) GetValuesForNode(node *corev1.Node, pods []*corev1.Pod) map
 
 	allocatableMinusRequests.ResourceList = getAllocatableMinusRequests(allocatable.ResourceList, requests.ResourceList)
 
-	return map[string]value{
+	return map[collectorcontrollerv1alpha1.Source]value{
 		collectorcontrollerv1alpha1.NodeAllocatableSource:        allocatable,
 		collectorcontrollerv1alpha1.NodeCapacitySource:           capacity,
 		collectorcontrollerv1alpha1.NodeItemsSource:              count,
@@ -522,7 +523,7 @@ func (r ValueReader) GetValuesForNode(node *corev1.Node, pods []*corev1.Pod) map
 		collectorcontrollerv1alpha1.NodeAllocatableMinusRequests: allocatableMinusRequests}
 }
 
-func (r ValueReader) GetValuesForPVC(pvc *corev1.PersistentVolumeClaim) map[string]value {
+func (r ValueReader) GetValuesForPVC(pvc *corev1.PersistentVolumeClaim) map[collectorcontrollerv1alpha1.Source]value {
 	requests := value{
 		ResourceList: pvc.Spec.Resources.Requests,
 		Level:        collectorcontrollerv1alpha1.PVCLevel,
@@ -540,13 +541,13 @@ func (r ValueReader) GetValuesForPVC(pvc *corev1.PersistentVolumeClaim) map[stri
 	}
 	count := value{
 		ResourceList: map[corev1.ResourceName]resource.Quantity{
-			collectorcontrollerv1alpha1.ItemsResource: *resource.NewQuantity(1, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceItems: *resource.NewQuantity(1, resource.DecimalSI),
 		},
 		Level:  collectorcontrollerv1alpha1.PVCLevel,
 		Source: collectorcontrollerv1alpha1.PVCItemsSource,
 	}
 
-	return map[string]value{
+	return map[collectorcontrollerv1alpha1.Source]value{
 		collectorcontrollerv1alpha1.PVCRequestsSource: requests,
 		collectorcontrollerv1alpha1.PVCLimitsSource:   limits,
 		collectorcontrollerv1alpha1.PVCCapacitySource: capacity,
@@ -554,7 +555,7 @@ func (r ValueReader) GetValuesForPVC(pvc *corev1.PersistentVolumeClaim) map[stri
 	}
 }
 
-func (r ValueReader) GetValuesForPV(pv *corev1.PersistentVolume) map[string]value {
+func (r ValueReader) GetValuesForPV(pv *corev1.PersistentVolume) map[collectorcontrollerv1alpha1.Source]value {
 	capacity := value{
 		ResourceList: pv.Spec.Capacity,
 		Level:        collectorcontrollerv1alpha1.PVLevel,
@@ -562,13 +563,13 @@ func (r ValueReader) GetValuesForPV(pv *corev1.PersistentVolume) map[string]valu
 	}
 	count := value{
 		ResourceList: map[corev1.ResourceName]resource.Quantity{
-			collectorcontrollerv1alpha1.ItemsResource: *resource.NewQuantity(1, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceItems: *resource.NewQuantity(1, resource.DecimalSI),
 		},
 		Level:  collectorcontrollerv1alpha1.PVLevel,
 		Source: collectorcontrollerv1alpha1.PVItemsSource,
 	}
 
-	return map[string]value{
+	return map[collectorcontrollerv1alpha1.Source]value{
 		collectorcontrollerv1alpha1.PVCapacitySource: capacity,
 		collectorcontrollerv1alpha1.PVItemsSource:    count}
 }

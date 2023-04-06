@@ -31,7 +31,7 @@ import (
 
 type SampleListBuilder struct {
 	Mask          collectorcontrollerv1alpha1.LabelsMask
-	SourceType    string
+	SourceType    collectorcontrollerv1alpha1.SourceType
 	DirectoryPath string
 	Save          bool
 	TimeFormat    string
@@ -39,16 +39,16 @@ type SampleListBuilder struct {
 	C             *Collector
 }
 
-func (c *Collector) NewAggregatedSampleListBuilder(src string) *SampleListBuilder {
+func (c *Collector) NewAggregatedSampleListBuilder(src collectorcontrollerv1alpha1.SourceType) *SampleListBuilder {
 	return c.newSampleListBuilder(src, true)
 }
 
-func (c *Collector) NewSampleListBuilder(src string) *SampleListBuilder {
+func (c *Collector) NewSampleListBuilder(src collectorcontrollerv1alpha1.SourceType) *SampleListBuilder {
 	return c.newSampleListBuilder(src, false)
 }
 
 // NewSampleListBuilder returns a SampleBuilder for
-func (c *Collector) newSampleListBuilder(src string, createIfNoMatch bool) *SampleListBuilder {
+func (c *Collector) newSampleListBuilder(src collectorcontrollerv1alpha1.SourceType, createIfNoMatch bool) *SampleListBuilder {
 	if c.SaveSamplesLocally == nil {
 		return nil
 	}
@@ -58,7 +58,7 @@ func (c *Collector) newSampleListBuilder(src string, createIfNoMatch bool) *Samp
 		SourceType:    src,
 		DirectoryPath: c.SaveSamplesLocally.DirectoryPath,
 		TimeFormat:    c.SaveSamplesLocally.TimeFormat,
-		SampleList:    &collectorapi.SampleList{Timestamp: ts, Type: src},
+		SampleList:    &collectorapi.SampleList{Timestamp: ts, Type: src.String()},
 	}
 	// index the label mask to use  for each sample
 	for _, s := range c.SaveSamplesLocally.SampleSources {
@@ -92,12 +92,12 @@ func (sb *SampleListBuilder) NewSample(labels LabelsValues) *collectorapi.Sample
 }
 
 // AddQuantityValues adds a Metric to the sample with the provided values
-func (sb *SampleListBuilder) AddQuantityValues(s *collectorapi.Sample, resourceType string, source string, v ...resource.Quantity) {
+func (sb *SampleListBuilder) AddQuantityValues(s *collectorapi.Sample, resourceType collectorcontrollerv1alpha1.ResourceName, source collectorcontrollerv1alpha1.Source, v ...resource.Quantity) {
 	if sb == nil {
 		return
 	}
 
-	m := &collectorapi.Metric{Source: source, ResourceType: resourceType}
+	m := &collectorapi.Metric{Source: string(source), ResourceType: string(resourceType)}
 	s.Values = append(s.Values, m)
 	for i := range v {
 		m.Values = append(m.Values, v[i].AsApproximateFloat64())
@@ -105,12 +105,12 @@ func (sb *SampleListBuilder) AddQuantityValues(s *collectorapi.Sample, resourceT
 }
 
 // AddIntValues adds a Metric to the sample with the provided values
-func (sb *SampleListBuilder) AddIntValues(s *collectorapi.Sample, resourceType string, source string, v ...int64) {
+func (sb *SampleListBuilder) AddIntValues(s *collectorapi.Sample, resourceType collectorcontrollerv1alpha1.ResourceName, source collectorcontrollerv1alpha1.Source, v ...int64) {
 	if sb == nil {
 		return
 	}
 
-	m := &collectorapi.Metric{Source: source, ResourceType: resourceType}
+	m := &collectorapi.Metric{Source: string(source), ResourceType: string(resourceType)}
 	s.Values = append(s.Values, m)
 	for i := range v {
 		m.Values = append(m.Values, float64(v[i]))
@@ -151,9 +151,9 @@ func (sb *SampleListBuilder) SaveSamplesToFile() error {
 	cn := os.Getenv("CLUSTER_NAME")
 	var filename string
 	if cn != "" {
-		filename = filepath.Join(sb.DirectoryPath, sb.SourceType, time.Now().Format(sb.TimeFormat)+"_"+cn+"_"+sb.SourceType+".samplelist.pb")
+		filename = filepath.Join(sb.DirectoryPath, sb.SourceType.String(), time.Now().Format(sb.TimeFormat)+"_"+cn+"_"+sb.SourceType.String()+".samplelist.pb")
 	} else {
-		filename = filepath.Join(sb.DirectoryPath, sb.SourceType, time.Now().Format(sb.TimeFormat)+"_"+sb.SourceType+".samplelist.pb")
+		filename = filepath.Join(sb.DirectoryPath, sb.SourceType.String(), time.Now().Format(sb.TimeFormat)+"_"+sb.SourceType.String()+".samplelist.pb")
 	}
 	err = os.MkdirAll(filepath.Dir(filename), 0700)
 	if err != nil {

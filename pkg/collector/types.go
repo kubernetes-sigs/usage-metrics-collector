@@ -15,8 +15,6 @@
 package collector
 
 import (
-	"strings"
-
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/pointer"
@@ -127,7 +125,7 @@ func (c *Collector) defaultMetricsPrometheusCollector() {
 func (c *Collector) validateMetricsPrometheusCollector() error {
 	resourceAlias := sets.NewString()
 	for _, v := range c.Resources {
-		resourceAlias.Insert(v)
+		resourceAlias.Insert(string(v))
 	}
 
 	if !c.PreComputeMetrics.Enabled && c.SaveSamplesLocally != nil {
@@ -136,17 +134,17 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 
 	for i, a := range c.Aggregations {
 		for _, s := range a.Sources.Container {
-			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.ContainerSources.Has(s) {
+			if !s.IsExtension() && !collectorcontrollerv1alpha1.ContainerSources.Has(s) {
 				return errors.Errorf("invalid container source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.Pod {
-			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.PodSources.Has(s) {
+			if !s.IsExtension() && !collectorcontrollerv1alpha1.PodSources.Has(s) {
 				return errors.Errorf("invalid pod source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.Node {
-			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.NodeSources.Has(s) {
+			if !s.IsExtension() && !collectorcontrollerv1alpha1.NodeSources.Has(s) {
 				return errors.Errorf("invalid node source '%s'", s)
 			}
 		}
@@ -167,35 +165,35 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 			}
 		}
 		for _, s := range a.Sources.Quota {
-			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.QuotaSources.Has(s) {
+			if !s.IsExtension() && !collectorcontrollerv1alpha1.QuotaSources.Has(s) {
 				return errors.Errorf("invalid quota source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.PV {
-			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.PVSources.Has(s) {
+			if !s.IsExtension() && !collectorcontrollerv1alpha1.PVSources.Has(s) {
 				return errors.Errorf("invalid pv source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.PVC {
-			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.PVCSources.Has(s) {
+			if !s.IsExtension() && !collectorcontrollerv1alpha1.PVCSources.Has(s) {
 				return errors.Errorf("invalid pvc source '%s'", s)
 			}
 		}
 		for _, s := range a.Sources.Namespace {
-			if !strings.HasPrefix(s, "ext_") && !collectorcontrollerv1alpha1.NamespaceSources.Has(s) {
+			if !s.IsExtension() && !collectorcontrollerv1alpha1.NamespaceSources.Has(s) {
 				return errors.Errorf("invalid namespace source '%s'", s)
 			}
 		}
 
-		if !collectorcontrollerv1alpha1.Types.Has(a.Sources.Type) {
+		if !collectorcontrollerv1alpha1.SourceTypes.Has(a.Sources.Type) {
 			return errors.Errorf("invalid aggregation type '%s'", a.Sources.Type)
 		}
 		if len(a.Levels) == 0 {
 			return errors.Errorf("aggregation %v missing levels", i)
 		}
-		if a.Sources.Type == "container" {
+		if a.Sources.Type == collectorcontrollerv1alpha1.ContainerType {
 			// the container utilization source has multiple values over time which should never be summed
-			sources := sets.NewString(a.Sources.GetSources()...)
+			sources := sets.New(a.Sources.GetSources()...)
 			if len(a.Levels[0].Operations) == 0 && sources.Has(collectorcontrollerv1alpha1.ContainerUtilizationSource) &&
 				InvalidContainerUtilizationInitialLevelOperations.Has(string(a.Levels[0].Operation)) {
 				return errors.Errorf("initial operation for aggregation %v must not be 'sum' if utilization source is used", i)
@@ -203,12 +201,12 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 		}
 
 		for _, l := range a.Levels {
-			if len(l.Operations) == 0 && !collectorcontrollerv1alpha1.Operations.Has(string(l.Operation)) {
+			if len(l.Operations) == 0 && !collectorcontrollerv1alpha1.AggregationOperations.Has(l.Operation) {
 				return errors.Errorf("invalid aggregation level operation '%s'", l.Operation)
 			}
 
 			for _, op := range l.Operations {
-				if !collectorcontrollerv1alpha1.Operations.Has(string(op)) {
+				if len(l.Operations) == 0 && !collectorcontrollerv1alpha1.AggregationOperations.Has(op) {
 					return errors.Errorf("invalid aggregation level operation '%s'", l.Operation)
 				}
 			}

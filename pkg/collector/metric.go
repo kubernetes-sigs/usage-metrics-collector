@@ -38,21 +38,21 @@ type Metric struct {
 type MetricName struct {
 	Prefix string
 
-	Level string // e.g. cluster
+	Level collectorcontrollerv1alpha1.AggregationLevel // e.g. cluster
 
-	Operation string // e.g. sum
+	Operation collectorcontrollerv1alpha1.AggregationOperation // e.g. sum
 
-	Source string // e.g. requests_quota_hard
+	Source collectorcontrollerv1alpha1.Source // e.g. requests_quota_hard
 
-	ResourceAlias string // e.g. cpu_cores
+	ResourceAlias collectorcontrollerv1alpha1.ResourceAlias // e.g. cpu_cores
 
-	Resource string // e.g. cpu
+	Resource collectorcontrollerv1alpha1.ResourceName // e.g. cpu
 
-	SourceType string // e.g. quota
+	SourceType collectorcontrollerv1alpha1.SourceType // e.g. quota
 }
 
 func (m MetricName) String() string {
-	return strings.Join([]string{m.Prefix, m.Level, m.Operation, m.Source, m.ResourceAlias}, "_")
+	return strings.Join([]string{m.Prefix, string(m.Level), string(m.Operation), string(m.Source), string(m.ResourceAlias)}, "_")
 }
 
 // quantities is a list of quantities
@@ -87,7 +87,7 @@ func (c *Collector) collectHistogramMetric(m Metric, ch chan<- prometheus.Metric
 
 	// Create the histogram with the label names
 	hv := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Buckets: m.Buckets[m.Name.ResourceAlias],
+		Buckets: m.Buckets[string(m.Name.ResourceAlias)],
 		Help:    m.Name.String(),
 		Name:    m.Name.String(),
 	}, names)
