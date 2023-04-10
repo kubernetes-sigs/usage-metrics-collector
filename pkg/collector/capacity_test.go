@@ -536,6 +536,8 @@ func TestValues(t *testing.T) {
 			values = instance.GetValuesForContainer(&pod.Spec.Containers[0], pod, usage)
 		case strings.Contains(tc.ExpectedFilepath, "pod"):
 			values = instance.GetValuesForPod(inputs.Pods[0])
+		case strings.Contains(tc.ExpectedFilepath, "scheduler"):
+			values = instance.GetValuesForSchedulerHealth(inputs.Pods[0], time.Minute)
 		case strings.Contains(tc.ExpectedFilepath, "node"):
 			values = instance.GetValuesForNode(&inputs.Node, inputs.Pods)
 		case strings.Contains(tc.ExpectedFilepath, "quota"):

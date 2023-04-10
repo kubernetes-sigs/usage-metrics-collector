@@ -843,6 +843,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 	// metrics
 	containerMetrics := map[MetricName]*Metric{}
 	podMetrics := map[MetricName]*Metric{}
+	schedulerMetrics := map[MetricName]*Metric{}
 
 	// debug state
 	results := map[string]int{}
@@ -888,6 +889,32 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 				if !ok {
 					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
 					podMetrics[name] = m
+				}
+				// set the value
+				if _, ok := m.Values[podLabels]; ok {
+					// already found an item here
+					log.Info("duplicate value for pods", "labels", podLabels)
+				}
+				m.Values[podLabels] = []resource.Quantity{q}
+			}
+		}
+
+		// collect scheduler health values
+		values = c.Reader.GetValuesForSchedulerHealth(pod, c.SchedulerRecencyPeriod)
+
+		for src, v := range values {
+			for r, alias := range c.Resources { // resource names are are interested in
+				q, ok := v.ResourceList[corev1.ResourceName(r)]
+				if !ok {
+					// container doesn't have values for this compute resource type -- skip it
+					continue
+				}
+
+				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.SchedulerHealthType}
+				m, ok := schedulerMetrics[name]
+				if !ok {
+					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
+					schedulerMetrics[name] = m
 				}
 				// set the value
 				if _, ok := m.Values[podLabels]; ok {
