@@ -54,13 +54,15 @@ var (
 	commit  = "none"
 	date    = "unknown"
 
-	logPath, pprofPort          string
-	profileMemory, pprof        bool
-	exitAfterLeaderElectionLoss time.Duration
+	logPath, pprofPort                                        string
+	profileMemory, pprof                                      bool
+	exitAfterLeaderElectionLoss, leaseDuration, renewDeadline time.Duration
 
 	options = Options{Options: ctrl.Options{
 		Scheme:           scheme.Scheme,
 		LeaderElectionID: "capacity-metrics-prometheus-collector-lock",
+		LeaseDuration:    &leaseDuration,
+		RenewDeadline:    &renewDeadline,
 	}}
 	RootCmd = &cobra.Command{
 		RunE: RunE,
@@ -111,6 +113,10 @@ func init() {
 
 	RootCmd.Flags().StringVar(&pprofPort, "pprof-port", "6060", "pprof port")
 
+	RootCmd.Flags().DurationVar(&leaseDuration, "lease-duration", 30*time.Second, "controller manager lease duration")
+
+	RootCmd.Flags().DurationVar(&renewDeadline, "renew-deadline", 20*time.Second, "controller manager lease renew deadline")
+
 	RootCmd.Flags().DurationVar(&exitAfterLeaderElectionLoss, "exit-after-leader-election-loss", time.Second*15, "if set to a non-zero durtion, exit after leader election loss + duration")
 
 	// Add the go `flag` package flags -- e.g. `--kubeconfig`
@@ -127,7 +133,7 @@ func RunE(_ *cobra.Command, _ []string) error {
 			http.ListenAndServe(fmt.Sprintf(":%s", pprofPort), nil)
 		}()
 	}
-	
+
 	electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
 	if profileMemory {
 		defer profile.Start(profile.MemProfile).Stop()
@@ -149,7 +155,11 @@ func RunE(_ *cobra.Command, _ []string) error {
 		"leader-election", options.LeaderElection,
 		"leader-election-namespace", options.LeaderElectionNamespace,
 		"log-level-filepath", logPath,
-		"profile-memory", profileMemory)
+		"profile-memory", profileMemory,
+		"leaseDuration", leaseDuration,
+		"renewDeadline", renewDeadline,
+		"pprof", pprof,
+		"pprofPort", pprofPort)
 
 	// get the Kubernetes config
 	restConfig, err := ctrl.GetConfig()
