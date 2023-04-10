@@ -65,14 +65,13 @@ func (s *Server) RunE(cmd *cobra.Command, args []string) error {
 		log.Error(err, "unable to unmarshal sampler-config-filepath")
 		return err
 	}
-	ctx, stop := context.WithCancel(context.Background())
-	ctx, _ = signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		// force process to exit so we don't get stuck in a terminating state
 		// its much better to get killed and recreated than to hang
 		<-ctx.Done()
-		log.Info("shutting down metrics-node-sampler")
+		log.Info("shutting down metrics-node-sampler", "err", ctx.Err())
 		time.Sleep(time.Duration(terminationSeconds) * time.Second)
 		log.Info("terminating metrics-node-sampler")
 		os.Exit(0)

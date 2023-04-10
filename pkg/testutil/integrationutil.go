@@ -89,7 +89,7 @@ var PodMetricsCRD = apiextensionsv1.CustomResourceDefinition{
 				Schema: &apiextensionsv1.CustomResourceValidation{
 					// Keep all the fields so we don't have to put the full schema here
 					OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
-						XPreserveUnknownFields: pointer.BoolPtr(true),
+						XPreserveUnknownFields: pointer.Bool(true),
 						Type:                   "object",
 					},
 				},
@@ -122,7 +122,7 @@ var ResourceQuotaDescriptorCRD = apiextensionsv1.CustomResourceDefinition{
 				Schema: &apiextensionsv1.CustomResourceValidation{
 					// Keep all the fields so we don't have to put the full schema here
 					OpenAPIV3Schema: &apiextensionsv1.JSONSchemaProps{
-						XPreserveUnknownFields: pointer.BoolPtr(true),
+						XPreserveUnknownFields: pointer.Bool(true),
 						Type:                   "object",
 						Properties: map[string]apiextensionsv1.JSONSchemaProps{
 							"metadata": {
@@ -310,7 +310,7 @@ func (suite *IntegrationTestSuite) RunCommand(t *testing.T, cmd string, args ...
 
 	var buff bytes.Buffer
 	command.Stdout = &buff
-	command.Stdout = &buff
+	command.Stderr = os.Stderr
 	go func() {
 		err := command.Run()
 		err = errors.Wrap(err, buff.String())

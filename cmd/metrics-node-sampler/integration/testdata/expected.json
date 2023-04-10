@@ -3,6 +3,9 @@
 		{
 			"containerID": "abcdef",
 			"podUID": "pod12345",
+			"containerName": "",
+			"podName": "",
+			"namespaceName": "",
 			"cpuCoresNanoSec": [
 				"200",
 				"250",

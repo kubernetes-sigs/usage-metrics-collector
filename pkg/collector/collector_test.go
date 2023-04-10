@@ -15,6 +15,7 @@
 package collector
 
 import (
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -42,8 +43,10 @@ func TestGetCGroupMetricSource(t *testing.T) {
 					Name: "root",
 				},
 			},
-		},
+		}, IsLeaderElected: &atomic.Bool{},
 	}
+	instance.UtilizationServer.IsReadyResult.Store(true)
+	instance.IsLeaderElected.Store(true)
 	expected := map[string]collectorcontrollerv1alpha1.Source{
 		"system.slice/foo/bar": "", // not present
 		"system.slice/foo":     "system",

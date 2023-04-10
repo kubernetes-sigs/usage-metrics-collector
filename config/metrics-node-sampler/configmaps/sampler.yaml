@@ -1,4 +1,5 @@
-pushAddress: "metrics-prometheus-collector:9090" # push metrics to this service
+pushHeadlessService: "metrics-prometheus-collector:9090" # push metrics to this service
+pushAddress: "deprecated"
 pushFrequencyDuration: "1m" # push metrics to the collector every minute
 exitOnConfigChange: true
 buffer:

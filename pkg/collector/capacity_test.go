@@ -22,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -171,6 +172,8 @@ func TestCollector(t *testing.T) {
 		instance, err := NewCollector(context.Background(), c, &spec)
 		require.NoError(t, err)
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
+		instance.UtilizationServer.IsReadyResult.Store(true)
+		instance.IsLeaderElected.Store(true)
 
 		if os.Getenv("TEST_COLLECTOR_FUNCS_OVERRIDE") == "true" {
 			fns := CollectorFuncs()
@@ -245,6 +248,8 @@ func TestCollectorOverride(t *testing.T) {
 		instance, err := NewCollector(context.Background(), c, &spec)
 		require.NoError(t, err)
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
+		instance.UtilizationServer.IsReadyResult.Store(true)
+		instance.IsLeaderElected.Store(true)
 
 		reg := prometheus.NewPedanticRegistry()
 		require.NoError(t, reg.Register(instance))
@@ -323,6 +328,8 @@ func testSave(t *testing.T, saveJSON, saveProto bool) {
 		instance, err := NewCollector(context.Background(), c, &spec)
 		require.NoError(t, err)
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
+		instance.UtilizationServer.IsReadyResult.Store(true)
+		instance.IsLeaderElected.Store(true)
 
 		ctx, cancelCtx := context.WithCancel(context.Background())
 		go instance.Run(ctx)
@@ -458,8 +465,9 @@ func TestLabels(t *testing.T) {
 			"input.yaml": &inputs,
 		})
 
-		c := Collector{MetricsPrometheusCollector: &inputs.Spec}
+		c := Collector{MetricsPrometheusCollector: &inputs.Spec, IsLeaderElected: &atomic.Bool{}}
 		require.NoError(t, c.init())
+		c.IsLeaderElected.Store(true)
 
 		instance := Labeler{
 			BuiltIn: builtInLabler{

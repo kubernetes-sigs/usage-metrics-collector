@@ -145,6 +145,14 @@ type UtilizationServer struct {
 	SamplerPodLabels map[string]string `json:"samplerPodLabels" yaml:"samplerPodLabels"`
 	// SamplerNamespaceName is the name of the sampler namespace.
 	SamplerNamespaceName string `json:"samplerNamespaceName" yaml:"samplerNamespaceName"`
+
+	CollectorPodLabels map[string]string `json:"collectorPodLabels" yaml:"collectorPodLabels"`
+
+	CollectorPodIPsIndex int `json:"collectorPodIPsIndex" yaml:"collectorPodIPsIndex"`
+
+	SamplerPort int `json:"samplerPort" yaml:"samplerPort"`
+
+	MinResultPctBeforeReady int `json:"minResultPctBeforeReady" yaml:"minResultPctBeforeReady"`
 }
 
 // Condition matches a node condition to determine whether a node is unhealthy.

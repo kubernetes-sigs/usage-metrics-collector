@@ -16,6 +16,7 @@ package samplerserverv1alpha1
 
 import (
 	"path/filepath"
+	"time"
 
 	"k8s.io/utils/pointer"
 )
@@ -32,7 +33,9 @@ type MetricsNodeSampler struct {
 	RestPort                  int `json:"restPort" yaml:"restPort"`
 	SendPushMetricsRetryCount int `json:"sendPushMetricsRetryCount" yaml:"sendPushMetricsRetryCount"`
 
-	PushAddress              string `json:"pushAddress" yaml:"pushAddress"`
+	DEPRECATED_PushService   string `json:"pushAddress" yaml:"pushAddress"` // TODO: Remove this
+	PushHeadlessService      string `json:"pushHeadlessService" yaml:"pushHeadlessService"`
+	PushHeadlessServicePort  int    `json:"pushHeadlessServicePort" yaml:"pushHeadlessServicePort"`
 	PushFrequency            string `json:"pushFrequencyDuration" yaml:"pushFrequencyDuration"`
 	CheckCreatedPodFrequency string `json:"checkCreatedPodFrequencyDuration" yaml:"checkCreatedPodFrequencyDuration"`
 
@@ -48,6 +51,20 @@ type MetricsNodeSampler struct {
 	// ContainerdNamespace specifies which containerd namespace to collect metrics for
 	// Default: default
 	ContainerdNamespace string `json:"containerdNamespace" yaml:"containerdNamespace"`
+
+	DNSSpec DNSSpec `json:"dnsSpec" yaml:"dnsSpec"`
+}
+
+type DNSSpec struct {
+	PollSeconds        int `json:"pollSeconds" yaml:"pollSeconds"`
+	FailuresBeforeExit int `json:"failuresBeforeExit" yaml:"failuresBeforeExit"`
+	BackoffSeconds     int `json:"backoffSeconds" yaml:"backoffSeconds"`
+
+	// CollectorServerExpiration sets the time to stop trying to re-establish grpc connections to
+	// collector servers after we last saw them in DNS or through direct registrations.
+	// Metrics will continue to be published to collectors until the connection is closed by the collector
+	// or until the sampler terminates.
+	CollectorServerExpiration time.Duration `json:"collectorServerExpiration" yaml:"collectorServerExpiration"`
 }
 
 // Buffer configures the window of buffered metric samples.
@@ -235,6 +252,9 @@ func (s *MetricsNodeSampler) Default() {
 		s.Reader.NodeAggregationLevelGlobs = DefaultNodeAggregationLevels
 	}
 
+	if s.PushHeadlessServicePort == 0 {
+		s.PushHeadlessServicePort = 9090
+	}
 	if s.PushFrequency == "" {
 		s.PushFrequency = DefaultPushFrequency
 	}
