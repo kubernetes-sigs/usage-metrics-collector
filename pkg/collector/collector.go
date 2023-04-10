@@ -900,7 +900,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 		}
 
 		// collect scheduler health values
-		values = c.Reader.GetValuesForSchedulerHealth(pod, c.SchedulerRecencyPeriod)
+		values = c.Reader.GetValuesForSchedulerHealth(pod, time.Duration(c.SchedulerRecencyPeriodSeconds)*time.Second)
 
 		for src, v := range values {
 			for r, alias := range c.Resources { // resource names are are interested in

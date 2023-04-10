@@ -1,4 +1,5 @@
 prefix: "kube_usage"
+schedulerRecencyPeriodSeconds: 600
 resources:
   "cpu": "cpu_cores"
   "memory": "memory_bytes"

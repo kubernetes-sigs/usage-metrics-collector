@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -85,10 +84,10 @@ type MetricsPrometheusCollector struct {
 	// SideCar metric
 	SideCarConfigDirectoryPaths []string `json:"sideCarMetricPaths" yaml:"sideCarMetricPaths"`
 
-	// SchedulerRecencyPeriod determines the time period during which pods are considered
+	// SchedulerRecencyPeriodSeconds determines the time period during which pods are considered
 	// to be recently scheduled.
 	// If set to zero, only pods that have not been scheduled will be considered.
-	SchedulerRecencyPeriod time.Duration
+	SchedulerRecencyPeriodSeconds uint64 `json:"schedulerRecencyPeriodSeconds" yaml:"schedulerRecencyPeriodSeconds"`
 }
 
 var (
