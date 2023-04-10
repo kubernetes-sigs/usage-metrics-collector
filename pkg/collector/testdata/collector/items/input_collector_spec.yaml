@@ -3,8 +3,7 @@ resources:
   "cpu": "cpu_cores"
   "memory": "memory_bytes"
   "items": "items"
-  "schedule_time": "schedule_time_seconds"
-  "schedule_wait_time": "schedule_wait_time_seconds"
+  "time": "time_seconds"
 extensions:
   podLabels:
   - name: pod_annotation
@@ -89,3 +88,23 @@ aggregations:
       name: "node_cluster_ext"
       builtIn:
         node_unschedulable: true
+- sources:
+    type: "scheduler_health"
+    scheduler_health:
+    - "scheduler_recent"
+  levels:
+  - operation: "max"
+    mask:
+      name: "priority"
+      builtIn:
+        exported_namespace: true
+        priority_class: true
+      extensions:
+        node_label: true
+  - operation: "max"
+    mask:
+      name: "namespace"
+      builtIn:
+        exported_namespace: true
+      extensions:
+        node_label: true

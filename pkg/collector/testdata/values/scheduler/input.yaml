@@ -1,0 +1,15 @@
+pods:
+  - apiVersion: v1
+    kind: Pod
+    spec:
+      containers:
+        - name: container-1
+          resources:
+            requests:
+              memory: "10M"
+              cpu: "1"
+              extensionResource: "50"
+            limits:
+              memory: "20M"
+              cpu: "2"
+              extensionResource: "100"

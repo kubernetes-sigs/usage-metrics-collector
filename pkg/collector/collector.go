@@ -1049,6 +1049,11 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.PodType) {
 		c.AggregateAndCollect(a, podMetrics, ch, sCh)
 	}
+
+	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.SchedulerHealthType) {
+		c.AggregateAndCollect(a, schedulerMetrics, ch, sCh)
+	}
+
 	for id := range utilization {
 		haveUsageForContainers.Insert(id.PodUID + "/" + id.ContainerID)
 	}

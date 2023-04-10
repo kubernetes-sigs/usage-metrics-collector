@@ -87,6 +87,7 @@ type MetricsPrometheusCollector struct {
 
 	// SchedulerRecencyPeriod determines the time period during which pods are considered
 	// to be recently scheduled.
+	// If set to zero, only pods that have not been scheduled will be considered.
 	SchedulerRecencyPeriod time.Duration
 }
 

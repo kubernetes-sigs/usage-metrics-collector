@@ -225,6 +225,8 @@ func (r ValueReader) GetValuesForSchedulerHealth(pod *corev1.Pod, recencyPeriod 
 
 	return map[collectorcontrollerv1alpha1.Source]value{
 		collectorcontrollerv1alpha1.SchedulerRecentSource: {
+			Level:  collectorcontrollerv1alpha1.PodLevel,
+			Source: collectorcontrollerv1alpha1.SchedulerRecentSource,
 			ResourceList: map[corev1.ResourceName]resource.Quantity{
 				collectorcontrollerv1alpha1.ResourceTime: *resource.NewMilliQuantity(duration.Milliseconds(), resource.DecimalSI),
 			},
