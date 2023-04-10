@@ -34,6 +34,7 @@ type Container struct {
 	SandboxNamespace string
 	ContainerName    string
 	Container        containerd.Container
+	NamespaceName    string
 }
 
 var ctrStatsLog = logrus.WithField("source", "ctrstats")
@@ -55,7 +56,7 @@ func GetContainers(client *containerd.Client) ([]Container, error) {
 	}
 
 	for _, c := range containers {
-		var sandboxID, podName, sandboxNamespace, containerName string
+		var sandboxID, sandboxNamespace string
 
 		container, err := c.Info(ctx)
 		if err != nil {
@@ -77,18 +78,17 @@ func GetContainers(client *containerd.Client) ([]Container, error) {
 			}
 
 			sandboxID = spec.Annotations["io.kubernetes.cri.sandbox-id"]
-			podName = spec.Annotations["io.kubernetes.cri.sandbox-name"]
 			sandboxNamespace = spec.Annotations["io.kubernetes.cri.sandbox-namespace"]
-			containerName = spec.Annotations["io.kubernetes.cri.container-name"]
 		}
 
 		containerInfo := Container{
 			ContainerID:      c.ID(),
 			SandboxID:        sandboxID,
 			PodID:            container.Labels["io.kubernetes.pod.uid"],
-			PodName:          podName,
+			PodName:          container.Labels["io.kubernetes.pod.name"],
 			SandboxNamespace: sandboxNamespace,
-			ContainerName:    containerName,
+			ContainerName:    container.Labels["io.kubernetes.container.name"],
+			NamespaceName:    container.Labels["io.kubernetes.pod.namespace"],
 			Container:        c,
 		}
 

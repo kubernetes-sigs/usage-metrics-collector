@@ -29,13 +29,16 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/go-logr/logr"
 	"github.com/pkg/profile"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	clientset "k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -46,7 +49,6 @@ import (
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 	"sigs.k8s.io/usage-metrics-collector/pkg/scheme"
 	versioncollector "sigs.k8s.io/usage-metrics-collector/pkg/version"
-	"sigs.k8s.io/usage-metrics-collector/pkg/watchconfig"
 )
 
 var (
@@ -54,16 +56,11 @@ var (
 	commit  = "none"
 	date    = "unknown"
 
-	logPath, pprofPort                                        string
-	profileMemory, pprof                                      bool
-	exitAfterLeaderElectionLoss, leaseDuration, renewDeadline time.Duration
+	logPath, pprofPort                                                     string
+	profileMemory, pprof                                                   bool
+	exitAfterLeaderElectionLoss, leaseDuration, renewDeadline, retryPeriod time.Duration
 
-	options = Options{Options: ctrl.Options{
-		Scheme:           scheme.Scheme,
-		LeaderElectionID: "capacity-metrics-prometheus-collector-lock",
-		LeaseDuration:    &leaseDuration,
-		RenewDeadline:    &renewDeadline,
-	}}
+	options = Options{Options: ctrl.Options{Scheme: scheme.Scheme}}
 	RootCmd = &cobra.Command{
 		RunE: RunE,
 	}
@@ -79,6 +76,10 @@ var (
 // Options is set by flags
 type Options struct {
 	ctrl.Options
+	LeaderElection             bool
+	LeaderElectionNamespace    string
+	LeaderElectionLockName     string
+	PodName                    string
 	metricsPrometheusCollector string
 }
 
@@ -102,8 +103,9 @@ func init() {
 	RootCmd.Flags().BoolVar(&options.LeaderElection, "leader-election", false, "Enable leader election")
 
 	// This is used for integration testing only
-	RootCmd.Flags().StringVar(&options.LeaderElectionNamespace, "leader-election-namespace", "", "Set the namespace used for leader election -- for testing only")
-	_ = RootCmd.Flags().MarkHidden("leader-election-namespace")
+	RootCmd.Flags().StringVar(&options.LeaderElectionNamespace, "leader-election-namespace", os.Getenv("POD_NAMESPACE"), "Set the namespace used for leader election")
+	RootCmd.Flags().StringVar(&options.LeaderElectionLockName, "leader-election-lock-name", "metrics-prometheus-collector", "Set the lock name used for leader election")
+	RootCmd.Flags().StringVar(&options.PodName, "leader-election-pod-name", os.Getenv("POD_NAME"), "Set the id used for leader election")
 
 	RootCmd.Flags().StringVar(&logPath, "log-level-filepath", "", "path to log level file.  The file must contain a single integer corresponding to the log level (e.g. 2)")
 
@@ -114,8 +116,8 @@ func init() {
 	RootCmd.Flags().StringVar(&pprofPort, "pprof-port", "6060", "pprof port")
 
 	RootCmd.Flags().DurationVar(&leaseDuration, "lease-duration", 30*time.Second, "controller manager lease duration")
-
 	RootCmd.Flags().DurationVar(&renewDeadline, "renew-deadline", 20*time.Second, "controller manager lease renew deadline")
+	RootCmd.Flags().DurationVar(&retryPeriod, "retry-period", 2*time.Second, "controller manager lease renew deadline")
 
 	RootCmd.Flags().DurationVar(&exitAfterLeaderElectionLoss, "exit-after-leader-election-loss", time.Second*15, "if set to a non-zero durtion, exit after leader election loss + duration")
 
@@ -174,23 +176,8 @@ func RunE(_ *cobra.Command, _ []string) error {
 		&versioncollector.Collector{
 			Version: version, Commit: commit, Date: date, Name: metrics.Prefix + "_version"})
 
-	ctx, stop := context.WithCancel(context.Background())
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	ctx, _ = signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
-
-	if metrics.MetricsPrometheusCollector.ExitOnConfigChange {
-		err := watchconfig.ConfigFile{
-			ConfigFilename: options.metricsPrometheusCollector,
-		}.WatchConfig(func(w *fsnotify.Watcher, s chan interface{}) {
-			log.Info("stopping metrics-prometheus-collector to read new config file")
-			stop()
-			w.Close()
-			close(s)
-		})
-		if err != nil {
-			log.Error(err, "unable to watch config")
-		}
-	}
 
 	options.Options.NewCache = collector.GetNewCacheFunc(metrics.MetricsPrometheusCollector)
 
@@ -212,6 +199,17 @@ func RunE(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	// If leader election is enabled, then only the leader instance publishes
+	// metrics to prometheus.  This ensures that a `sum` operation doesn't
+	// sum metrics across the instances.  Leader election is preferred both with
+	// multiple instances, and when using a rolling update strategy.
+	// Initially set the value to false and change it to true once we are the leader,
+	// we can then start publishing.
+	// If we are not using leader election set to true.  This is preferred if using
+	// a single replica with a replace update strategy.
+	metrics.Col.IsLeaderElected.Store(!options.LeaderElection)
+
 	go func() {
 		// NOTE: we don't want to start getting node sample traffic until we are the leader
 		// so we use a readiness check in the config and don't report ourselves
@@ -226,9 +224,8 @@ func RunE(_ *cobra.Command, _ []string) error {
 	}()
 
 	// start the manager and the reconcilers
-	// Note: mgr.Start will return an error if leadership is lost and leader-election is used.
 	log.Info("starting manager")
-	checkError(log, mgr.Start(ctx), "")
+	checkError(log, metrics.Mgr.Start(ctx), "")
 	return nil
 }
 
@@ -271,32 +268,6 @@ func (ms *MetricsServer) ReadCollectorSpec() error {
 // Start starts the metrics server
 // nolint: gocyclo
 func (ms *MetricsServer) Start(ctx context.Context) error {
-	mgr := ms.Mgr
-	// Important -- don't register metrics until we are the leader
-	// otherwise we will be duplicating values by sending them from multiple instances.
-	// This is especially bad since we won't have the utilization data.
-
-	// Note: This shouldn't be necessary -- this function isn't called until we are elected as the leader
-	// but it is here as a defensive check.
-	<-mgr.Elected()
-	log.Info("elected as leader -- serving capacity metrics")
-
-	// mark us as ready to start receiving node samples -- this requires configuring a readiness check
-	// in the pod yaml
-	ms.Col.UtilizationServer.IsLeaderElected.Store(true)
-	// this shouldn't be necessary since we shutdown when we aren't the leader, but
-	// serves as a sanity check in case we don't shutdown gracefully and quickly
-	defer func() {
-		ms.Col.UtilizationServer.IsLeaderElected.Store(false)
-		// Ensure that we exit so we stop getting utilization requests
-		time.Sleep(exitAfterLeaderElectionLoss)
-		log.Info("exiting after leader election loss")
-		os.Exit(0)
-	}()
-
-	// update the metric showing we are the leader
-	electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
-
 	// TODO: try to do this before becoming the leader.  This isn't trivial
 	// because the manager won't let us use the caches prior to starting.
 	log.Info("initializing informers")
@@ -313,14 +284,66 @@ func (ms *MetricsServer) Start(ctx context.Context) error {
 		log.V(1).Info("starting metrics-prometheus-collector", "MetricsPrometheusCollector", val)
 	}
 
-	// don't pre-compute and cache the metrics until we are the leader otherwise they may be ancient
-	// when we are elected
-	go ms.Col.Run(ctx)
-
 	ctrlmetrics.Registry.MustRegister(ms.Col)
 
+	// start pre-computing metrics eagerly.  we won't publish them until we are the leader.
+	go ms.Col.Run(ctx)
+
+	if options.LeaderElection {
+		ms.doLeaderElection(ctx)
+	} else {
+		electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
+	}
+
+	// this shouldn't be necessary since we shutdown when we aren't the leader, but
+	// serves as a sanity check in case we don't shutdown gracefully and quickly
+
 	<-ctx.Done()
-	return ctx.Err()
+	log.Info("ending sampler server", "reason", ctx.Err())
+	return nil
+}
+
+func (ms *MetricsServer) doLeaderElection(ctx context.Context) {
+	ms.Col.IsLeaderElected.Store(false)
+	config := ms.Mgr.GetConfig()
+	lock := &resourcelock.LeaseLock{
+		LeaseMeta: metav1.ObjectMeta{
+			Name:      options.LeaderElectionLockName,
+			Namespace: options.LeaderElectionNamespace,
+		},
+		Client: clientset.NewForConfigOrDie(config).CoordinationV1(),
+		LockConfig: resourcelock.ResourceLockConfig{
+			Identity: options.PodName,
+		},
+	}
+	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
+		Name:            options.LeaderElectionLockName,
+		Lock:            lock,
+		ReleaseOnCancel: true,
+		LeaseDuration:   leaseDuration,
+		RenewDeadline:   renewDeadline,
+		RetryPeriod:     retryPeriod,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: func(c context.Context) {
+				log.Info("acquired leadership", "id", options.PodName)
+				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
+				ms.Col.IsLeaderElected.Store(true)
+			},
+			OnStoppedLeading: func() {
+				log.Info("lost leadership", "id", options.PodName)
+				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
+				ms.Col.IsLeaderElected.Store(false)
+			},
+			OnNewLeader: func(current_id string) {
+				if current_id == options.PodName {
+					return
+				}
+				log.Info("lost leadership", "id", options.PodName)
+				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
+				ms.Col.IsLeaderElected.Store(false)
+			},
+		},
+	})
 }
 
 // checkError exits in in case of errors printing the given output message

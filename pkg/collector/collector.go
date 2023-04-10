@@ -18,15 +18,20 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	ctrlmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 	collectorapi "sigs.k8s.io/usage-metrics-collector/pkg/collector/api"
@@ -51,6 +56,8 @@ var (
 
 type Collector struct {
 	// collector dependencies
+
+	IsLeaderElected *atomic.Bool
 
 	client.Client
 	Labeler Labeler
@@ -90,7 +97,10 @@ func NewCollector(
 		UtilizationServer:          utilization.Server{UtilizationServer: config.UtilizationServer},
 		startTime:                  time.Now(),
 		metrics:                    make(chan *cachedMetrics),
+		IsLeaderElected:            &atomic.Bool{},
 	}
+	c.UtilizationServer.IsReadyResult.Store(false)
+	c.IsLeaderElected.Store(false)
 
 	// initialize the extensions data
 	if err := c.init(); err != nil {
@@ -119,8 +129,9 @@ func (c *Collector) InitInformers(ctx context.Context) error {
 // Start runs the collector
 func (c *Collector) Run(ctx context.Context) {
 	if c.PreComputeMetrics.Enabled {
-		c.continuouslyCollect(ctx)
+		go c.continuouslyCollect(ctx)
 	}
+	c.registerWithSamplers(ctx)
 }
 
 // Describe returns all descriptions of the collector.
@@ -129,13 +140,34 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *Collector) continuouslyCollect(ctx context.Context) {
+	cacheTicker := time.NewTicker(time.Minute * 5)
+	defer cacheTicker.Stop()
 	for {
+		start := time.Now()
+
+		// calculate the metrics from the current cluster state
+		log.Info("caching metrics")
 		m := c.cacheMetrics()
-		select {
-		case <-ctx.Done():
-			return // shutdown
-		case c.metrics <- m:
-			// write the cached metrics
+		log.Info("complete caching metrics", "seconds", time.Since(start).Seconds())
+
+		if c.IsLeaderElected.Load() && c.UtilizationServer.IsReadyResult.Load() {
+			// if we are the leader and ready, write the metrics so they are published
+			select {
+			case <-ctx.Done():
+				return // shutdown
+			case c.metrics <- m:
+				// send the cached metrics to the collector
+				// the collector will throw these away if it isn't the
+			}
+		} else {
+			// if we are not the leader, we should continuously re-caculate the metrics
+			// so that we can publish them immediately when we become the leader.
+			select {
+			case <-ctx.Done():
+				return // shutdown
+			case <-cacheTicker.C:
+				// re-cacalculate the metrics without publishing them
+			}
 		}
 	}
 }
@@ -233,12 +265,29 @@ func (c *Collector) cacheMetrics() *cachedMetrics {
 // Collect returns the current state of all metrics of the collector.
 // This there are cached metrics, Collect will return the cached metrics.
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
-	start := time.Now()
-	if !c.PreComputeMetrics.Enabled {
-		c.collect(ch, nil)
+	if !c.IsLeaderElected.Load() || !c.UtilizationServer.IsReadyResult.Load() {
+		// Never export metrics if we aren't the leader or aren't ready to report them.
+		// e.g. have sufficient utilization metrics
+		select {
+		case <-c.metrics:
+			// we were leader elected when we cached the metrics, but aren't anymore.
+			// throw the results away so the are recalculated.
+			log.Info("lost leadership after caching metrics, throwing them away")
+		default:
+		}
+		log.Info("skipping collection")
 		return
 	}
 
+	start := time.Now()
+	if !c.PreComputeMetrics.Enabled {
+		log.Info("collecting metrics without caching")
+		c.collect(ch, nil)
+		log.Info("finished collection", "seconds", time.Since(start).Seconds())
+		return
+	}
+
+	log.Info("collecting metrics from cache")
 	// write the cached metrics out as a response
 	metrics := <-c.metrics
 	for i := range metrics.metrics {
@@ -266,6 +315,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	})
 	cacheCollectTime.Set(float64(time.Since(start).Seconds()))
 	cacheCollectTime.Collect(ch)
+	log.Info("finished collection", "seconds", time.Since(start).Seconds())
 }
 
 func (c *Collector) getSideCarConfigs() ([]*collectorcontrollerv1alpha1.SideCarConfig, error) {
@@ -839,6 +889,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 
 	log := log.WithValues("start", start.Local().Format("2006-01-02 15:04:05"))
 	utilization := c.UtilizationServer.GetContainerUsageSummary(o.UtilizationByNode)
+	log.Info("found utilization metrics", "container-count", len(utilization))
 
 	// metrics
 	containerMetrics := map[MetricName]*Metric{}
@@ -917,10 +968,16 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 			c.Labeler.SetLabelsForContainer(&containerLabels, container)
 			sample := sb.NewSample(containerLabels) // For saving locally
 
-			id := sampler.ContainerKey{ContainerID: containerNameToID[container.Name], PodUID: podUID}
-			allContainers.Insert(string(id.PodUID) + "/" + string(id.ContainerID))
+			// first try to get the metrics based on the container name and namespace
+			id := sampler.ContainerKey{ContainerName: container.Name, PodName: pod.Name, NamespaceName: pod.Namespace}
+			allContainers.Insert(string(pod.UID) + "/" + string(containerNameToID[container.Name]))
+			usage, ok := utilization[id]
+			if !ok {
+				// check for metrics based on uid and id if not present by name
+				id := sampler.ContainerKey{ContainerID: containerNameToID[container.Name], PodUID: podUID}
+				usage = utilization[id]
+			}
 
-			usage := utilization[id]
 			if usage != nil {
 				log.V(2).Info("found usage for container", "namespace", pod.Namespace,
 					"pod", pod.Name, "container", container.Name, "id", id,
@@ -1526,6 +1583,7 @@ func (c *Collector) listCapacityObjects(ch chan<- prometheus.Metric) (*CapacityO
 
 	// get this once since it requires locking the cache
 	o.UtilizationByNode = c.UtilizationServer.GetMetrics()
+	log.Info("found utilization metrics", "node-count", len(o.UtilizationByNode))
 	return &o, nil
 }
 
@@ -1565,4 +1623,217 @@ func (c *Collector) wait(fns map[string]func() error, metricCh chan<- prometheus
 	default:
 	}
 	return nil
+}
+
+// registerWithSamplers manually registers the collector with node samplers
+// so that it can start getting metrics before it marks itself as "Ready"
+// and before it appears in the DNS ips for the service.
+func (c *Collector) registerWithSamplers(ctx context.Context) {
+	if c.UtilizationServer.MinResultPctBeforeReady == 0 {
+		// don't register with samplers
+		c.UtilizationServer.IsReadyResult.Store(true)
+		log.Info("not using min utilization results for ready check")
+	}
+	if len(c.UtilizationServer.CollectorPodLabels) == 0 {
+		// don't know the collector pods, we can't register
+		log.Info("not registering collector with samplers, no collector pod labels were specified")
+		return
+	}
+
+	// continuously register with node samplers that we don't have results from
+	go func() {
+		tick := time.NewTicker(time.Minute)
+		for {
+			log.V(1).Info("ensuring collector is registered with samplers")
+			// since we can't get the status.ips list from the downward api,
+			// get the collector status.ips lists from the collector pods
+			// and register all collectors.
+			collectors := &corev1.PodList{}
+			err := c.Client.List(ctx, collectors,
+				client.InNamespace(c.UtilizationServer.SamplerNamespaceName),
+				client.MatchingLabels(c.UtilizationServer.CollectorPodLabels),
+			)
+			if err != nil || len(collectors.Items) == 0 {
+				log.Error(err, "unable to register collector with node samplers -- failed to list collector pods.")
+			}
+			// calculate the collector IPs to register with the samplers
+			req := &samplerapi.RegisterCollectorsRequest{
+				Collectors: make([]*samplerapi.Collector, 0, len(collectors.Items)),
+				Source:     "Collector",           // the sampler also registers collectors from DNS
+				FromPod:    os.Getenv("POD_NAME"), // used for debugging in the sampler
+			}
+			for _, col := range collectors.Items {
+				if col.Status.Phase != corev1.PodRunning {
+					// only register running collectors
+					continue
+				}
+				if len(col.Status.PodIPs) <= c.UtilizationServer.CollectorPodIPsIndex {
+					// only register collectors with ip addresses
+					continue
+				}
+				ip := col.Status.PodIPs[c.UtilizationServer.CollectorPodIPsIndex] // pick the ip to register
+				req.Collectors = append(req.Collectors, &samplerapi.Collector{
+					IpAddress: ip.IP,
+					PodName:   col.Name, // used for debugging in the sampler
+				})
+			}
+
+			// list all sampler pods we may need to register with.
+			samplers := &corev1.PodList{}
+			err = c.Client.List(ctx, samplers,
+				client.InNamespace(c.UtilizationServer.SamplerNamespaceName),
+				client.MatchingLabels(c.UtilizationServer.SamplerPodLabels),
+			)
+			if err != nil {
+				log.Error(err, "unable to register collector with node samplers.  failed to list samplers.")
+			}
+
+			// don't re-register with samplers if we are already registered
+			nodesWithResults := c.UtilizationServer.GetNodeNames()
+
+			// Check if we have gotten enough node results to consider ourselves ready.
+			// We don't want Kubernetes to terminate the old replica during a rollout
+			// until we are able to publish utilization metrics to prometheus, and
+			// accomplish this by not being ready.
+			if c.UtilizationServer.MinResultPctBeforeReady > 0 && !c.UtilizationServer.IsReadyResult.Load() {
+				nodesWithRunningSamplers := sets.NewString()
+				nodesWithSamplers := sets.NewString() // used for logging
+				for i := range samplers.Items {
+					nodesWithSamplers.Insert(samplers.Items[i].Spec.NodeName)
+					if samplers.Items[i].Status.Phase != corev1.PodRunning {
+						// only consider running pods -- we don't expect results from non-running pods
+						continue
+					}
+					nodesWithRunningSamplers.Insert(samplers.Items[i].Spec.NodeName)
+				}
+				nodesMissingResults := nodesWithRunningSamplers.Difference(nodesWithResults)
+
+				readyPct := (nodesWithResults.Len() * 100 / nodesWithSamplers.Len())
+				if nodesWithSamplers.Len() > 0 && readyPct > c.UtilizationServer.MinResultPctBeforeReady {
+					// Have enough utilization results to say we are ready
+					log.Info("collector ready",
+						"running-minutes", time.Since(c.startTime).Minutes(),
+						"nodes-with-results-count", nodesWithResults.Len(),
+						"nodes-with-samplers-count", nodesWithSamplers.Len(),
+						"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
+						"nodes-missing-results", nodesMissingResults.List(),
+						"ready-pct", readyPct,
+						"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady,
+					)
+					c.UtilizationServer.IsReadyResult.Store(true)
+				} else {
+					// Don't have enough utilization results to say we are ready
+					log.Info("collector not-ready",
+						"running-minutes", time.Since(c.startTime).Minutes(),
+						"nodes-with-results-count", nodesWithResults.Len(),
+						"nodes-with-samplers-count", nodesWithSamplers.Len(),
+						"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
+						"nodes-missing-results", nodesMissingResults.List(),
+						"ready-pct", readyPct,
+						"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady)
+				}
+			}
+
+			// identify the sampler pods to register with
+			wg := sync.WaitGroup{}
+			var samplerCount, samplerResultsCount, registeredCount, errorCount, notRunningCount int
+			for i := range samplers.Items {
+				pod := samplers.Items[i]
+				switch {
+				case pod.Status.Phase != corev1.PodRunning:
+					// sampler isn't running yet
+					notRunningCount++
+					continue
+				case pod.Spec.NodeName == "":
+					// defensive: shouldn't hit this
+					notRunningCount++
+					continue
+				case pod.Status.PodIP == "":
+					// defensive: pod not running
+					notRunningCount++
+					continue
+				case nodesWithResults.Has(pod.Spec.NodeName):
+					// already registered.
+					samplerResultsCount++
+					samplerCount++
+					continue
+				}
+				samplerCount++
+
+				// register the collector with the each node sampler
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					// build the address for us to register with the sampler
+					address := pod.Status.PodIP
+					if strings.Contains(address, ":") {
+						// format IPv6 correctly
+						address = "[" + address + "]"
+					}
+					address = fmt.Sprintf("%s:%v", address, c.UtilizationServer.SamplerPort)
+
+					// create the grpc connection
+					var conn *grpc.ClientConn
+					for i := 0; i < 3; i++ { // retry connection
+						conn, err = grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+						if err == nil {
+							// connection established
+							break
+						}
+					}
+					if err != nil {
+						log.Error(err, "unable to connect to node sampler",
+							"node", pod.Spec.NodeName,
+							"pod", pod.Name,
+						)
+						return
+					}
+
+					// register ourself with this node sampler
+					c := samplerapi.NewMetricsClient(conn)
+					resp, err := c.RegisterCollectors(ctx, req)
+					if err != nil {
+						errorCount++
+						log.Error(err, "failed to register with node sampler",
+							"node", pod.Spec.NodeName,
+							"pod", pod.Name,
+						)
+					} else {
+						registeredCount++
+						log.Info("registered with node sampler",
+							"node", pod.Spec.NodeName,
+							"pod", pod.Name,
+							"sent", req,
+							"got", resp.IpAddresses)
+					}
+				}()
+			}
+			log.Info("finished registering with node-samplers",
+				"results-pct", samplerResultsCount*100/samplerCount,
+				"results-count", samplerResultsCount,
+				"running-sampler-count", samplerCount,
+				"not-running-sampler-count", notRunningCount,
+				"register-success-count", registeredCount,
+				"register-fail-count", errorCount,
+			)
+			registeredWithSamplers.Reset()
+			registeredWithSamplers.WithLabelValues("node-registered").Set(float64(samplerResultsCount))
+			registeredWithSamplers.WithLabelValues("node-registration-error").Set(float64(errorCount))
+			registeredWithSamplers.WithLabelValues("node-registration-success").Set(float64(registeredCount))
+			registeredWithSamplers.WithLabelValues("sampler-not-running").Set(float64(notRunningCount))
+			registeredWithSamplers.WithLabelValues("node-not-registered").Set(float64(samplerCount - notRunningCount - samplerResultsCount - errorCount - registeredCount))
+
+			wg.Wait()
+			<-tick.C // wait before registering again
+		}
+	}()
+}
+
+var registeredWithSamplers = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "metrics_prometheus_collector_registered_count",
+	Help: "Nodes the collector has registered with.",
+}, []string{"status"})
+
+func init() {
+	ctrlmetrics.Registry.MustRegister(registeredWithSamplers)
 }

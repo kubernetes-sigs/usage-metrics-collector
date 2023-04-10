@@ -5,7 +5,8 @@ checkCreatedPodFrequencyDuration: 10s
 containerdAddress: /var/run/containerd/containerd.sock
 containerdNamespace: k8s.io
 pbPort: 7070
-pushAddress: "default.svg"
+pushHeadlessService: "default.svg"
+pushAddress: "deprecated"
 pushFrequencyDuration: 2m
 reader:
   cgroupVersion: v1

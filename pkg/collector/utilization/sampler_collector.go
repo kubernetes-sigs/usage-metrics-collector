@@ -33,6 +33,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"k8s.io/apimachinery/pkg/util/sets"
 	ctrlmetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
@@ -97,8 +98,8 @@ type Server struct {
 	expireFreq time.Duration
 	ttl        time.Duration
 
-	IsLeaderElected atomic.Bool
-	IsHealthy       atomic.Bool
+	IsReadyResult   atomic.Bool
+	IsHealthyResult atomic.Bool
 
 	grpcServer *grpc.Server
 }
@@ -196,7 +197,7 @@ func (s *Server) Start(ctx context.Context) error {
 
 	go s.expireEntries()
 
-	s.IsHealthy.Store(true)
+	s.IsHealthyResult.Store(true)
 
 	select {
 	case err := <-errs:
@@ -207,15 +208,15 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 func (s *Server) Check(ctx context.Context, _ *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
-	if !s.IsHealthy.Load() {
+	if !s.IsHealthyResult.Load() {
 		return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_NOT_SERVING}, fmt.Errorf("not-healthy")
 	}
 	return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_SERVING}, nil
 }
 
 // Ready returns success if the service should be accepting traffic
-func (s *Server) IsLeader(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
-	if !s.IsLeaderElected.Load() {
+func (s *Server) IsReady(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+	if !s.IsReadyResult.Load() {
 		return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_NOT_SERVING}, fmt.Errorf("not-leader")
 	}
 	return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_SERVING}, nil
@@ -241,14 +242,6 @@ func (s *Server) PushMetrics(req api.MetricsCollector_PushMetricsServer) error {
 	var nodeName, podName string
 	for {
 		msg, err := req.Recv() // Read metrics message
-		if !s.IsLeaderElected.Load() {
-			// We shouldn't be getting metrics if we aren't the leader.
-			// This can happen if we restart and the endpoints isn't updated to remove us yet.
-			log.Error(fmt.Errorf("got node samples when not leader"), "only the leader should get node samples.  Possible that Readiness checks are not setup.")
-			nonLeaderRequestsTotal.WithLabelValues(nodeName, podName, os.Getenv("POD_NAME")).Inc()
-			s.grpcServer.Stop() // stop the server immediately
-			os.Exit(1)          // exit so we restart with the new server
-		}
 
 		if err == io.EOF {
 			log.V(5).Info("read utilization metrics eof", "node", nodeName, "pod", podName)
@@ -295,17 +288,35 @@ func (c *Server) GetContainerUsageSummary(metrics map[string]*api.ListMetricsRes
 	for n, r := range metrics {
 		for _, c := range r.Containers {
 			c.NodeName = n
+			if c.PodName != "" && c.ContainerName != "" && c.NamespaceName != "" {
+				log.V(10).Info("found metrics for container",
+					"container", c.ContainerName,
+					"pod", c.PodName,
+					"namespace", c.NamespaceName,
+				)
+				values[sampler.ContainerKey{
+					PodName:       c.PodName,
+					ContainerName: c.ContainerName,
+					NamespaceName: c.NamespaceName,
+				}] = c
+				continue
+			}
+			log := log.WithValues("node", c.NodeName, "namespace", c.NamespaceName, "pod", c.PodName, "container", c.ContainerName, "pod-id", c.PodUID, "container-id", c.ContainerID)
 			if c.PodUID == "" { // this should never happen
-				log.Error(errors.New("pod-id missing from summary"), "response", r)
-				summaryErrorsTotal.WithLabelValues(n, r.PodName, "missing-pod-id").Inc()
+				log.Info("missing pod UID")
+				summaryErrorsTotal.WithLabelValues(n, r.NodeName, "missing-pod-id").Inc()
 				continue
 			}
 			if c.ContainerID == "" { // this may happen for microvms or other edge cases
-				log.V(1).Error(errors.New("container-id missing from summary"), "pod", c.PodUID)
-				summaryErrorsTotal.WithLabelValues(n, r.PodName, "missing-container-id").Inc()
+				log.Info("missing container ID")
+				summaryErrorsTotal.WithLabelValues(n, r.NodeName, "missing-container-id").Inc()
 				continue
 			}
-			values[sampler.ContainerKey{ContainerID: c.ContainerID, PodUID: c.PodUID}] = c
+			values[sampler.ContainerKey{
+				ContainerID: c.ContainerID,
+				PodUID:      c.PodUID,
+			}] = c
+			log.V(10).Info("found metrics for container", "container", c.ContainerID, "pod", c.PodUID)
 		}
 	}
 	log.V(1).Info("return container summary", "container-count", len(values))
@@ -320,6 +331,22 @@ func (s *Server) GetMetrics() map[string]*api.ListMetricsResponse {
 		return s.getMetrics(false)
 	}
 	return s.getMetrics(true)
+}
+
+// GetNodeNames returns the names of the nodes we have results for
+func (s *Server) GetNodeNames() sets.String {
+	nodes := sets.NewString()
+	func() {
+		s.ResponseMutext.Lock()
+		defer s.ResponseMutext.Unlock()
+		for k, v := range s.Responses {
+			if time.Since(v.Timestamp.AsTime()) > s.ttl {
+				continue
+			}
+			nodes.Insert(k)
+		}
+	}()
+	return nodes
 }
 
 // GetMetrics returns a copy of the current cached metrics

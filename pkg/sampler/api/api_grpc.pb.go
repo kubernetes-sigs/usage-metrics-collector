@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MetricsClient interface {
 	ListMetrics(ctx context.Context, in *ListMetricsRequest, opts ...grpc.CallOption) (*ListMetricsResponse, error)
+	RegisterCollectors(ctx context.Context, in *RegisterCollectorsRequest, opts ...grpc.CallOption) (*RegisterCollectorsResponse, error)
 }
 
 type metricsClient struct {
@@ -43,11 +44,21 @@ func (c *metricsClient) ListMetrics(ctx context.Context, in *ListMetricsRequest,
 	return out, nil
 }
 
+func (c *metricsClient) RegisterCollectors(ctx context.Context, in *RegisterCollectorsRequest, opts ...grpc.CallOption) (*RegisterCollectorsResponse, error) {
+	out := new(RegisterCollectorsResponse)
+	err := c.cc.Invoke(ctx, "/containerd.api.Metrics/RegisterCollectors", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MetricsServer is the server API for Metrics service.
 // All implementations must embed UnimplementedMetricsServer
 // for forward compatibility
 type MetricsServer interface {
 	ListMetrics(context.Context, *ListMetricsRequest) (*ListMetricsResponse, error)
+	RegisterCollectors(context.Context, *RegisterCollectorsRequest) (*RegisterCollectorsResponse, error)
 	mustEmbedUnimplementedMetricsServer()
 }
 
@@ -57,6 +68,9 @@ type UnimplementedMetricsServer struct {
 
 func (UnimplementedMetricsServer) ListMetrics(context.Context, *ListMetricsRequest) (*ListMetricsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMetrics not implemented")
+}
+func (UnimplementedMetricsServer) RegisterCollectors(context.Context, *RegisterCollectorsRequest) (*RegisterCollectorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterCollectors not implemented")
 }
 func (UnimplementedMetricsServer) mustEmbedUnimplementedMetricsServer() {}
 
@@ -89,6 +103,24 @@ func _Metrics_ListMetrics_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Metrics_RegisterCollectors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterCollectorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricsServer).RegisterCollectors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/containerd.api.Metrics/RegisterCollectors",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricsServer).RegisterCollectors(ctx, req.(*RegisterCollectorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Metrics_ServiceDesc is the grpc.ServiceDesc for Metrics service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +132,10 @@ var Metrics_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ListMetrics",
 			Handler:    _Metrics_ListMetrics_Handler,
 		},
+		{
+			MethodName: "RegisterCollectors",
+			Handler:    _Metrics_RegisterCollectors_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "pkg/sampler/api/api.proto",
@@ -110,7 +146,7 @@ var Metrics_ServiceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HealthClient interface {
 	Check(ctx context.Context, in *grpc_health_v1.HealthCheckRequest, opts ...grpc.CallOption) (*grpc_health_v1.HealthCheckResponse, error)
-	IsLeader(ctx context.Context, in *grpc_health_v1.HealthCheckRequest, opts ...grpc.CallOption) (*grpc_health_v1.HealthCheckResponse, error)
+	IsReady(ctx context.Context, in *grpc_health_v1.HealthCheckRequest, opts ...grpc.CallOption) (*grpc_health_v1.HealthCheckResponse, error)
 }
 
 type healthClient struct {
@@ -130,9 +166,9 @@ func (c *healthClient) Check(ctx context.Context, in *grpc_health_v1.HealthCheck
 	return out, nil
 }
 
-func (c *healthClient) IsLeader(ctx context.Context, in *grpc_health_v1.HealthCheckRequest, opts ...grpc.CallOption) (*grpc_health_v1.HealthCheckResponse, error) {
+func (c *healthClient) IsReady(ctx context.Context, in *grpc_health_v1.HealthCheckRequest, opts ...grpc.CallOption) (*grpc_health_v1.HealthCheckResponse, error) {
 	out := new(grpc_health_v1.HealthCheckResponse)
-	err := c.cc.Invoke(ctx, "/containerd.api.Health/IsLeader", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/containerd.api.Health/IsReady", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +180,7 @@ func (c *healthClient) IsLeader(ctx context.Context, in *grpc_health_v1.HealthCh
 // for forward compatibility
 type HealthServer interface {
 	Check(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error)
-	IsLeader(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error)
+	IsReady(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error)
 	mustEmbedUnimplementedHealthServer()
 }
 
@@ -155,8 +191,8 @@ type UnimplementedHealthServer struct {
 func (UnimplementedHealthServer) Check(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
 }
-func (UnimplementedHealthServer) IsLeader(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsLeader not implemented")
+func (UnimplementedHealthServer) IsReady(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsReady not implemented")
 }
 func (UnimplementedHealthServer) mustEmbedUnimplementedHealthServer() {}
 
@@ -189,20 +225,20 @@ func _Health_Check_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Health_IsLeader_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Health_IsReady_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(grpc_health_v1.HealthCheckRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(HealthServer).IsLeader(ctx, in)
+		return srv.(HealthServer).IsReady(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/containerd.api.Health/IsLeader",
+		FullMethod: "/containerd.api.Health/IsReady",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServer).IsLeader(ctx, req.(*grpc_health_v1.HealthCheckRequest))
+		return srv.(HealthServer).IsReady(ctx, req.(*grpc_health_v1.HealthCheckRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -219,8 +255,8 @@ var Health_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Health_Check_Handler,
 		},
 		{
-			MethodName: "IsLeader",
-			Handler:    _Health_IsLeader_Handler,
+			MethodName: "IsReady",
+			Handler:    _Health_IsReady_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

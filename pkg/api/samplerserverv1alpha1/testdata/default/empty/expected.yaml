@@ -4,10 +4,17 @@ buffer:
 checkCreatedPodFrequencyDuration: 6s
 containerdAddress: /run/containerd/containerd.sock
 containerdNamespace: default
+dnsSpec:
+  backoffSeconds: 0
+  collectorServerExpiration: 0
+  failuresBeforeExit: 0
+  pollSeconds: 0
 exitOnConfigChange: false
 pbPort: 8080
 pushAddress: ""
 pushFrequencyDuration: 1m
+pushHeadlessService: ""
+pushHeadlessServicePort: 9090
 reader:
   cgroupVersion: v1
   containerCacheSyncIntervalSeconds: 1

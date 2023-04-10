@@ -19,6 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
+	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
 )
 
 func (c *Collector) init() error {
@@ -100,6 +101,10 @@ func (c *Collector) init() error {
 }
 
 func (c *Collector) defaultMetricsPrometheusCollector() {
+	if c.UtilizationServer.SamplerPort == 0 {
+		c.UtilizationServer.SamplerPort = samplerserverv1alpha1.DefaultPBPort
+	}
+
 	c.Kind = "MetricsPrometheusCollector"
 	c.APIVersion = "v1alpha1"
 	for i := range c.Aggregations {

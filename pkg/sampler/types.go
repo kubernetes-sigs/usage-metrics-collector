@@ -27,6 +27,15 @@ type ContainerKey struct {
 	// PodUID is the uid of the pod the container is running in, and corresponds to the pod.metadata.uid, or for
 	// mirror pods the config.mirror annotation.
 	PodUID string
+
+	// NamespaceName is the namespace of the pod
+	NamespaceName string
+
+	// ContainerName is the name of the container
+	ContainerName string
+
+	// PodName is the name of the pod
+	PodName string
 }
 
 type sampleInstant struct {

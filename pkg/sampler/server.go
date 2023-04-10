@@ -23,16 +23,15 @@ import (
 	"net/http"
 	"os"
 	"sort"
-	"sync/atomic"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -68,11 +67,12 @@ type Server struct {
 	pushFrequency            time.Duration
 	checkCreatedPodFrequency time.Duration
 
-	PushHealthy  atomic.Bool
-	PushErrorMsg atomic.Value
+	pushers     map[string]*pusher
+	pushersLock sync.Mutex
+
+	CTX context.Context
 }
 
-// Stop stops the server from sampling metrics
 func (s *Server) Stop() {
 	if s.stop != nil {
 		s.stop()
@@ -81,7 +81,24 @@ func (s *Server) Stop() {
 
 // Start starts the server sampling metrics and serving them
 func (s *Server) Start(ctx context.Context, stop context.CancelFunc) error {
-	defer stop() // stop the context when we are done
+	s.CTX = ctx
+	s.stop = stop
+
+	s.pushers = make(map[string]*pusher)
+	if s.DNSSpec.FailuresBeforeExit == 0 {
+		s.DNSSpec.FailuresBeforeExit = 30
+	}
+	if s.DNSSpec.BackoffSeconds == 0 {
+		s.DNSSpec.BackoffSeconds = 60
+	}
+	if s.DNSSpec.PollSeconds == 0 {
+		s.DNSSpec.PollSeconds = 60
+	}
+	if s.DNSSpec.CollectorServerExpiration == 0 {
+		s.DNSSpec.CollectorServerExpiration = time.Minute * 20
+	}
+
+	defer stop() // stop the context if we encounter an error
 
 	s.Default()
 	if log.Enabled() {
@@ -89,7 +106,8 @@ func (s *Server) Start(ctx context.Context, stop context.CancelFunc) error {
 		if err != nil {
 			return err
 		}
-		log.Info("starting metrics-node-sampler", "MetricsNodeSampler", val)
+		// use println so it renders on multiple lines instead of 1
+		fmt.Println(string(val))
 	}
 	var err error
 	s.pushFrequency, err = time.ParseDuration(s.PushFrequency)
@@ -178,50 +196,78 @@ func (s *Server) Start(ctx context.Context, stop context.CancelFunc) error {
 	// run the REST service
 	go func() {
 		log.V(1).Info("serving json", "address", addr)
-		defer rpcServer.GracefulStop()                                      // stop the server when we are done
-		go func() { errs <- errors.WithStack(gwServer.ListenAndServe()) }() // run the server
-		<-ctx.Done()                                                        // wait until the context is cancelled
+		defer rpcServer.GracefulStop() // stop the server when we are done
+		go func() {
+			err := errors.WithStack(gwServer.ListenAndServe())
+			if err != nil {
+				log.Error(err, "error starting server")
+				errs <- err
+			}
+		}() // run the server
+		<-ctx.Done() // wait until the context is cancelled
 	}()
-
-	if s.PushAddress != "" {
-		s.PushErrorMsg.Store("starting push metrics")
-		s.PushHealthy.Store(false)
-		go func() { errs <- s.PushMetrics(ctx) }()
-	} else {
-		s.PushHealthy.Store(true)
-	}
+	log.V(1).Info("start registering collectors from DNS", "ctx-err", ctx.Err(),
+		"ctx", ctx, "ctx-type", fmt.Sprintf("%T", ctx),
+		"ctx-address", fmt.Sprintf("%p", ctx))
+	go s.RegisterCollectorsFromDNS(ctx)
 
 	// block until we are shutdown or there is an error in a service
 	select {
 	case err := <-errs:
+		log.Error(err, "stopping node-sampler due to error")
 		return err
 	case <-ctx.Done():
+		log.Info("stopping node-sampler due to context done", "err", ctx.Err())
 		return nil
 	}
 }
 
-// PushMetrics pushes utilization metrics to a server
-func (s *Server) PushMetrics(ctx context.Context) error {
-	var connectErrorMessage string
-	log := log.WithValues("address", s.PushAddress)
-	return wait.PollImmediateInfiniteWithContext(ctx, time.Second*30, func(ctx context.Context) (done bool, err error) {
-		// continously try to connect and push metrics
-		retry, err := s.connectAndPushMetrics(ctx)
+// RegisterCollectorsFromDNS pushes utilization metrics to collector servers.
+// The list of servers is configured through reading the DNS 'A' records.
+// This is usually accomplished through a Kubernetes headless service.
+func (s *Server) RegisterCollectorsFromDNS(ctx context.Context) {
+	// periodically update the list of servers and start pushing metrics
+	t := time.NewTicker(time.Duration(s.DNSSpec.PollSeconds) * time.Second)
+	log.Info("starting register collectors from DNS")
+	for {
+		// find the list of servers to push metrics to
+		ips, err := net.LookupIP(s.PushHeadlessService)
 		if err != nil {
-			s.PushErrorMsg.Store(err.Error())
-			s.PushHealthy.Store(false)
-			if err.Error() != connectErrorMessage { // don't spam the log file since we retry
-				log.Error(err,
-					"unable to establish grpc connection to prometheus-collector instance")
+			if strings.Contains(err.Error(), "no such host") {
+				log.Info("unable to lookup collector servers from dns records",
+					"service", s.PushHeadlessService, "msg", err.Error())
+			} else {
+				log.Error(err, "unable to lookup collector servers from dns records", "service", s.PushHeadlessService)
 			}
 		}
-		return retry, nil // never return an error, it stops polling if we do
-	})
+
+		// register the collectors
+		if len(ips) > 0 {
+			req := &api.RegisterCollectorsRequest{
+				Source:     "DNS",
+				Collectors: make([]*api.Collector, 0, len(ips)),
+			}
+			for _, i := range ips {
+				req.Collectors = append(req.Collectors, &api.Collector{IpAddress: i.String()})
+			}
+			log.V(1).Info("registering collectors from DNS", "ips", req)
+			_, _ = s.RegisterCollectors(ctx, req)
+		}
+
+		select {
+		case <-t.C:
+			// keep going
+		case <-ctx.Done():
+			// we are done
+			t.Stop()
+			return
+		}
+	}
 }
 
 // foundUnsentPods returns true if we have discovered containers that we haven't
 // sent metrics for their pods.
-func (s *Server) foundUnsentPods(ctx context.Context, lastResp *api.ListMetricsResponse) bool {
+func (s *Server) foundUnsentPods(lastResp *api.ListMetricsResponse) bool {
 	if lastResp == nil {
 		// we've never sent pods
 		return true
@@ -234,17 +280,50 @@ func (s *Server) foundUnsentPods(ctx context.Context, lastResp *api.ListMetricsR
 	}
 
 	// get the pods we have metrics for
-	known := s.cache.metricsReader.knownContainersSet.Load().(sets.String)
-
-	return known.Difference(last).Len() > 0 // we know about pods we haven't sent
+	if k := s.cache.metricsReader.knownContainersSet.Load(); k != nil {
+		return k.(sets.String).Difference(last).Len() > 0 // we know about pods we haven't sent
+	} else {
+		// we don't have metrics for any pods
+		// this should never happen since we shouldn't have sent metrics if we don't have any
+		return false
+	}
 }
 
-func (s *Server) connectAndPushMetrics(ctx context.Context) (bool, error) {
-	log := log.WithValues("address", s.PushAddress)
+type pusher struct {
+	IP           string
+	Context      context.Context
+	Cancel       context.CancelFunc
+	SawCollector time.Time
+}
+
+func (p *pusher) connect(s *Server) error {
+	defer s.UnRegisterCollectors(p.Context, p.IP)
+	return wait.PollImmediateInfiniteWithContext(p.Context, time.Second*30, func(ctx context.Context) (done bool, err error) {
+		log.Info("starting metrics pushing", "ip", p.IP)
+		// continously try to connect and push metrics
+		done, err = p.connectAndPushMetrics(s)
+		if done {
+			return done, err
+		}
+		done = time.Since(p.SawCollector) > s.DNSSpec.CollectorServerExpiration
+		return done, err
+	})
+}
+
+func (p *pusher) connectAndPushMetrics(s *Server) (bool, error) {
+	a := p.IP
+	if strings.Contains(a, ":") {
+		a = fmt.Sprintf("[%s]:%v", a, s.PushHeadlessServicePort)
+	} else {
+		a = fmt.Sprintf("%s:%v", a, s.PushHeadlessServicePort)
+	}
+	log := log.WithValues("address", a, "node", nodeName)
 
 	// setup a connection to the server to push metrics
-	conn, err := grpc.Dial(s.PushAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	log.Info("connecting to collector")
+	conn, err := grpc.Dial(a, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
+		log.Error(err, "failed collector connection")
 		return false, err // re-establish the connection
 	}
 
@@ -257,6 +336,7 @@ func (s *Server) connectAndPushMetrics(ctx context.Context) (bool, error) {
 	defer stop() // cancel the send context
 	stream, err := client.PushMetrics(sendCtx)
 	if err != nil {
+		log.Error(err, "failed metrics push")
 		return false, err // re-establish the connection
 	}
 	defer func() {
@@ -274,53 +354,60 @@ func (s *Server) connectAndPushMetrics(ctx context.Context) (bool, error) {
 	sendTryCount := s.SendPushMetricsRetryCount + 1 // try to send at least once
 	reason := "unknown"
 	for {
-		select {
-		case <-ctx.Done():
-			log.Info("sending final metrics to collector before shutdown", "node", nodeName)
-			resp, err := s.ListMetrics(ctx, &api.ListMetricsRequest{})
-			resp.Reason = "sampler-shutdown"
-			if err != nil {
-				log.Error(errors.WithStack(err), "unable to list metrics")
-				// don't re-enter loop -- we need to shutdown
-			} else if err := stream.Send(resp); err != nil {
-				log.Error(errors.WithStack(err), "unable to send metrics")
-				// don't re-enter loop -- we need to shutdown
-			}
-			log.Info("closing push metrics stream")
-			return true, nil // we are done
-		case <-ticker.C:
-			// block until it is time to send metrics
-			reason = "periodic-sync"
-		case <-createdPodTicker.C: // check for new pods that we haven't seen
-			// check if there are any pods we haven't sent metrics for
-			if !s.foundUnsentPods(ctx, lastSent) {
-				// don't send the metrics if we don't have any new pods
-				continue
-			}
-			reason = "found-new-pods"
-		}
 		if lastSent == nil {
 			// we haven't sent metrics yet
 			reason = "initial-sync"
+		} else {
+			select {
+			case <-p.Context.Done():
+				log.Info("sending final metrics to collector before shutdown", "err", p.Context.Err())
+				resp, err := s.ListMetrics(p.Context, &api.ListMetricsRequest{})
+				resp.Reason = "sampler-shutdown"
+				if err != nil {
+					log.Error(errors.WithStack(err), "unable to list metrics")
+					// don't re-enter loop -- we need to shutdown
+				} else if err := stream.Send(resp); err != nil {
+					log.Error(errors.WithStack(err), "unable to send metrics")
+					// don't re-enter loop -- we need to shutdown
+				}
+				log.Info("closing push metrics stream")
+				return true, nil // we are done
+			case <-ticker.C:
+				// block until it is time to send metrics
+				reason = "periodic-sync"
+			case <-createdPodTicker.C: // check for new pods that we haven't seen
+				// check if there are any pods we haven't sent metrics for
+				if !s.foundUnsentPods(lastSent) {
+					// don't send the metrics if we don't have any new pods
+					continue
+				}
+				reason = "found-new-pods"
+			}
 		}
+
 		var resp *api.ListMetricsResponse
 		for i := 0; i < sendTryCount; i++ {
-			resp, err = s.ListMetrics(ctx, &api.ListMetricsRequest{})
+			resp, err = s.ListMetrics(p.Context, &api.ListMetricsRequest{})
 			if err == nil {
 				break
 			}
-			log.Error(errors.WithStack(err), "unable to list metrics locally")
-			s.PushErrorMsg.Store(err.Error())
-			s.PushHealthy.Store(false) // we were not able to push metrics
+			log.Error(errors.WithStack(err), "unable to list metrics")
 		}
+		if len(resp.Containers) == 0 {
+			// we haven't seen any containers, don't send metrics until we do
+			continue
+		}
+
 		resp.Timestamp = timestamppb.Now()
 		resp.Reason = reason
 		if err := stream.Send(resp); err != nil {
 			log.Error(errors.WithStack(err), "unable to send metrics to collector server")
-			return false, err // may be an error with the connection -- re-establish the connection
+			return false, err // may be an error with the connection -- re-establish the connection if possible
 		}
-		s.PushHealthy.Store(true) // we are able to push metrics
-		log.V(1).Info("sent metrics to collector", "node", nodeName)
+		log.V(1).Info("sent metrics to collector",
+			"containers-len", len(resp.Containers),
+			"reason", reason,
+			"push-frequency-seconds", s.pushFrequency.Seconds())
 		lastSent = resp
 	}
 }
@@ -332,6 +419,47 @@ var (
 	podName = os.Getenv("POD_NAME")
 )
 
+func (s *Server) UnRegisterCollectors(ctx context.Context, ip string) {
+	s.pushersLock.Lock()
+	defer s.pushersLock.Unlock()
+	delete(s.pushers, ip)
+}
+
+// RegisterCollector provides an endpoint for collectors to manually register with the
+// samplers.  This is useful in cases where DNS isn't adequate.
+// - Collector needs to get utilization data before marking itself as ready and serving metrics
+// - DNS is slow to propagate
+func (s *Server) RegisterCollectors(ctx context.Context, req *api.RegisterCollectorsRequest) (*api.RegisterCollectorsResponse, error) {
+	if req.Source != "DNS" {
+		log.Info("registration request from collector", "req", req)
+	}
+	resp := &api.RegisterCollectorsResponse{}
+	s.pushersLock.Lock()
+	defer s.pushersLock.Unlock()
+	for _, c := range req.Collectors {
+		if len(c.IpAddress) == 0 {
+			log.Info("got empty IP for registration")
+			continue
+		}
+
+		if p, ok := s.pushers[c.IpAddress]; ok {
+			p.SawCollector = time.Now()
+			// already running, do nothing
+			continue
+		}
+		// IMPORTANT: use the server context not the request context or the
+		// pusher will shutdown when the request ends
+		p := &pusher{IP: c.IpAddress, Context: s.CTX, SawCollector: time.Now()}
+		log.Info("starting metrics pusher for new server", "req", req)
+
+		s.pushers[c.IpAddress] = p
+		go p.connect(s) // run the metrics pusher
+		resp.IpAddresses = append(resp.IpAddresses, c.IpAddress)
+	}
+
+	return resp, nil
+}
+
 // ListMetrics lists the aggregated metrics for all containers and nodes
 func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.ListMetricsResponse, error) {
 	var result api.ListMetricsResponse
@@ -340,8 +468,11 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 
 	for k, v := range samples.containers {
 		c := &api.ContainerMetrics{
-			ContainerID: k.ContainerID,
-			PodUID:      k.PodUID,
+			ContainerID:   k.ContainerID,
+			PodUID:        k.PodUID,
+			ContainerName: k.ContainerName,
+			PodName:       k.PodName,
+			NamespaceName: k.NamespaceName,
 		}
 		for _, s := range v {
 			c.CpuCoresNanoSec = append(c.CpuCoresNanoSec, int64(s.CPUCoresNanoSec))
@@ -424,12 +555,5 @@ func (x NodeAggregatedMetricsSlice) Less(i, j int) bool {
 func (x NodeAggregatedMetricsSlice) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
 
 func (s *Server) Check(ctx context.Context, _ *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
-	if !s.PushHealthy.Load() {
-		var msg string
-		if v := s.PushErrorMsg.Load(); v != nil {
-			msg = v.(string)
-		}
-		return nil, status.Error(codes.Internal, msg)
-	}
 	return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_SERVING}, nil
 }

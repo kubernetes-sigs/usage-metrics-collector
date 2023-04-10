@@ -10,6 +10,28 @@ service Metrics {
   rpc ListMetrics (ListMetricsRequest) returns (ListMetricsResponse) {
     option (google.api.http) = { get: "/v1/metrics" };
   }
+
+rpc RegisterCollectors (RegisterCollectorsRequest) returns (RegisterCollectorsResponse) {
+  option (google.api.http) = {
+      post: "/v1/register"
+      body: "*"
+    };
+  }
+}
+
+message RegisterCollectorsRequest {
+  repeated Collector collectors=1;
+  string source=2;
+  string fromPod=3;
+}
+
+message Collector {
+  string ipAddress=1;
+  string podName=2;
+}
+
+message RegisterCollectorsResponse {
+  repeated string ipAddresses=1;
 }
 
 service Health {
@@ -17,8 +39,8 @@ service Health {
     option (google.api.http) = { get: "/v1/healthz" };
   }
 
-   rpc IsLeader(grpc.health.v1.HealthCheckRequest) returns (grpc.health.v1.HealthCheckResponse) {
-      option (google.api.http) = { get: "/v1/is-leader" };
+   rpc IsReady(grpc.health.v1.HealthCheckRequest) returns (grpc.health.v1.HealthCheckResponse) {
+      option (google.api.http) = { get: "/v1/is-ready" };
    }
 }
 
@@ -34,8 +56,13 @@ message ListMetricsResponse {
 }
 
 message ContainerMetrics {
+    // nextID: 15
+
     string containerID =1;
     string podUID=2;
+    string containerName=12;
+    string podName=13;
+    string namespaceName=14;
 
     repeated int64 cpuCoresNanoSec=3;
     repeated int64 memoryBytes=4;

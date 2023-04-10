@@ -68,16 +68,27 @@ func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, e
 		} else if stats != nil {
 			cpu, err := cmStatsToCPUResult(stats, readTime)
 			if err != nil {
-				return nil, nil, err
+				log.Error(err, "no cpu stats available for container",
+					"namespace", c.NamespaceName,
+					"pod", c.PodName,
+					"container", c.ContainerName,
+				)
 			}
 			mem, err := cmStatsToMemoryResult(stats, readTime)
 			if err != nil {
-				return nil, nil, err
+				log.Error(err, "no memory stats available for container",
+					"namespace", c.NamespaceName,
+					"pod", c.PodName,
+					"container", c.ContainerName,
+				)
 			}
 
 			var container ContainerKey
 			container.ContainerID = c.ContainerID
 			container.PodUID = c.PodID
+			container.NamespaceName = c.NamespaceName
+			container.PodName = c.PodName
+			container.ContainerName = c.ContainerName
 
 			cpuResult[container] = cpu
 			memResult[container] = mem

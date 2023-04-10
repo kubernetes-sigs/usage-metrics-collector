@@ -63,7 +63,7 @@ func (s *sampleCache) Start(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			// stop scraping
-			log.Info("stopping cgroup sampler")
+			log.Info("stopping cgroup sampler", "err", ctx.Err())
 			return nil
 		case <-ticker.C:
 			// retry fetching the sample in case of a failure
