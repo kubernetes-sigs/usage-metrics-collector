@@ -412,34 +412,10 @@ func (c *Collector) collectPVs(o *CapacityObjects, ch chan<- prometheus.Metric, 
 			node = o.NodesByName[nodeName]
 		}
 
-		l := LabelsValues{}
-		c.Labeler.SetLabelsForPersistentVolume(&l, pv, pvc, node)
+		pvLabels := LabelsValues{}
+		c.Labeler.SetLabelsForPersistentVolume(&pvLabels, pv, pvc, node)
 		values := c.Reader.GetValuesForPV(pv)
-		for src, v := range values {
-			// each resource -- e.g. capacity
-			for r, alias := range c.Resources {
-				q, ok := v.ResourceList[corev1.ResourceName(r)]
-				if !ok {
-					// we aren't interested in this resource -- skip
-					continue
-				}
-
-				// initialize the metric
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.PVType}
-				m, ok := metrics[name]
-				if !ok {
-					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-					metrics[name] = m
-				}
-
-				// set the value for this set of labels
-				if _, ok := m.Values[l]; ok {
-					// already found an item here
-					log.Info("duplicate value for pvs", "labels", l)
-				}
-				m.Values[l] = []resource.Quantity{q}
-			}
-		}
+		c.addValuesToMetrics(values, pvLabels, metrics, collectorcontrollerv1alpha1.PVType, nil)
 	}
 
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.PVType) {
@@ -473,33 +449,7 @@ func (c *Collector) collectPVCs(o *CapacityObjects, ch chan<- prometheus.Metric,
 		c.Labeler.SetLabelsForPersistentVolumeClaim(&l, pvc, pv, n, p, wl, node)
 
 		values := c.Reader.GetValuesForPVC(pvc)
-
-		// each source -- e.g. pvc_requests, pvc_limits, pvc_capacity
-		for src, v := range values {
-			// each resource -- e.g. capacity
-			for r, alias := range c.Resources {
-				q, ok := v.ResourceList[corev1.ResourceName(r)]
-				if !ok {
-					// we aren't interested in this resource -- skip
-					continue
-				}
-
-				// initialize the metric
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.PVCType}
-				m, ok := metrics[name]
-				if !ok {
-					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-					metrics[name] = m
-				}
-
-				// set the value for this set of labels
-				if _, ok := m.Values[l]; ok {
-					// already found an item here
-					log.Info("duplicate value for pvcs", "labels", l)
-				}
-				m.Values[l] = []resource.Quantity{q}
-			}
-		}
+		c.addValuesToMetrics(values, l, metrics, collectorcontrollerv1alpha1.PVCType, nil)
 	}
 
 	for _, a := range c.MetricsPrometheusCollector.Aggregations.ByType(collectorcontrollerv1alpha1.PVCType) {
@@ -706,39 +656,12 @@ func (c *Collector) collectNodes(o *CapacityObjects, ch chan<- prometheus.Metric
 		n := &o.Nodes.Items[i]
 
 		// get the labels for this quota
-		l := LabelsValues{}
-		c.Labeler.SetLabelsForNode(&l, n)
-		sample := sb.NewSample(l) // For saving locally
+		nodeLabels := LabelsValues{}
+		c.Labeler.SetLabelsForNode(&nodeLabels, n)
 
 		// get the values for this quota
 		values := c.Reader.GetValuesForNode(n, o.PodsByNodeName[n.Name])
-
-		// find the sources + resource we care about and add them to the metrics
-		for src, v := range values {
-			for r, alias := range c.Resources { // resource names are are interested in
-				q, ok := v.ResourceList[corev1.ResourceName(r)]
-				if !ok {
-					// we aren't interested in this resource -- skip
-					continue
-				}
-
-				// initialize the metric
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.NodeType}
-				m, ok := metrics[name]
-				if !ok {
-					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-					metrics[name] = m
-				}
-
-				// set the value for this set of labels
-				if _, ok := m.Values[l]; ok {
-					// already found an item here
-					log.Info("duplicate value for nodes", "labels", l)
-				}
-				m.Values[l] = []resource.Quantity{q}
-				sb.AddQuantityValues(sample, r, src, q) // For saving locally
-			}
-		}
+		c.addValuesToMetrics(values, nodeLabels, metrics, collectorcontrollerv1alpha1.NodeType, sb)
 	}
 
 	if err := sb.SaveSamplesToFile(); err != nil {
@@ -1031,7 +954,7 @@ func (c *Collector) addValuesToMetrics(values map[collectorcontrollerv1alpha1.So
 			// set the value
 			if _, ok := m.Values[labels]; ok {
 				// already found an item here
-				log.Info("duplicate value for", "sourceType", sourceType, "labels", labels)
+				log.V(1).Info("duplicate value for", "sourceType", sourceType, "labels", labels)
 			}
 			m.Values[labels] = qs
 
