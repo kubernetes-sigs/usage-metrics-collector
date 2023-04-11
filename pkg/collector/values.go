@@ -213,12 +213,12 @@ func (r ValueReader) GetValuesForSchedulerHealth(pod *corev1.Pod, recencyPeriod 
 			if cond.Type != corev1.PodScheduled || cond.Status != corev1.ConditionTrue {
 				continue
 			}
-			duration = cond.LastTransitionTime.Time.Sub(pod.CreationTimestamp.Time)
-
 			// pod scheduled too long ago, nothing to publish
-			if duration > recencyPeriod {
+			if now().Sub(cond.LastTransitionTime.Time) > recencyPeriod {
 				return nil
 			}
+
+			duration = cond.LastTransitionTime.Time.Sub(pod.CreationTimestamp.Time)
 			break
 		}
 	}
