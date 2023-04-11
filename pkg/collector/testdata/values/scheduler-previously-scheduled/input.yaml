@@ -1,0 +1,14 @@
+pods:
+  - apiVersion: v1
+    kind: Pod
+    metadata:
+      name: "previously-scheduled"
+      creationTimestamp: "2022-03-22T00:00:00Z"
+    spec:
+      nodeName: "some-node"
+    status:
+      phase: "Running"
+      conditions:
+      - lastTransitionTime: "2022-03-22T00:01:00Z"
+        status: "True"
+        type: "PodScheduled"
