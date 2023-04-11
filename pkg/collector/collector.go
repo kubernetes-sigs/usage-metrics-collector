@@ -874,56 +874,11 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 
 		// collect pod values
 		values := c.Reader.GetValuesForPod(pod)
-
-		for src, v := range values { // sources we are interested in
-			for r, alias := range c.Resources { // resource names are are interested in
-				q, ok := v.ResourceList[corev1.ResourceName(r)]
-				if !ok {
-					// container doesn't have values for this compute resource type -- skip it
-					continue
-				}
-
-				// get the metric for this level + source + resource + operation
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.PodType}
-				m, ok := podMetrics[name]
-				if !ok {
-					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-					podMetrics[name] = m
-				}
-				// set the value
-				if _, ok := m.Values[podLabels]; ok {
-					// already found an item here
-					log.Info("duplicate value for pods", "labels", podLabels)
-				}
-				m.Values[podLabels] = []resource.Quantity{q}
-			}
-		}
+		c.addValuesToMetrics(values, podLabels, podMetrics, collectorcontrollerv1alpha1.PodType, nil)
 
 		// collect scheduler health values
 		values = c.Reader.GetValuesForSchedulerHealth(pod, time.Duration(c.SchedulerRecencyPeriodSeconds)*time.Second)
-
-		for src, v := range values {
-			for r, alias := range c.Resources { // resource names are are interested in
-				q, ok := v.ResourceList[corev1.ResourceName(r)]
-				if !ok {
-					// container doesn't have values for this compute resource type -- skip it
-					continue
-				}
-
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.SchedulerHealthType}
-				m, ok := schedulerMetrics[name]
-				if !ok {
-					m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-					schedulerMetrics[name] = m
-				}
-				// set the value
-				if _, ok := m.Values[podLabels]; ok {
-					// already found an item here
-					log.Info("duplicate value for pods", "labels", podLabels)
-				}
-				m.Values[podLabels] = []resource.Quantity{q}
-			}
-		}
+		c.addValuesToMetrics(values, podLabels, schedulerMetrics, collectorcontrollerv1alpha1.SchedulerHealthType, nil)
 
 		// the utilization values on give the containerID, not the container name
 		// use the Pod containerStatuses field to map the container name to a containerID.
@@ -942,7 +897,6 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 			container := &pod.Spec.Containers[i]
 			containerLabels := podLabels
 			c.Labeler.SetLabelsForContainer(&containerLabels, container)
-			sample := sb.NewSample(containerLabels) // For saving locally
 
 			id := sampler.ContainerKey{ContainerID: containerNameToID[container.Name], PodUID: podUID}
 			allContainers.Insert(string(id.PodUID) + "/" + string(id.ContainerID))
@@ -986,55 +940,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 			// get the quantities from the container -- there will be 1 value for
 			// each unique source
 			values := c.Reader.GetValuesForContainer(container, pod, usage)
-
-			for src, v := range values { // sources we are interested in
-				for r, alias := range c.Resources { // resource names are are interested in
-					if v.ResourceList != nil {
-						q, ok := v.ResourceList[corev1.ResourceName(r)]
-						if !ok {
-							// container doesn't have values for this compute resource type -- skip it
-							continue
-						}
-
-						// get the metric for this level + source + resource + operation
-						name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.ContainerType}
-						m, ok := containerMetrics[name]
-						if !ok {
-							m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-							containerMetrics[name] = m
-						}
-						// set the value
-						if _, ok := m.Values[containerLabels]; ok {
-							// already found an item here
-							log.Info("duplicate value for containers", "labels", containerLabels)
-						}
-						m.Values[containerLabels] = []resource.Quantity{q}
-						sb.AddQuantityValues(sample, r, src, q) // For saving locally
-					} else if v.MultiResourceList != nil {
-						// TODO: figure out a way to factor this so it is clean with less duplication across the file
-						q, ok := v.MultiResourceList[corev1.ResourceName(r)]
-						if !ok {
-							// container doesn't have values for this compute resource type -- skip it
-							continue
-						}
-
-						// get the metric for this level + source + resource + operation
-						name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: collectorcontrollerv1alpha1.ContainerType}
-						m, ok := containerMetrics[name]
-						if !ok {
-							m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-							containerMetrics[name] = m
-						}
-						// set the value
-						if _, ok := m.Values[containerLabels]; ok {
-							// already found an item here
-							log.Info("duplicate value for containers", "labels", containerLabels)
-						}
-						m.Values[containerLabels] = q
-						sb.AddQuantityValues(sample, r, src, q...) // For saving locally
-					}
-				}
-			}
+			c.addValuesToMetrics(values, containerLabels, containerMetrics, collectorcontrollerv1alpha1.ContainerType, sb)
 		}
 	}
 
@@ -1093,6 +999,45 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 	podCountMetric.Set(float64(len(o.Pods.Items)))
 	podCountMetric.Collect(ch)
 	return nil
+}
+
+func (c *Collector) addValuesToMetrics(values map[collectorcontrollerv1alpha1.Source]value, labels LabelsValues,
+	metrics map[MetricName]*Metric, sourceType collectorcontrollerv1alpha1.SourceType, sb *SampleListBuilder) {
+	sample := sb.NewSample(labels)
+
+	for src, v := range values { // sources we are interested in
+		for r, alias := range c.Resources { // resource names are are interested in
+			var qs []resource.Quantity
+			if v.ResourceList != nil {
+				if q, ok := v.ResourceList[corev1.ResourceName(r)]; ok {
+					qs = []resource.Quantity{q}
+				}
+			} else if v.MultiResourceList != nil {
+				if q, ok := v.MultiResourceList[corev1.ResourceName(r)]; ok {
+					qs = q
+				}
+			}
+			if qs == nil {
+				continue
+			}
+
+			// get the metric for this level + source + resource + operation
+			name := MetricName{Source: src, ResourceAlias: alias, Resource: r, SourceType: sourceType}
+			m, ok := metrics[name]
+			if !ok {
+				m = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
+				metrics[name] = m
+			}
+			// set the value
+			if _, ok := m.Values[labels]; ok {
+				// already found an item here
+				log.Info("duplicate value for", "sourceType", sourceType, "labels", labels)
+			}
+			m.Values[labels] = qs
+
+			sb.AddQuantityValues(sample, r, src, qs...) // For saving locally
+		}
+	}
 }
 
 func (c *Collector) nodeMissingReason(node *corev1.Node, o *CapacityObjects) string {
