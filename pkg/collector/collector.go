@@ -1564,6 +1564,10 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 				FromPod:    os.Getenv("POD_NAME"), // used for debugging in the sampler
 			}
 			for _, col := range collectors.Items {
+				if col.DeletionTimestamp != nil {
+					// only register running collectors
+					continue
+				}
 				if col.Status.Phase != corev1.PodRunning {
 					// only register running collectors
 					continue
@@ -1654,7 +1658,8 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 
 			// identify the sampler pods to register with
 			wg := sync.WaitGroup{}
-			var samplerCount, samplerResultsCount, registeredCount, errorCount, notRunningCount int
+			var samplerCount, samplerResultsCount, notRunningCount int
+			var errorCount, registeredCount atomic.Int32
 			for i := range samplers.Items {
 				pod := samplers.Items[i]
 				switch {
@@ -1704,6 +1709,7 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 							"node", pod.Spec.NodeName,
 							"pod", pod.Name,
 						)
+						errorCount.Add(1)
 						return
 					}
 
@@ -1711,13 +1717,13 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 					c := samplerapi.NewMetricsClient(conn)
 					resp, err := c.RegisterCollectors(ctx, req)
 					if err != nil {
-						errorCount++
+						errorCount.Add(1)
 						log.Error(err, "failed to register with node sampler",
 							"node", pod.Spec.NodeName,
 							"pod", pod.Name,
 						)
 					} else {
-						registeredCount++
+						registeredCount.Add(1)
 						log.Info("registered with node sampler",
 							"node", pod.Spec.NodeName,
 							"pod", pod.Name,
@@ -1726,22 +1732,24 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 					}
 				}()
 			}
+			wg.Wait()
+
 			log.Info("finished registering with node-samplers",
 				"results-pct", samplerResultsCount*100/samplerCount,
 				"results-count", samplerResultsCount,
 				"running-sampler-count", samplerCount,
 				"not-running-sampler-count", notRunningCount,
-				"register-success-count", registeredCount,
-				"register-fail-count", errorCount,
+				"register-success-count", registeredCount.Load(),
+				"register-fail-count", errorCount.Load(),
 			)
 			registeredWithSamplers.Reset()
 			registeredWithSamplers.WithLabelValues("node-registered").Set(float64(samplerResultsCount))
-			registeredWithSamplers.WithLabelValues("node-registration-error").Set(float64(errorCount))
-			registeredWithSamplers.WithLabelValues("node-registration-success").Set(float64(registeredCount))
+			registeredWithSamplers.WithLabelValues("node-registration-error").Set(float64(errorCount.Load()))
+			registeredWithSamplers.WithLabelValues("node-registration-success").Set(float64(registeredCount.Load()))
 			registeredWithSamplers.WithLabelValues("sampler-not-running").Set(float64(notRunningCount))
-			registeredWithSamplers.WithLabelValues("node-not-registered").Set(float64(samplerCount - samplerResultsCount - errorCount - registeredCount))
+			registeredWithSamplers.WithLabelValues("node-not-registered").Set(float64(
+				samplerCount - samplerResultsCount - int(errorCount.Load()) - int(registeredCount.Load())))
 
-			wg.Wait()
 			<-tick.C // wait before registering again
 		}
 	}()
