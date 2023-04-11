@@ -1821,7 +1821,7 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 			registeredWithSamplers.WithLabelValues("node-registration-error").Set(float64(errorCount))
 			registeredWithSamplers.WithLabelValues("node-registration-success").Set(float64(registeredCount))
 			registeredWithSamplers.WithLabelValues("sampler-not-running").Set(float64(notRunningCount))
-			registeredWithSamplers.WithLabelValues("node-not-registered").Set(float64(samplerCount - notRunningCount - samplerResultsCount - errorCount - registeredCount))
+			registeredWithSamplers.WithLabelValues("node-not-registered").Set(float64(samplerCount - samplerResultsCount - errorCount - registeredCount))
 
 			wg.Wait()
 			<-tick.C // wait before registering again
