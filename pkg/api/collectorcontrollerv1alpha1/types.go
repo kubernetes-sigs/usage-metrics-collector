@@ -152,7 +152,13 @@ type UtilizationServer struct {
 
 	SamplerPort int `json:"samplerPort" yaml:"samplerPort"`
 
+	// MinResultPctBeforeReady if set will fail readiness checks until the collector has utilization results
+	// from at least this percent of running samplers.
 	MinResultPctBeforeReady int `json:"minResultPctBeforeReady" yaml:"minResultPctBeforeReady"`
+
+	// WaitSamplerRegistrationsBeforeReady if set will wait this many additional registration cycles after reaching
+	// MinResultPctBeforeReady before becoming ready.
+	WaitSamplerRegistrationsBeforeReady int `json:"waitSamplerRegistrationsBeforeReady" yaml:"waitSamplerRegistrationsBeforeReady"`
 }
 
 // Condition matches a node condition to determine whether a node is unhealthy.
