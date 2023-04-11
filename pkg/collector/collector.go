@@ -1643,6 +1643,7 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 	// continuously register with node samplers that we don't have results from
 	go func() {
 		tick := time.NewTicker(time.Minute)
+		waitReadyCyclesCount := c.UtilizationServer.WaitSamplerRegistrationsBeforeReady
 		for {
 			log.V(1).Info("ensuring collector is registered with samplers")
 			// since we can't get the status.ips list from the downward api,
@@ -1710,17 +1711,32 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 
 				readyPct := (nodesWithResults.Len() * 100 / nodesWithSamplers.Len())
 				if nodesWithSamplers.Len() > 0 && readyPct > c.UtilizationServer.MinResultPctBeforeReady {
-					// Have enough utilization results to say we are ready
-					log.Info("collector ready",
-						"running-minutes", time.Since(c.startTime).Minutes(),
-						"nodes-with-results-count", nodesWithResults.Len(),
-						"nodes-with-samplers-count", nodesWithSamplers.Len(),
-						"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
-						"nodes-missing-results", nodesMissingResults.List(),
-						"ready-pct", readyPct,
-						"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady,
-					)
-					c.UtilizationServer.IsReadyResult.Store(true)
+					if waitReadyCyclesCount <= 0 {
+						// Have enough utilization results to say we are ready
+						log.Info("collector ready",
+							"running-minutes", time.Since(c.startTime).Minutes(),
+							"nodes-with-results-count", nodesWithResults.Len(),
+							"nodes-with-samplers-count", nodesWithSamplers.Len(),
+							"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
+							"nodes-missing-results", nodesMissingResults.List(),
+							"ready-pct", readyPct,
+							"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady,
+							"remaining-cycles", waitReadyCyclesCount,
+						)
+						c.UtilizationServer.IsReadyResult.Store(true)
+					} else {
+						log.Info("collector has required sampler results, waiting on WaitSamplerRegistrationsBeforeReady to be ready",
+							"running-minutes", time.Since(c.startTime).Minutes(),
+							"nodes-with-results-count", nodesWithResults.Len(),
+							"nodes-with-samplers-count", nodesWithSamplers.Len(),
+							"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
+							"nodes-missing-results", nodesMissingResults.List(),
+							"ready-pct", readyPct,
+							"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady,
+							"remaining-cycles", waitReadyCyclesCount,
+						)
+						waitReadyCyclesCount--
+					}
 				} else {
 					// Don't have enough utilization results to say we are ready
 					log.Info("collector not-ready",
@@ -1730,7 +1746,9 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 						"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
 						"nodes-missing-results", nodesMissingResults.List(),
 						"ready-pct", readyPct,
-						"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady)
+						"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady,
+						"remaining-cycles", waitReadyCyclesCount,
+					)
 				}
 			}
 
