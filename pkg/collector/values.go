@@ -204,6 +204,42 @@ func (r ValueReader) GetValuesForPod(pod *corev1.Pod) map[collectorcontrollerv1a
 	}
 }
 
+func (r ValueReader) GetValuesForSchedulerHealth(pod *corev1.Pod, recencyPeriod time.Duration) map[collectorcontrollerv1alpha1.Source]value {
+	// Missing critical information, no metric will be emitted.
+	if pod.CreationTimestamp.Time.IsZero() {
+		log.V(1).Info("missing creation timestamp in pod", "pod", pod.ObjectMeta)
+		return nil
+	}
+
+	duration := now().Sub(pod.CreationTimestamp.Time)
+
+	// pod has been scheduled
+	if pod.Spec.NodeName != "" {
+		for _, cond := range pod.Status.Conditions {
+			if cond.Type != corev1.PodScheduled || cond.Status != corev1.ConditionTrue {
+				continue
+			}
+			// pod scheduled too long ago, nothing to publish
+			if d := now().Sub(cond.LastTransitionTime.Time); d > recencyPeriod {
+				return nil
+			}
+
+			duration = cond.LastTransitionTime.Time.Sub(pod.CreationTimestamp.Time)
+			break
+		}
+	}
+
+	return map[collectorcontrollerv1alpha1.Source]value{
+		collectorcontrollerv1alpha1.SchedulerRecentSource: {
+			Level:  collectorcontrollerv1alpha1.PodLevel,
+			Source: collectorcontrollerv1alpha1.SchedulerRecentSource,
+			ResourceList: map[corev1.ResourceName]resource.Quantity{
+				collectorcontrollerv1alpha1.ResourceTime: *resource.NewMilliQuantity(duration.Milliseconds(), resource.DecimalSI),
+			},
+		},
+	}
+}
+
 var now = func() time.Time {
 	return time.Now()
 }

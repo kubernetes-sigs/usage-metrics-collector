@@ -1,0 +1,6 @@
+pods:
+  - apiVersion: v1
+    kind: Pod
+    metadata:
+      name: "not-scheduled-yet"
+      creationTimestamp: "2022-03-23T00:55:00Z"

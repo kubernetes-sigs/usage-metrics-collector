@@ -83,6 +83,11 @@ type MetricsPrometheusCollector struct {
 	// SideCarConfigDirectoryPaths are paths to directories with sidecar metric files.
 	// SideCar metric
 	SideCarConfigDirectoryPaths []string `json:"sideCarMetricPaths" yaml:"sideCarMetricPaths"`
+
+	// SchedulerRecencyPeriodSeconds determines the time period during which pods are considered
+	// to be recently scheduled.
+	// If set to zero, only pods that have not been scheduled will be considered.
+	SchedulerRecencyPeriodSeconds uint64 `json:"schedulerRecencyPeriodSeconds" yaml:"schedulerRecencyPeriodSeconds"`
 }
 
 var (
@@ -197,10 +202,13 @@ const (
 
 	// ResourcePeriods is the resource name for CPU periods.
 	ResourcePeriods = ResourceName("periods")
+
+	// ResourceTime is the resource name for time periods.
+	ResourceTime = ResourceName("time")
 )
 
 // ResourceNames defines a set of the supported ResourceName values.
-var ResourceNames = sets.New(ResourceCPU, ResourceMemory, ResourceStorage, ResourceItems)
+var ResourceNames = sets.New(ResourceCPU, ResourceMemory, ResourceStorage, ResourceItems, ResourceTime)
 
 // ResourceAlias is an alias for a resource, it normally includes units (e.g. cpu_cores, memory_bytes)
 type ResourceAlias string
@@ -219,6 +227,9 @@ const (
 
 	// ResourceAliasItems is the resource alias for object counts
 	ResourceAliasItems ResourceAlias = "items"
+
+	// ResourceAliasTime is the resource alias for time.
+	ResourceAliasTime ResourceAlias = "time_seconds"
 )
 
 // Built in prometheus metric labels
@@ -360,6 +371,9 @@ const (
 
 	// ClusterScopedType is the type for metrics pulled from the cluster scope.
 	ClusterScopedType SourceType = "cluster_scoped"
+
+	// SchedulerHealthType is the type for metrics pulled for scheduler health.
+	SchedulerHealthType SourceType = "scheduler_health"
 )
 
 // SourceTypes is a set of all of the valid SourceType values.
@@ -373,6 +387,7 @@ var SourceTypes = sets.New(
 	PVCType,
 	NamespaceType,
 	ClusterScopedType,
+	SchedulerHealthType,
 )
 
 // Source is one of the sources of metrics for different types.
@@ -586,6 +601,17 @@ const (
 var NamespaceSources = sets.New(NamespaceItemsSource)
 
 const (
+	// SchedulerRecentSource publishes all of the pods waiting to be scheduled or scheduled
+	// less than the period of time in MetricsPrometheusCollector.SchedulerRecencyPeriod.
+	// The value of this metric is the time it took from pod creation to scheduling
+	// for scheduled pods or to current time for pending ones.
+	SchedulerRecentSource Source = "scheduler_recent"
+)
+
+// SchedulerHealthSources all of the Source values of SourceType SchedulerHealthType.
+var SchedulerHealthSources = sets.New(SchedulerRecentSource)
+
+const (
 	// LimitsResourcePrefix is the prefix for limits resource name
 	LimitsResourcePrefix = "limits"
 	// RequestsResourceName is the prefix for requests resource name
@@ -666,6 +692,9 @@ type Sources struct {
 	// ClusterScoped are sources for cluster-scoped resources in the Kubernetes
 	// control plane.
 	ClusterScoped []Source `json:"cluster_scoped" yaml:"cluster_scoped"`
+
+	// SchedulerHealth are sources for scheduler health objects.
+	SchedulerHealth []Source `json:"scheduler_health,omitempty" yaml:"scheduler_health,omitempty"`
 }
 
 func (s *Sources) GetSources() []Source {
@@ -688,6 +717,8 @@ func (s *Sources) GetSources() []Source {
 		return s.CGroup
 	case ClusterScopedType:
 		return s.ClusterScoped
+	case SchedulerHealthType:
+		return s.SchedulerHealth
 	}
 	return nil
 }
