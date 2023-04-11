@@ -2,7 +2,7 @@
 # TYPE kube_usage_namespace_max_scheduler_recent_time_seconds gauge
 kube_usage_namespace_max_scheduler_recent_time_seconds{exported_namespace="test-namespace-1",node_label=""} 30
 kube_usage_namespace_max_scheduler_recent_time_seconds{exported_namespace="test-namespace-1",node_label="node-label-value-1"} 1800
-kube_usage_namespace_max_scheduler_recent_time_seconds{exported_namespace="test-namespace-1",node_label="node-label-value-2"} 9.223372036854e+09
+kube_usage_namespace_max_scheduler_recent_time_seconds{exported_namespace="test-namespace-1",node_label="node-label-value-2"} 10
 # HELP kube_usage_node_cluster_ext_sum_node_items kube_usage_node_cluster_ext_sum_node_items
 # TYPE kube_usage_node_cluster_ext_sum_node_items gauge
 kube_usage_node_cluster_ext_sum_node_items{node_unschedulable="false"} 2
@@ -28,7 +28,6 @@ kube_usage_pod_namespace_ext_sum_pod_items{exported_namespace="test-namespace-1"
 # TYPE kube_usage_priority_max_scheduler_recent_time_seconds gauge
 kube_usage_priority_max_scheduler_recent_time_seconds{exported_namespace="test-namespace-1",node_label="",pod_label="pod-label-value",priority_class="p1"} 30
 kube_usage_priority_max_scheduler_recent_time_seconds{exported_namespace="test-namespace-1",node_label="node-label-value-1",pod_label="",priority_class="p1"} 1800
-kube_usage_priority_max_scheduler_recent_time_seconds{exported_namespace="test-namespace-1",node_label="node-label-value-2",pod_label="",priority_class="p1"} 9.223372036854e+09
 kube_usage_priority_max_scheduler_recent_time_seconds{exported_namespace="test-namespace-1",node_label="node-label-value-2",pod_label="pod-label-value",priority_class="p1"} 10
 # HELP kube_usage_quota_cluster_ext_sum_quota_items kube_usage_quota_cluster_ext_sum_quota_items
 # TYPE kube_usage_quota_cluster_ext_sum_quota_items gauge

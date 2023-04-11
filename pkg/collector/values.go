@@ -205,6 +205,11 @@ func (r ValueReader) GetValuesForPod(pod *corev1.Pod) map[collectorcontrollerv1a
 }
 
 func (r ValueReader) GetValuesForSchedulerHealth(pod *corev1.Pod, recencyPeriod time.Duration) map[collectorcontrollerv1alpha1.Source]value {
+	// Missing critical information, no metric will be emitted.
+	if pod.CreationTimestamp.Time.IsZero() {
+		return nil
+	}
+
 	duration := now().Sub(pod.CreationTimestamp.Time)
 
 	// pod has been scheduled
