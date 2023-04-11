@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: test-pod-1-deployment-1
+  name: still-scheduling
   namespace: test-namespace-1
   creationTimestamp: "2022-03-23T01:00:00Z"
   labels:
@@ -41,8 +41,9 @@ status:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: test-pod-2-deployment-1
+  name: scheduled-recently
   namespace: test-namespace-1
+  creationTimestamp: "2022-03-23T01:00:00Z"
   labels:
     app: app-1
     "p-l": "pod-label-value"
@@ -77,6 +78,10 @@ spec:
           cpu: "1"
 status:
   phase: Running
+  conditions:
+  - lastTransitionTime: "2022-03-23T01:00:10Z"
+    status: "True"
+    type: PodScheduled
 ---
 apiVersion: apps/v1
 kind: ReplicaSet
@@ -92,8 +97,9 @@ metadata:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: test-pod-1-deployment-2
+  name: scheduled-long-ago
   namespace: test-namespace-1
+  creationTimestamp: "2022-03-23T01:00:00Z"
   labels:
     app: app-2
   ownerReferences:
@@ -101,7 +107,6 @@ metadata:
       controller: true
       kind: ReplicaSet
       name: test-replicasset-1-deployment-2
-  creationTimestamp: "2022-03-23T01:00:00Z"
 spec:
   nodeName: test-node-1
   priorityClassName: p1
@@ -127,7 +132,7 @@ spec:
 status:
   phase: Running
   conditions:
-  - lastTransitionTime: "2022-03-23T01:00:10Z"
+  - lastTransitionTime: "2022-03-23T01:30:00Z"
     status: "True"
     type: PodScheduled
 ---

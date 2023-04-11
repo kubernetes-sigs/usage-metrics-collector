@@ -127,10 +127,6 @@ func TestCollector(t *testing.T) {
 	parser.TestDir(t, func(tc *testutil.TestCase) error {
 		t := tc.T
 
-		if name := t.Name(); name != "TestCollector/collector/items" {
-			t.SkipNow()
-		}
-
 		// get the client initialized with the test data
 		c, err := tc.GetFakeClient(scheme.Scheme)
 		require.NoError(t, err, "unable to create Kubernetes client")

@@ -101,6 +101,7 @@ aggregations:
         exported_namespace: true
         priority_class: true
       extensions:
+        pod_label: true
         node_label: true
   - operation: "max"
     mask:
