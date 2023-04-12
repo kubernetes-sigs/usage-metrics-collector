@@ -148,14 +148,11 @@ func (c *Collector) continuouslyCollect(ctx context.Context) {
 	for {
 		start := time.Now()
 
-		// calculate the metrics from the current cluster state
-		if c.UtilizationServer.IsReadyResult.Load() {
-			// wait until we are ready to start caching metrics
-			log.Info("caching metrics")
-			c.metrics.Store(c.cacheMetrics())
-			c.hasCachedMetrics.Done()
-			log.Info("complete caching metrics", "seconds", time.Since(start).Seconds())
-		}
+		// wait until we are ready to start caching metrics
+		log.Info("caching metrics")
+		c.metrics.Store(c.cacheMetrics())
+		c.hasCachedMetrics.Done()
+		log.Info("complete caching metrics", "seconds", time.Since(start).Seconds())
 
 		select {
 		case <-ctx.Done():
