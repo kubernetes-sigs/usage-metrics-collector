@@ -73,8 +73,9 @@ type Collector struct {
 	taintLabelsById        map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.NodeTaint
 	extensionLabelMaskById map[collectorcontrollerv1alpha1.LabelsMaskId]*extensionLabelsMask
 
-	startTime time.Time
-	metrics   chan *cachedMetrics
+	startTime        time.Time
+	metrics          *atomic.Value
+	hasCachedMetrics *sync.WaitGroup
 
 	sideCarConfigs []*collectorcontrollerv1alpha1.SideCarConfig
 }
@@ -96,9 +97,11 @@ func NewCollector(
 		MetricsPrometheusCollector: config,
 		UtilizationServer:          utilization.Server{UtilizationServer: config.UtilizationServer},
 		startTime:                  time.Now(),
-		metrics:                    make(chan *cachedMetrics),
+		metrics:                    &atomic.Value{},
 		IsLeaderElected:            &atomic.Bool{},
+		hasCachedMetrics:           &sync.WaitGroup{},
 	}
+	c.hasCachedMetrics.Add(1)
 	c.UtilizationServer.IsReadyResult.Store(false)
 	c.IsLeaderElected.Store(false)
 
@@ -140,34 +143,25 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *Collector) continuouslyCollect(ctx context.Context) {
-	cacheTicker := time.NewTicker(time.Minute * 5)
+	cacheTicker := time.NewTicker(time.Minute * 2)
 	defer cacheTicker.Stop()
 	for {
 		start := time.Now()
 
 		// calculate the metrics from the current cluster state
-		log.Info("caching metrics")
-		m := c.cacheMetrics()
-		log.Info("complete caching metrics", "seconds", time.Since(start).Seconds())
+		if c.UtilizationServer.IsReadyResult.Load() {
+			// wait until we are ready to start caching metrics
+			log.Info("caching metrics")
+			c.metrics.Store(c.cacheMetrics())
+			c.hasCachedMetrics.Done()
+			log.Info("complete caching metrics", "seconds", time.Since(start).Seconds())
+		}
 
-		if c.IsLeaderElected.Load() && c.UtilizationServer.IsReadyResult.Load() {
-			// if we are the leader and ready, write the metrics so they are published
-			select {
-			case <-ctx.Done():
-				return // shutdown
-			case c.metrics <- m:
-				// send the cached metrics to the collector
-				// the collector will throw these away if it isn't the
-			}
-		} else {
-			// if we are not the leader, we should continuously re-caculate the metrics
-			// so that we can publish them immediately when we become the leader.
-			select {
-			case <-ctx.Done():
-				return // shutdown
-			case <-cacheTicker.C:
-				// re-cacalculate the metrics without publishing them
-			}
+		select {
+		case <-ctx.Done():
+			return // shutdown
+		case <-cacheTicker.C:
+			// block before recalculating metrics
 		}
 	}
 }
@@ -265,21 +259,14 @@ func (c *Collector) cacheMetrics() *cachedMetrics {
 // Collect returns the current state of all metrics of the collector.
 // This there are cached metrics, Collect will return the cached metrics.
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
+	start := time.Now()
 	if !c.IsLeaderElected.Load() || !c.UtilizationServer.IsReadyResult.Load() {
 		// Never export metrics if we aren't the leader or aren't ready to report them.
 		// e.g. have sufficient utilization metrics
-		select {
-		case <-c.metrics:
-			// we were leader elected when we cached the metrics, but aren't anymore.
-			// throw the results away so the are recalculated.
-			log.Info("lost leadership after caching metrics, throwing them away")
-		default:
-		}
 		log.Info("skipping collection")
 		return
 	}
 
-	start := time.Now()
 	if !c.PreComputeMetrics.Enabled {
 		log.Info("collecting metrics without caching")
 		c.collect(ch, nil)
@@ -287,9 +274,13 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
+	c.hasCachedMetrics.Wait() // wait until the first cache happens
+
+	lm := c.metrics.Load()
+
 	log.Info("collecting metrics from cache")
 	// write the cached metrics out as a response
-	metrics := <-c.metrics
+	metrics := lm.(*cachedMetrics)
 	for i := range metrics.metrics {
 		ch <- metrics.metrics[i]
 	}
