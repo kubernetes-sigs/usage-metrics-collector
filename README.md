@@ -53,11 +53,11 @@ this own until this is resolved.
   - `docker build . -t my-org/usage-metrics-collector:v0.0.0`
 2. Push the image to a container repo
   - `docker push my-org/usage-metrics-collector:v0.0.0`
-4. Make sure the `GKE cluster values` config portion is uncommented in [config/metrics-prometheus-collector/configmaps/sampler.yaml](config/metrics-node-sampler/configmaps/sampler.yaml)
+3. Make sure the `GKE cluster values` config portion is uncommented in [config/metrics-prometheus-collector/configmaps/sampler.yaml](config/metrics-node-sampler/configmaps/sampler.yaml)
   - Other `cluster values` should be commented
-5. Install the config
+4. Install the config
   - `kustomize build config | kubectl apply -f -`
-6. Update your context to use the usage-metrics-collector namespace by default
+5. Update your context to use the usage-metrics-collector namespace by default
   - `kubectl config set-context --current --namespace=usage-metrics-collector`
 
 ### Kicking the tires
@@ -74,7 +74,7 @@ this own until this is resolved.
 4. Get the metrics from prometheus
   - `kubectl port-forward $(kubectl get pods -o name -l app=prometheus) 9090:9090`
   - visit `localhost:9090/` in your browser
-4. View the metrics in Grafana
+5. View the metrics in Grafana
   - `kubectl port-forward service/grafana 3000:3000`
   - visit `localhost:3000` in your browser
   - enter `admin` for the username and password
