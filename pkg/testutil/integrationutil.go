@@ -250,7 +250,7 @@ func (suite *IntegrationTestSuite) GetMetrics(t *testing.T, url string, cmdOut *
 		}
 
 		return true
-	}, time.Second*30, time.Second, cmdOut)
+	}, time.Minute*5, time.Second, cmdOut)
 
 	if len(prefixes) == 0 {
 		return string(out)

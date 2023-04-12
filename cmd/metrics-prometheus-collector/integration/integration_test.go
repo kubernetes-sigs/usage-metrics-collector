@@ -16,6 +16,7 @@ package integration
 
 import (
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -42,6 +43,11 @@ func TestMetricsPrometheusCollector(t *testing.T) {
 		ports, err := testutil.GetFreePorts(1)
 		require.NoError(t, err)
 		port := fmt.Sprintf("%v", ports[0])
+
+		// build the instance first so it doesn't have to compile much when we run it
+		b, err := exec.Command("go", "build",
+			"sigs.k8s.io/usage-metrics-collector/cmd/metrics-prometheus-collector").CombinedOutput()
+		require.NoError(t, err, string(b))
 
 		// Run the instance
 		c, buff, cmdErr := suite.RunCommand(t, "go", "run",
