@@ -145,13 +145,16 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 func (c *Collector) continuouslyCollect(ctx context.Context) {
 	cacheTicker := time.NewTicker(time.Minute * 2)
 	defer cacheTicker.Stop()
+	wgDecrmeneted := sync.Once{}
 	for {
 		start := time.Now()
 
 		// wait until we are ready to start caching metrics
 		log.Info("caching metrics")
 		c.metrics.Store(c.cacheMetrics())
-		c.hasCachedMetrics.Done()
+		wgDecrmeneted.Do(func() {
+			c.hasCachedMetrics.Done()
+		})
 		log.Info("complete caching metrics", "seconds", time.Since(start).Seconds())
 
 		select {
