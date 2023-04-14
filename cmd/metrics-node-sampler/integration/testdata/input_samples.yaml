@@ -74,49 +74,49 @@ cpuThrottlingSamples:
     nr_throttled: 500
 memorySamples:
   "sys/fs/cgroup/memory/system.slice/kubelet.service/memory.stat":
-  - rss: 100
-    cache: 50
-  - rss: 200
-    cache: 100
-  - rss: 300
-    cache: 300
-  - rss: 400
-    cache: 400
-  - rss: 500
-    cache: 500
+  - total_rss: 100
+    total_cache: 50
+  - total_rss: 200
+    total_cache: 100
+  - total_rss: 300
+    total_cache: 300
+  - total_rss: 400
+    total_cache: 400
+  - total_rss: 500
+    total_cache: 500
   "sys/fs/cgroup/memory/kubelet/kubepods/memory.stat":
-  - rss: 100
-    cache: 50
-  - rss: 200
-    cache: 100
-  - rss: 300
-    cache: 300
-  - rss: 400
-    cache: 400
-  - rss: 500
-    cache: 500
+  - total_rss: 100
+    total_cache: 50
+  - total_rss: 200
+    total_cache: 100
+  - total_rss: 300
+    total_cache: 300
+  - total_rss: 400
+    total_cache: 400
+  - total_rss: 500
+    total_cache: 500
   "sys/fs/cgroup/memory/kubelet/kubepods/guaranteed/memory.stat":
-  - rss: 50
-    cache: 50
-  - rss: 50
-    cache: 50
-  - rss: 50
-    cache: 100
-  - rss: 60
-    cache: 110
-  - rss: 100
-    cache: 200
+  - total_rss: 50
+    total_cache: 50
+  - total_rss: 50
+    total_cache: 50
+  - total_rss: 50
+    total_cache: 100
+  - total_rss: 60
+    total_cache: 110
+  - total_rss: 100
+    total_cache: 200
   "sys/fs/cgroup/memory/kubelet/kubepods/burstable/podpod12345/abcdef/memory.stat":
-  - rss: 100
-    cache: 110
-  - rss: 100
-    cache: 150
-  - rss: 200
-    cache: 120
-  - rss: 200
-    cache: 140
-  - rss: 300
-    cache: 130
+  - total_rss: 100
+    total_cache: 110
+  - total_rss: 100
+    total_cache: 150
+  - total_rss: 200
+    total_cache: 120
+  - total_rss: 200
+    total_cache: 140
+  - total_rss: 300
+    total_cache: 130
 oomSamples:
   "sys/fs/cgroup/memory/kubelet/kubepods/burstable/podpod12345/abcdef/memory.oom_control":
   - "oom_kill": 0

@@ -210,8 +210,8 @@ type fakeFS struct {
 }
 
 type MemorySample struct {
-	RSS   int `yaml:"rss" json:"rss"`
-	Cache int `yaml:"cache" json:"cache"`
+	RSS   int `yaml:"total_rss" json:"total_rss"`
+	Cache int `yaml:"total_cache" json:"total_cache"`
 }
 
 type MemoryOOMKillSample struct {
@@ -247,7 +247,7 @@ func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
 		index := fakeFS.index[name] % len(val)
 		fakeFS.index[name] = (index + 1)
 		newVal := val[index]
-		b := fmt.Sprintf("cache %d\nrss %d\n", newVal.Cache, newVal.RSS)
+		b := fmt.Sprintf("total_cache %d\ntotal_rss %d\n", newVal.Cache, newVal.RSS)
 		err := os.WriteFile(filepath.Join(fakeFS.root, name), []byte(b), 0600)
 		if err != nil {
 			return nil, err

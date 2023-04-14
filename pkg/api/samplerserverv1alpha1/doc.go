@@ -41,8 +41,8 @@
 //	  nr_throttled – number of runnable periods in which the application used its entire quota and was throttled
 //	  throttled_time – sum total amount of time individual threads within the cgroup were throttled
 //	memory.stat:
-//	  cache : The amount of memory used by the processes of this control group that can be associated precisely with a block on a block device.
-//	  rss : The amount of memory that doesn’t correspond to anything on disk: stacks, heaps, and anonymous memory maps.
+//	  total_cache : The amount of memory used by the processes of this control group that can be associated precisely with a block on a block device.
+//	  total_rss : The amount of memory that doesn’t correspond to anything on disk: stacks, heaps, and anonymous memory maps.
 //	oom_control:
 //	  oom-kill : OOM Kill counter
 //	  memory.failcnt: reports the number of times that the memory limit has reached the value set in memory.limit_in_bytes.
