@@ -2,13 +2,13 @@ pods:
   - apiVersion: v1
     kind: Pod
     metadata:
-      name: "previously-scheduled"
-      creationTimestamp: "2022-03-22T00:00:00Z"
+      name: "previously-scheduled-3"
+      creationTimestamp: "2022-03-23T00:00:00Z" # 60+ minutes old -- don't show
     spec:
       nodeName: "some-node"
     status:
       phase: "Running"
       conditions:
-      - lastTransitionTime: "2022-03-22T00:01:00Z"
+      - lastTransitionTime: "2022-03-23T00:02:30Z" # 2 minutes to schedule
         status: "True"
         type: "PodScheduled"

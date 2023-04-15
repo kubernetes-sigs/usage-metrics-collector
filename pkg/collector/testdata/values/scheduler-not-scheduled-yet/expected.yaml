@@ -1,5 +1,0 @@
-scheduler_recent:
-  level: pod
-  resourceList:
-    time: "330"
-  source: scheduler_recent

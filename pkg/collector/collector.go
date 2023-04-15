@@ -842,7 +842,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 		c.addValuesToMetrics(values, podLabels, podMetrics, collectorcontrollerv1alpha1.PodType, nil)
 
 		// collect scheduler health values
-		values = c.Reader.GetValuesForSchedulerHealth(pod, time.Duration(c.SchedulerRecencyPeriodSeconds)*time.Second)
+		values = c.Reader.GetValuesForSchedulerHealth(pod, c.SchedulerHealth)
 		c.addValuesToMetrics(values, podLabels, schedulerMetrics, collectorcontrollerv1alpha1.SchedulerHealthType, nil)
 
 		// the utilization values on give the containerID, not the container name

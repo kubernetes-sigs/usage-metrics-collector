@@ -24,3 +24,4 @@ dist/
 .DS_Store
 
 artifacts/
+cmd/metrics-prometheus-collector/integration/metrics-prometheus-collector

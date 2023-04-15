@@ -1,5 +1,7 @@
 prefix: "kube_usage"
-schedulerRecencyPeriodSeconds: 600
+schedulerHealth:
+  maxPodAgeMinutes: 60 # start of window is 60 minutes ago
+  minPodAgeMinutes: 0 # end of window for pending pods is 0 minutes ago
 resources:
   "cpu": "cpu_cores"
   "memory": "memory_bytes"
@@ -92,7 +94,7 @@ aggregations:
 - sources:
     type: "scheduler_health"
     scheduler_health:
-    - "scheduler_recent"
+    - "pod_schedule_wait"
   levels:
   - operation: "max"
     mask:
