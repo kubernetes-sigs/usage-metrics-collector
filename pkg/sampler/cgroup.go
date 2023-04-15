@@ -234,9 +234,9 @@ func (r *metricsReader) GetLevelMemoryMetrics(metricFilepaths map[ContainerMetri
 				switch metricType {
 				case MemoryUsageMetricType:
 					switch fields[0] {
-					case "rss":
+					case "total_rss":
 						metrics.RSS = value
-					case "cache":
+					case "total_cache":
 						metrics.Cache = value
 					}
 				case MemoryOOMKillMetricType:
