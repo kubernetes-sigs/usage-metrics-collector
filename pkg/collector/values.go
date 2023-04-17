@@ -204,37 +204,54 @@ func (r ValueReader) GetValuesForPod(pod *corev1.Pod) map[collectorcontrollerv1a
 	}
 }
 
-func (r ValueReader) GetValuesForSchedulerHealth(pod *corev1.Pod, recencyPeriod time.Duration) map[collectorcontrollerv1alpha1.Source]value {
+func (r ValueReader) GetValuesForSchedulerHealth(pod *corev1.Pod, s *collectorcontrollerv1alpha1.SchedulerHealth) map[collectorcontrollerv1alpha1.Source]value {
+
+	if s == nil {
+		// scheduler health not configured
+		return nil
+	}
+
 	// Missing critical information, no metric will be emitted.
 	if pod.CreationTimestamp.Time.IsZero() {
 		log.V(1).Info("missing creation timestamp in pod", "pod", pod.ObjectMeta)
 		return nil
 	}
 
-	duration := now().Sub(pod.CreationTimestamp.Time)
+	n := now()
+	podAge := n.Sub(pod.CreationTimestamp.Time)
 
-	// pod has been scheduled
+	if podAge > (time.Duration(s.MaxPodAgeMinutes) * time.Minute) {
+		// ignore old pods -- they create noise in the metrics
+		return nil
+	}
+
+	var scheduleDuration time.Duration
+	minAge := (time.Duration(s.MinPodAgeMinutes) * time.Minute)
+
 	if pod.Spec.NodeName != "" {
+		// pod has been placed on a node -- check for the scheduling condition
 		for _, cond := range pod.Status.Conditions {
-			if cond.Type != corev1.PodScheduled || cond.Status != corev1.ConditionTrue {
-				continue
+			if cond.Type == corev1.PodScheduled && cond.Status == corev1.ConditionTrue {
+				scheduleDuration = cond.LastTransitionTime.Time.Sub(pod.CreationTimestamp.Time)
+				break
 			}
-			// pod scheduled too long ago, nothing to publish
-			if d := now().Sub(cond.LastTransitionTime.Time); d > recencyPeriod {
-				return nil
-			}
-
-			duration = cond.LastTransitionTime.Time.Sub(pod.CreationTimestamp.Time)
-			break
 		}
+	} else if podAge > minAge {
+		// For unscheduled pods, use the pod age once it reaches a certain age
+		scheduleDuration = n.Sub(pod.CreationTimestamp.Time)
+	}
+
+	if scheduleDuration == 0 {
+		// unable to determine scheduling time for the pod
+		return nil
 	}
 
 	return map[collectorcontrollerv1alpha1.Source]value{
-		collectorcontrollerv1alpha1.SchedulerRecentSource: {
+		collectorcontrollerv1alpha1.SchedulerPodScheduleWait: {
 			Level:  collectorcontrollerv1alpha1.PodLevel,
-			Source: collectorcontrollerv1alpha1.SchedulerRecentSource,
+			Source: collectorcontrollerv1alpha1.SchedulerPodScheduleWait,
 			ResourceList: map[corev1.ResourceName]resource.Quantity{
-				collectorcontrollerv1alpha1.ResourceTime: *resource.NewMilliQuantity(duration.Milliseconds(), resource.DecimalSI),
+				collectorcontrollerv1alpha1.ResourceTime: *resource.NewMilliQuantity(scheduleDuration.Milliseconds(), resource.DecimalSI),
 			},
 		},
 	}

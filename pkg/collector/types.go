@@ -122,7 +122,15 @@ func (c *Collector) defaultMetricsPrometheusCollector() {
 			c.SaveSamplesLocally.TimeFormat = collectorcontrollerv1alpha1.DefaultSamplesTimeFormat
 		}
 		if c.SaveSamplesLocally.SaveJSON == nil && c.SaveSamplesLocally.SaveProto == nil {
-			c.SaveSamplesLocally.SaveProto = pointer.BoolPtr(true)
+			c.SaveSamplesLocally.SaveProto = pointer.Bool(true)
+		}
+	}
+	if c.SchedulerHealth != nil {
+		if c.SchedulerHealth.MaxPodAgeMinutes == 0 {
+			c.SchedulerHealth.MaxPodAgeMinutes = 60
+		}
+		if c.SchedulerHealth.MinPodAgeMinutes == 0 {
+			c.SchedulerHealth.MaxPodAgeMinutes = 15
 		}
 	}
 }

@@ -1,0 +1,5 @@
+pod_schedule_wait:
+  level: pod
+  resourceList:
+    time: "120"
+  source: pod_schedule_wait

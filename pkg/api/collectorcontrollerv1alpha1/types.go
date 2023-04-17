@@ -84,10 +84,18 @@ type MetricsPrometheusCollector struct {
 	// SideCar metric
 	SideCarConfigDirectoryPaths []string `json:"sideCarMetricPaths" yaml:"sideCarMetricPaths"`
 
-	// SchedulerRecencyPeriodSeconds determines the time period during which pods are considered
-	// to be recently scheduled.
-	// If set to zero, only pods that have not been scheduled will be considered.
-	SchedulerRecencyPeriodSeconds uint64 `json:"schedulerRecencyPeriodSeconds" yaml:"schedulerRecencyPeriodSeconds"`
+	// SchedulerHealth if not empty configures exporting metrics on pod schedule time
+	SchedulerHealth *SchedulerHealth `json:"schedulerHealth" yaml:"schedulerHealth"`
+}
+
+type SchedulerHealth struct {
+	// MaxPodAgeMinutes disregards pods that are older than this many seconds.  Helps clean up noise from
+	// pods that never schedule due to their specifications.
+	MaxPodAgeMinutes uint64 `json:"maxPodAgeMinutes" yaml:"maxPodAgeMinutes"`
+
+	// MinPodAgeMinutes disregards pods that are newer than this many seconds.  Helps clean up noise from
+	// pods were just created.
+	MinPodAgeMinutes uint64 `json:"minPodAgeMinutes" yaml:"minPodAgeMinutes"`
 }
 
 var (
@@ -601,15 +609,17 @@ const (
 var NamespaceSources = sets.New(NamespaceItemsSource)
 
 const (
-	// SchedulerRecentSource publishes all of the pods waiting to be scheduled or scheduled
-	// less than the period of time in MetricsPrometheusCollector.SchedulerRecencyPeriod.
-	// The value of this metric is the time it took from pod creation to scheduling
-	// for scheduled pods or to current time for pending ones.
-	SchedulerRecentSource Source = "scheduler_recent"
+	// SchedulerPodScheduleWait publishes all of the pods waiting to be scheduled or scheduled
+	// that are less than MetricsPrometheusCollector.SchedulerHealth.MaxPodAgeMinutes old.
+	// If a pod is waiting to be scheduled, metrics are only reported if it is
+	// at least MetricsPrometheusCollector.SchedulerHealth.MinPodAgeMinutes old.
+	// The value of this metric is the time (seconds) it took from pod creation to scheduling
+	// for scheduled pods or the pod age for pending ones.
+	SchedulerPodScheduleWait Source = "pod_schedule_wait"
 )
 
 // SchedulerHealthSources all of the Source values of SourceType SchedulerHealthType.
-var SchedulerHealthSources = sets.New(SchedulerRecentSource)
+var SchedulerHealthSources = sets.New(SchedulerPodScheduleWait)
 
 const (
 	// LimitsResourcePrefix is the prefix for limits resource name
