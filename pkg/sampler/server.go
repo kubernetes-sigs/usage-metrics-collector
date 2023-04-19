@@ -122,8 +122,8 @@ func (s *Server) Start(ctx context.Context, stop context.CancelFunc) error {
 	if err != nil {
 		return err
 	}
-	if s.pushFrequency < time.Second {
-		return errors.New("pushFrequencyDuration must be at least 1 seconds")
+	if s.checkCreatedPodFrequency < time.Second {
+		return errors.New("checkCreatedPodFrequency must be at least 1 seconds")
 	}
 
 	errs := make(chan error)
