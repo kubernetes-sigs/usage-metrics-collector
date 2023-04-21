@@ -529,6 +529,22 @@ func (c *Collector) mask(mask collectorcontrollerv1alpha1.LabelsMask, m LabelsVa
 	return m
 }
 
+// overrideLabels performs a custom override on labels
+func (c *Collector) overrideLabels(mask collectorcontrollerv1alpha1.LabelsMask,
+	labels LabelsValues, overrides map[string]string) LabelsValues {
+	if len(overrides) == 0 {
+		return labels
+	}
+	m := LabelsValues{}
+	// override builtin labels
+	m.BuiltIn = getOverrideBuiltInLabelValues(labels.BuiltIn, overrides)
+
+	// override extension labels
+	internalMask := c.extensionLabelMaskById[mask.ID]
+	m.Extension = internalMask.getOverrideExtensionLabelValues(labels.Extension, overrides)
+	return m
+}
+
 // LabelOverrides may be appended to in order to explicitly override values
 // To introduce a new label and override it, use an extension to create the label
 // and then override it by appending to this list.
@@ -547,7 +563,8 @@ func (l LabelOverriderFn) OverrideLabels(m map[string]string) map[string]string 
 	return l(m)
 }
 
-func overrideValues(values, names []string) {
+func overrideValues(values, names []string) map[string]string {
+	r := map[string]string{}
 	for _, o := range LabelOverrides {
 		l := map[string]string{}
 		for i := range names {
@@ -556,10 +573,12 @@ func overrideValues(values, names []string) {
 		l = o.OverrideLabels(l)
 		for i := range names {
 			if v, ok := l[names[i]]; ok {
-				values[i] = v // replace our value with the override value
+				values[i] = v   // replace our value with the override value
+				r[names[i]] = v // store the replaced label value
 			}
 		}
 	}
+	return r
 }
 
 // getLabelValues returns the set of label values for this mask
@@ -577,9 +596,6 @@ func (c *Collector) getLabelValues(mask collectorcontrollerv1alpha1.LabelsMask, 
 	extValues := internalMask.GetLabelValues(m.Extension) // get the values
 
 	values := append(b, extValues...)
-
-	// extension point for overriding values
-	overrideValues(values, names)
 
 	return values
 }

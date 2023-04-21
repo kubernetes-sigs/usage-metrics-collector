@@ -213,24 +213,28 @@ func TestCollector(t *testing.T) {
 
 // Update test data by running with `TESTUTIL_UPDATE_EXPECTED=true`
 func TestCollectorOverride(t *testing.T) {
-	// Test override functionality
-	LabelOverrides = append(LabelOverrides, LabelOverriderFn(func(m map[string]string) map[string]string {
-		o := map[string]string{}
-		if v, ok := m["exported_namespace"]; ok {
-			o["exported_namespace"] = v + "-overridden"
-		}
-		return o
-	}))
-	defer func() {
-		LabelOverrides = nil
-	}()
-
 	parser := testutil.TestCaseParser{
 		Subdir:         "collector-override",
 		ExpectedSuffix: ".txt",
 	}
 	parser.TestDir(t, func(tc *testutil.TestCase) error {
 		t := tc.T
+
+		// Test override functionality
+		nsData := map[string]map[string]string{}
+		tc.UnmarshalInputsStrict(map[string]interface{}{"input_ns_overrides.yaml": &nsData})
+		LabelOverrides = append(LabelOverrides, LabelOverriderFn(func(m map[string]string) map[string]string {
+			o := map[string]string{}
+			if ns := m["exported_namespace"]; ns != "" {
+				for k, v := range nsData[ns] {
+					o[k] = v
+				}
+			}
+			return o
+		}))
+		defer func() {
+			LabelOverrides = nil
+		}()
 
 		// get the client initialized with the test data
 		c, err := tc.GetFakeClient(scheme.Scheme)

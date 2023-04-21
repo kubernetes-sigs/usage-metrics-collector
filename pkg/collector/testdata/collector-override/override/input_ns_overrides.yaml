@@ -1,0 +1,2 @@
+test-namespace-1:
+  exported_namespace: test-namespace-1-overridden
