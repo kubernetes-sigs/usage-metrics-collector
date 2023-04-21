@@ -312,6 +312,42 @@ func getBuiltInLabelValues(mask collectorcontrollerv1alpha1.BuiltInLabelsMask, m
 	return labels
 }
 
+// getOverrideBuiltInLabelValues returns the label values with the mask and overrides applied.
+// nolint: gocyclo
+func getOverrideBuiltInLabelValues(m builtInLabelsValues, overrides map[string]string) builtInLabelsValues {
+	f := func(labelName, labelValue string) string {
+		if val, ok := overrides[labelName]; ok {
+			return val
+		}
+		return labelValue
+	}
+
+	s := m
+	s.ContainerName = f(collectorcontrollerv1alpha1.ExportedContainerLabel, m.ContainerName)
+	s.PodName = f(collectorcontrollerv1alpha1.ExportedPodLabel, m.PodName)
+	s.NamespaceName = f(collectorcontrollerv1alpha1.ExportedNamespaceLabel, m.NamespaceName)
+	s.NodeName = f(collectorcontrollerv1alpha1.ExportedNodeLabel, m.NodeName)
+	s.NodeUnschedulable = f(collectorcontrollerv1alpha1.NodeUnschedulableLabel, m.NodeUnschedulable)
+	s.WorkloadName = f(collectorcontrollerv1alpha1.WorkloadNameLabel, m.WorkloadName)
+	s.WorkloadKind = f(collectorcontrollerv1alpha1.WorkloadKindLabel, m.WorkloadKind)
+	s.WorkloadAPIGroup = f(collectorcontrollerv1alpha1.WorkloadAPIGroupLabel, m.WorkloadAPIGroup)
+	s.WorkloadAPIGroup = f(collectorcontrollerv1alpha1.WorkloadAPIGroupLabel, m.WorkloadAPIGroup)
+	s.WorkloadAPIVersion = f(collectorcontrollerv1alpha1.WorkloadAPIVersionLabel, m.WorkloadAPIVersion)
+	s.App = f(collectorcontrollerv1alpha1.AppLabel, m.App)
+	s.PriorityClass = f(collectorcontrollerv1alpha1.PriorityClassLabel, m.PriorityClass)
+	s.Scheduled = f(collectorcontrollerv1alpha1.ScheduledLabel, m.Scheduled)
+	s.Level = collectorcontrollerv1alpha1.AggregationLevel(f(collectorcontrollerv1alpha1.LevelLabel, m.Level.String()))
+	s.QuotaName = f(collectorcontrollerv1alpha1.QuotaLabel, m.QuotaName)
+	s.AllocationStrategy = f(collectorcontrollerv1alpha1.AllocationStrategyLabel, m.AllocationStrategy)
+	s.PVCName = f(collectorcontrollerv1alpha1.PVCNameLabel, m.PVCName)
+	s.PVName = f(collectorcontrollerv1alpha1.PVNameLabel, m.PVName)
+	s.StorageClass = f(collectorcontrollerv1alpha1.StorageClassLabel, m.StorageClass)
+	s.CGroup = f(collectorcontrollerv1alpha1.CGroupLabel, m.CGroup)
+	s.Phase = f(collectorcontrollerv1alpha1.PhaseLabel, m.Phase)
+
+	return s
+}
+
 type builtInLabler struct {
 	UseQuotaNameForPriorityClass bool
 }

@@ -81,6 +81,11 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 		// compute the labels for this instance of the metric so we can drop metrics appropriately
 		names := c.getLabelNames(mask)
 		values := c.getLabelValues(mask, labels, names)
+		overrides := overrideValues(values, names)
+
+		// reduce labels after override
+		overrideLabels := c.overrideLabels(mask, labels, overrides)
+
 		index := map[string]string{}
 		for i := range names {
 			if values[i] != "" {
@@ -105,7 +110,7 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 			return true
 		}()
 		if ok {
-			indexed[labels] = append(indexed[labels], v...)
+			indexed[overrideLabels] = append(indexed[overrideLabels], v...)
 		}
 	}
 
