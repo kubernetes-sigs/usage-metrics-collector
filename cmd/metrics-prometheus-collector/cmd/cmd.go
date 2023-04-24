@@ -336,9 +336,12 @@ func (ms *MetricsServer) doLeaderElection(ctx context.Context) {
 			},
 			OnNewLeader: func(current_id string) {
 				if current_id == options.PodName {
+					log.Info("acquired leadership after change", "id", options.PodName)
+					electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
+					ms.Col.IsLeaderElected.Store(true)
 					return
 				}
-				log.Info("lost leadership", "id", options.PodName)
+				log.Info("lost leadership after change", "id", options.PodName)
 				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
 				ms.Col.IsLeaderElected.Store(false)
 			},
