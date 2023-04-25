@@ -187,8 +187,13 @@ func (s *Server) Start(ctx context.Context, stop context.CancelFunc) error {
 		return err
 	}
 
+	// Serve the API under /v1 but also expose pprof endpoints.
+	mux := http.NewServeMux()
+	mux.Handle("/v1/", gwmux)
+	mux.Handle("/", http.DefaultServeMux)
+
 	addr := fmt.Sprintf(":%v", s.RestPort)
-	gwServer := &http.Server{Addr: addr, Handler: gwmux}
+	gwServer := &http.Server{Addr: addr, Handler: mux}
 	rpcServer := grpc.NewServer()
 	api.RegisterMetricsServer(rpcServer, s)
 	api.RegisterHealthServer(rpcServer, s)

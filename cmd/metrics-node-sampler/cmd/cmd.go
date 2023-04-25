@@ -26,6 +26,8 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
+	_ "net/http/pprof"
+
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler"
 	"sigs.k8s.io/usage-metrics-collector/pkg/watchconfig"
