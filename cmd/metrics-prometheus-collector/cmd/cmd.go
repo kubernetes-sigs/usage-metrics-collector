@@ -56,9 +56,10 @@ var (
 	commit  = "none"
 	date    = "unknown"
 
-	logPath, pprofPort                                                     string
-	profileMemory, pprof                                                   bool
-	exitAfterLeaderElectionLoss, leaseDuration, renewDeadline, retryPeriod time.Duration
+	logPath, pprofPort                        string
+	profileMemory, pprof                      bool
+	leaseDuration, renewDeadline, retryPeriod time.Duration
+	exitAfterLeaderElectionLoss               bool
 
 	options = Options{Options: ctrl.Options{Scheme: scheme.Scheme}}
 	RootCmd = &cobra.Command{
@@ -119,7 +120,7 @@ func init() {
 	RootCmd.Flags().DurationVar(&renewDeadline, "renew-deadline", 20*time.Second, "controller manager lease renew deadline")
 	RootCmd.Flags().DurationVar(&retryPeriod, "retry-period", 2*time.Second, "controller manager lease renew deadline")
 
-	RootCmd.Flags().DurationVar(&exitAfterLeaderElectionLoss, "exit-after-leader-election-loss", time.Second*15, "if set to a non-zero durtion, exit after leader election loss + duration")
+	RootCmd.Flags().BoolVar(&exitAfterLeaderElectionLoss, "exit-after-leader-election-loss", true, "if true, exit the process after leader election loss")
 
 	// Add the go `flag` package flags -- e.g. `--kubeconfig`
 	RootCmd.Flags().AddGoFlagSet(flag.CommandLine)
@@ -303,6 +304,25 @@ func (ms *MetricsServer) Start(ctx context.Context) error {
 	return nil
 }
 
+func (ms *MetricsServer) startLeading(current_id string) {
+	log.Info("acquired leadership", "id", options.PodName, "leader_id", current_id)
+	electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
+	ms.Col.IsLeaderElected.Store(true)
+}
+
+func (ms *MetricsServer) stopLeading(current_id string) {
+	log.Info("lost leadership", "id", options.PodName, "leader_id", current_id)
+	electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
+	ms.Col.IsLeaderElected.Store(false)
+	if exitAfterLeaderElectionLoss {
+		log.Info("exiting after leader election loss")
+		// TODO: we shouldn't actually need to do this, but are seeing issues
+		// where pods never re-aquire leadership after loss.  Kicking the process
+		// to make it try to re-establish leadership.
+		os.Exit(0)
+	}
+}
+
 func (ms *MetricsServer) doLeaderElection(ctx context.Context) {
 	ms.Col.IsLeaderElected.Store(false)
 	config := ms.Mgr.GetConfig()
@@ -325,25 +345,17 @@ func (ms *MetricsServer) doLeaderElection(ctx context.Context) {
 		RetryPeriod:     retryPeriod,
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(c context.Context) {
-				log.Info("acquired leadership", "id", options.PodName)
-				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
-				ms.Col.IsLeaderElected.Store(true)
+				ms.startLeading("")
 			},
 			OnStoppedLeading: func() {
-				log.Info("lost leadership", "id", options.PodName)
-				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
-				ms.Col.IsLeaderElected.Store(false)
+				ms.stopLeading("")
 			},
 			OnNewLeader: func(current_id string) {
 				if current_id == options.PodName {
-					log.Info("acquired leadership after change", "id", options.PodName)
-					electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
-					ms.Col.IsLeaderElected.Store(true)
-					return
+					ms.stopLeading(current_id)
+				} else {
+					ms.startLeading(current_id)
 				}
-				log.Info("lost leadership after change", "id", options.PodName)
-				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
-				ms.Col.IsLeaderElected.Store(false)
 			},
 		},
 	})
