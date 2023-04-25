@@ -124,29 +124,12 @@ func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
 
 	wg := &sync.WaitGroup{}
 	for _, c := range containers {
-
-		// If ContainerID and SandboxID are the same, we are either dealing with a
-		// single container (non pod), or a pause container
-		if c.ContainerID == c.SandboxID {
-
-			// If a Pod ID is available, we know that this is a pod and should skip
-			// stats gathering:
-			if c.PodID != "" {
-				monitorLog.WithField("container id", c.ContainerID).Trace("skipping stats collection for pause container")
-				continue
-			}
-
-			monitorLog.WithField("container id", c.ContainerID).Trace("standlone container observed")
-			c.ContainerName = c.ContainerID
-		}
-
 		wg.Add(1)
 
 		go func(c ctrstats.Container, results chan<- prometheus.Metric) {
 			stats, err := ctrstats.GetContainerStats(context.Background(), c)
 			if err != nil {
 				monitorLog.WithFields(log.Fields{
-					"sandbox":   c.SandboxID,
 					"container": c.ContainerID,
 				}).WithError(err).Info("failed to get container stats - likely an issue with non-running containers being tracked in containerd state")
 			} else if stats != nil {

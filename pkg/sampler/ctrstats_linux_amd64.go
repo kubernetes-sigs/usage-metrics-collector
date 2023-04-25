@@ -41,28 +41,11 @@ func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, e
 	knownPods := sets.NewString()
 
 	for _, c := range containers {
-
-		// If ContainerID and SandboxID are the same, we are either dealing with a
-		// single container (non pod), or a pause container
-		if c.ContainerID == c.SandboxID {
-
-			// If a Pod ID is available, we know that this is a pod and should skip
-			// stats gathering:
-			if c.PodID != "" {
-				log.V(7).Info("skipping stats collection for pause container", "container id", c.ContainerID)
-				continue
-			}
-
-			log.V(7).Info("standlone container observed", "container id", c.ContainerID)
-			c.ContainerName = c.ContainerID
-		}
-
 		// TODO: is this a reasonable key for the metric read time?
 		readTime := s.metricsReader.readTimeFunc(c.PodID + "/" + c.ContainerID)
 		stats, err := ctrstats.GetContainerStats(context.Background(), c)
 		if err != nil {
 			log.V(10).WithValues(
-				"sandbox", c.SandboxID,
 				"container", c.ContainerID,
 			).Info("failed to get container stats - likely an issue with non-running containers being tracked in containerd state", "err", err)
 		} else if stats != nil {

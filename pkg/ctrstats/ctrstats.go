@@ -22,12 +22,10 @@ import (
 	v1 "github.com/containerd/cgroups/stats/v1"
 	"github.com/containerd/containerd"
 	"github.com/containerd/typeurl"
-	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 )
 
 type Container struct {
-	SandboxID        string
 	ContainerID      string
 	PodID            string
 	PodName          string
@@ -44,58 +42,31 @@ func NewContainerdClient(address, namespace string) (*containerd.Client, error) 
 }
 
 func GetContainers(client *containerd.Client) ([]Container, error) {
-	var cids []Container
-
 	ctx := gocontext.Background()
 
 	containers, err := client.Containers(ctx)
 	if err != nil {
 		ctrStatsLog.WithError(err).Errorf("client containers request failure")
 
-		return cids, err
+		return nil, err
 	}
 
+	cids := make([]Container, 0, len(containers))
 	for _, c := range containers {
-		var sandboxID, sandboxNamespace string
-
 		container, err := c.Info(ctx)
 		if err != nil {
 			ctrStatsLog.WithField("container-id", c.ID()).Warn("could not get container info")
 			continue
 		}
 
-		if container.Spec != nil && container.Spec.GetValue() != nil {
-			v, err := typeurl.UnmarshalAny(container.Spec)
-			if err != nil {
-				ctrStatsLog.WithField("container-id", c.ID()).Warn("could not get container Spec")
-				continue
-			}
-
-			spec, ok := v.(*specs.Spec)
-			if !ok {
-				ctrStatsLog.WithField("container-id", c.ID()).Warn("spec type assertion failure")
-				continue
-			}
-
-			sandboxID = spec.Annotations["io.kubernetes.cri.sandbox-id"]
-			sandboxNamespace = spec.Annotations["io.kubernetes.cri.sandbox-namespace"]
-		}
-
 		containerInfo := Container{
 			ContainerID:      c.ID(),
-			SandboxID:        sandboxID,
 			PodID:            container.Labels["io.kubernetes.pod.uid"],
 			PodName:          container.Labels["io.kubernetes.pod.name"],
-			SandboxNamespace: sandboxNamespace,
+			SandboxNamespace: container.Labels["io.kubernetes.pod.namespace"],
 			ContainerName:    container.Labels["io.kubernetes.container.name"],
 			NamespaceName:    container.Labels["io.kubernetes.pod.namespace"],
 			Container:        c,
-		}
-
-		// If there isn't a SandboxID, then we're probably dealing with
-		// standard container (not a pod - launched with ctr)-- set SandboxID to ContainerID
-		if containerInfo.SandboxID == "" {
-			containerInfo.SandboxID = containerInfo.ContainerID
 		}
 
 		cids = append(cids, containerInfo)
