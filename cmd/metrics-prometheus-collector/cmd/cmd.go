@@ -304,16 +304,7 @@ func (ms *MetricsServer) Start(ctx context.Context) error {
 	return nil
 }
 
-func (ms *MetricsServer) startLeading(current_id string) {
-	log.Info("acquired leadership", "id", options.PodName, "leader_id", current_id)
-	electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
-	ms.Col.IsLeaderElected.Store(true)
-}
-
 func (ms *MetricsServer) stopLeading(current_id string) {
-	log.Info("lost leadership", "id", options.PodName, "leader_id", current_id)
-	electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
-	ms.Col.IsLeaderElected.Store(false)
 	if exitAfterLeaderElectionLoss {
 		log.Info("exiting after leader election loss")
 		// TODO: we shouldn't actually need to do this, but are seeing issues
@@ -345,16 +336,31 @@ func (ms *MetricsServer) doLeaderElection(ctx context.Context) {
 		RetryPeriod:     retryPeriod,
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(c context.Context) {
-				ms.startLeading("")
+				log.Info("acquired leadership", "id", options.PodName)
+				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
+				ms.Col.IsLeaderElected.Store(true)
 			},
 			OnStoppedLeading: func() {
-				ms.stopLeading("")
+				log.Info("lost leadership", "id", options.PodName)
+				electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
+				ms.Col.IsLeaderElected.Store(false)
 			},
 			OnNewLeader: func(current_id string) {
 				if current_id == options.PodName {
-					ms.stopLeading(current_id)
+					log.Info("acquired leadership on change", "id", options.PodName, "leader_id", current_id)
+					electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(1)
+					ms.Col.IsLeaderElected.Store(true)
 				} else {
-					ms.startLeading(current_id)
+					if exitAfterLeaderElectionLoss && ms.Col.IsLeaderElected.Load() {
+						// only exit if we gave up leadership
+						defer func() {
+							log.Info("exiting after leadership election loss")
+							os.Exit(0)
+						}()
+					}
+					log.Info("lost leadership on change", "id", options.PodName, "leader_id", current_id)
+					electedMetric.WithLabelValues(os.Getenv("POD_NAME")).Set(0)
+					ms.Col.IsLeaderElected.Store(false)
 				}
 			},
 		},
