@@ -211,6 +211,43 @@ func TestCollector(t *testing.T) {
 	})
 }
 
+func BenchmarkCollector(b *testing.B) {
+	parser := testutil.TestCaseParser{
+		Subdir:         "collector",
+		ExpectedSuffix: ".txt",
+	}
+	tt, err := parser.GetTestCases()
+	require.NoError(b, err)
+
+	for i := 0; i < b.N; i++ {
+		for _, tc := range tt {
+			tc.T = b
+
+			// get the client initialized with the test data
+			c, err := tc.GetFakeClient(scheme.Scheme)
+			require.NoError(b, err, "unable to create Kubernetes client")
+
+			// filter metric names if an allow list exists
+			var spec collectorcontrollerv1alpha1.MetricsPrometheusCollector
+
+			tc.UnmarshalInputsStrict(map[string]interface{}{"input_collector_spec.yaml": &spec})
+
+			instance, err := NewCollector(context.Background(), c, &spec)
+			require.NoError(b, err)
+			tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
+			instance.UtilizationServer.IsReadyResult.Store(true)
+			instance.IsLeaderElected.Store(true)
+
+			reg := prometheus.NewPedanticRegistry()
+			require.NoError(b, reg.Register(instance))
+
+			// collect the metrics
+			_, err = reg.Gather()
+			require.NoError(b, err)
+		}
+	}
+}
+
 // Update test data by running with `TESTUTIL_UPDATE_EXPECTED=true`
 func TestCollectorOverride(t *testing.T) {
 	parser := testutil.TestCaseParser{

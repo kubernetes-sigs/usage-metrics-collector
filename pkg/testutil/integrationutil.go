@@ -58,7 +58,7 @@ type IntegrationTestSuite struct {
 }
 
 // WriteKubeconfig writes the Config to a `kubeconfig` file
-func (suite *IntegrationTestSuite) WriteKubeconfig(t *testing.T) error {
+func (suite *IntegrationTestSuite) WriteKubeconfig(t testing.TB) error {
 	// Create the directory to host the kubeconfig file
 	f, err := os.CreateTemp("", "kube-metrics-kubeconfig")
 	require.NoError(t, err)
@@ -144,7 +144,7 @@ var ResourceQuotaDescriptorCRD = apiextensionsv1.CustomResourceDefinition{
 }
 
 // SetupTest creates the objects in the apiserver
-func (suite *IntegrationTestSuite) SetupTest(t *testing.T, tc TestCase) {
+func (suite *IntegrationTestSuite) SetupTest(t testing.TB, tc TestCase) {
 	// Parse the objects from strings
 	suite.TestCase = tc
 	objs, _, err := suite.TestCase.GetObjects(scheme.Scheme)
@@ -177,7 +177,7 @@ func (suite *IntegrationTestSuite) SetupTest(t *testing.T, tc TestCase) {
 }
 
 // TearDownTest implements TearDownTest
-func (suite *IntegrationTestSuite) TearDownTest(t *testing.T) {
+func (suite *IntegrationTestSuite) TearDownTest(t testing.TB) {
 	// delete all of the objects in reverse
 	policy := metav1.DeletePropagationForeground
 	for _, o := range suite.TestCaseObjects {
@@ -201,7 +201,7 @@ func (suite *IntegrationTestSuite) TearDownTest(t *testing.T) {
 	suite.TestCaseObjects = nil
 }
 
-func (suite *IntegrationTestSuite) CheckDeleted(t *testing.T) bool {
+func (suite *IntegrationTestSuite) CheckDeleted(t testing.TB) bool {
 	done := true
 	policy := metav1.DeletePropagationForeground
 	for _, o := range suite.TestCaseObjects {
@@ -226,7 +226,7 @@ func (suite *IntegrationTestSuite) CheckDeleted(t *testing.T) bool {
 
 // GetMetrics reads the metrics from the metrics endpoint
 // nolint: gosec
-func (suite *IntegrationTestSuite) GetMetrics(t *testing.T, url string, cmdOut *bytes.Buffer, prefixes ...string) string {
+func (suite *IntegrationTestSuite) GetMetrics(t testing.TB, url string, cmdOut *bytes.Buffer, prefixes ...string) string {
 
 	var out []byte
 	require.Eventually(t, func() bool {
@@ -270,7 +270,7 @@ func (suite *IntegrationTestSuite) GetMetrics(t *testing.T, url string, cmdOut *
 }
 
 // SetupTestSuite implements SetupSuite
-func (suite *IntegrationTestSuite) SetupTestSuite(t *testing.T) {
+func (suite *IntegrationTestSuite) SetupTestSuite(t testing.TB) {
 	// Fake out the PodMetrics APIs -- this is actually an aggregated API in a real cluster
 	suite.Environment.CRDs = []*apiextensionsv1.CustomResourceDefinition{&PodMetricsCRD, &ResourceQuotaDescriptorCRD}
 	cfg, err := suite.Environment.Start()
@@ -289,7 +289,7 @@ func (suite *IntegrationTestSuite) SetupTestSuite(t *testing.T) {
 }
 
 // TearDownTestSuite implements TearDownSuite
-func (suite *IntegrationTestSuite) TearDownTestSuite(t *testing.T) {
+func (suite *IntegrationTestSuite) TearDownTestSuite(t testing.TB) {
 	// Stop the control-plane
 	require.NoError(t, suite.Environment.Stop())
 
@@ -298,7 +298,7 @@ func (suite *IntegrationTestSuite) TearDownTestSuite(t *testing.T) {
 }
 
 // RunCommand runs the command asynchronously, returning the command + the output buffer
-func (suite *IntegrationTestSuite) RunCommand(t *testing.T, cmd string, args ...string) (*exec.Cmd, *bytes.Buffer, chan error) {
+func (suite *IntegrationTestSuite) RunCommand(t testing.TB, cmd string, args ...string) (*exec.Cmd, *bytes.Buffer, chan error) {
 	// nolint: gosec
 	command := exec.Command(cmd, args...)
 	command.SysProcAttr = &syscall.SysProcAttr{
@@ -320,7 +320,7 @@ func (suite *IntegrationTestSuite) RunCommand(t *testing.T, cmd string, args ...
 }
 
 // StopCommand kills the command and it's child processes
-func (suite *IntegrationTestSuite) StopCommand(t *testing.T, c *exec.Cmd) {
+func (suite *IntegrationTestSuite) StopCommand(t testing.TB, c *exec.Cmd) {
 	// Kill all the commands and their child processes
 	if c.Process == nil || c.Process.Pid == 0 {
 		return
@@ -345,7 +345,7 @@ func (suite *IntegrationTestSuite) StopCommand(t *testing.T, c *exec.Cmd) {
 // CheckHealth ensures the localhost:8080/healthz is healthy
 // nolint: godox
 // TODO: make this more generic
-func (suite *IntegrationTestSuite) CheckHealth(t *testing.T, url string, out *bytes.Buffer) {
+func (suite *IntegrationTestSuite) CheckHealth(t testing.TB, url string, out *bytes.Buffer) {
 	// Poll the healthz endpoint until it is healthy
 	require.Eventually(t, func() bool {
 		// nolint: gosec,noctx
