@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -127,7 +128,8 @@ type SampleSources struct {
 }
 
 type PreComputeMetrics struct {
-	Enabled bool `json:"enabled" yaml:"enabled"`
+	Enabled   bool          `json:"enabled" yaml:"enabled"`
+	Frequency time.Duration `json:"frequency" yaml:"frequency"`
 }
 
 type CacheOptions struct {

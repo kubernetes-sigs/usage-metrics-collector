@@ -4,6 +4,7 @@ prefix: kube_usage
 # to reduce response latency
 preComputeMetrics:
   enabled: true
+  frequency: "2m"
 # exitOnConfigChange exits the collector if the collector config changes
 exitOnConfigChange: true
 # cacheOptions configures the informer cache

@@ -15,6 +15,8 @@
 package collector
 
 import (
+	"time"
+
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/utils/pointer"
@@ -103,6 +105,11 @@ func (c *Collector) init() error {
 func (c *Collector) defaultMetricsPrometheusCollector() {
 	if c.UtilizationServer.SamplerPort == 0 {
 		c.UtilizationServer.SamplerPort = samplerserverv1alpha1.DefaultPBPort
+	}
+
+	if c.PreComputeMetrics.Frequency == 0 {
+		// re-cache metrics response every 2 minutes by default
+		c.PreComputeMetrics.Frequency = time.Minute * 2
 	}
 
 	c.Kind = "MetricsPrometheusCollector"
