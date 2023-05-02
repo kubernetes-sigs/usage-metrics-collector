@@ -40,9 +40,10 @@ func TestMetricsPrometheusCollector(t *testing.T) {
 		suite.SetupTest(t, *tc)
 		defer suite.TearDownTest(t)
 
-		ports, err := testutil.GetFreePorts(1)
+		ports, err := testutil.GetFreePorts(2)
 		require.NoError(t, err)
-		port := fmt.Sprintf("%v", ports[0])
+		port0 := fmt.Sprintf("%v", ports[0])
+		port1 := fmt.Sprintf("%v", ports[1])
 
 		// build the instance first so it doesn't have to compile much when we run it
 		b, err := exec.Command("go", "build",
@@ -53,9 +54,9 @@ func TestMetricsPrometheusCollector(t *testing.T) {
 		c, buff, cmdErr := suite.RunCommand(t, "go", "run",
 			"sigs.k8s.io/usage-metrics-collector/cmd/metrics-prometheus-collector",
 			"--kubeconfig", suite.ConfigFilepath,
-			"--leader-election",
-			"--leader-election-namespace", "default",
-			"--http-addr", "127.0.0.1:"+port,
+			"--leader-election=false",
+			"--internal-http-addr", "localhost:"+port0,
+			"--http-addr", "localhost:"+port1,
 			"--collector-config-filepath", filepath.Join(filepath.Dir(tc.ExpectedFilepath), "input_collector.yaml"),
 		)
 		defer suite.StopCommand(t, c)
@@ -68,11 +69,15 @@ func TestMetricsPrometheusCollector(t *testing.T) {
 		}
 
 		// Get the metrics
-		out := suite.GetMetrics(t, "http://localhost:"+port+"/metrics", buff)
+		out := suite.GetMetrics(t, "http://localhost:"+port1+"/metrics", buff)
 
 		tc.Actual = filterMetrics(out,
 			"go_", "rest_client_", "_latency_seconds", "prometheus_",
-			"process_", "promhttp_", "net_", "certwatcher", "kube_usage_version", "leader_elected")
+			"process_", "promhttp_", "net_", "certwatcher",
+			"kube_usage_version",
+			"kube_usage_leader_elected",
+			"kube_usage_collect_cache_time",
+		)
 		return nil
 	})
 }

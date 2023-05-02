@@ -217,6 +217,7 @@ resources:
   "items": "items"
 preComputeMetrics:
   enabled: true
+  frequency: "1s"
 cacheOptions:
   unsafeDisableDeepCopy: true
   dropAnnotations:

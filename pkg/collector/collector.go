@@ -73,9 +73,8 @@ type Collector struct {
 	taintLabelsById        map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.NodeTaint
 	extensionLabelMaskById map[collectorcontrollerv1alpha1.LabelsMaskId]*extensionLabelsMask
 
-	startTime        time.Time
-	metrics          *atomic.Value
-	hasCachedMetrics *sync.WaitGroup
+	startTime time.Time
+	metrics   chan *cachedMetrics
 
 	sideCarConfigs []*collectorcontrollerv1alpha1.SideCarConfig
 }
@@ -97,11 +96,9 @@ func NewCollector(
 		MetricsPrometheusCollector: config,
 		UtilizationServer:          utilization.Server{UtilizationServer: config.UtilizationServer},
 		startTime:                  time.Now(),
-		metrics:                    &atomic.Value{},
+		metrics:                    make(chan *cachedMetrics),
 		IsLeaderElected:            &atomic.Bool{},
-		hasCachedMetrics:           &sync.WaitGroup{},
 	}
-	c.hasCachedMetrics.Add(1)
 	c.UtilizationServer.IsReadyResult.Store(false)
 	c.IsLeaderElected.Store(false)
 
@@ -143,25 +140,19 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *Collector) continuouslyCollect(ctx context.Context) {
-	cacheTicker := time.NewTicker(time.Minute * 2)
-	defer cacheTicker.Stop()
-	wgDecrmeneted := sync.Once{}
 	for {
 		start := time.Now()
 
 		// wait until we are ready to start caching metrics
 		log.Info("caching metrics")
-		c.metrics.Store(c.cacheMetrics())
-		wgDecrmeneted.Do(func() {
-			c.hasCachedMetrics.Done()
-		})
+		m := c.cacheMetrics()
 		log.Info("complete caching metrics", "seconds", time.Since(start).Seconds())
 
 		select {
 		case <-ctx.Done():
 			return // shutdown
-		case <-cacheTicker.C:
-			// block before recalculating metrics
+		case c.metrics <- m:
+			// write the metrics to the collect function
 		}
 	}
 }
@@ -274,13 +265,9 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	c.hasCachedMetrics.Wait() // wait until the first cache happens
-
-	lm := c.metrics.Load()
-
 	log.Info("collecting metrics from cache")
 	// write the cached metrics out as a response
-	metrics := lm.(*cachedMetrics)
+	metrics := <-c.metrics
 	for i := range metrics.metrics {
 		ch <- metrics.metrics[i]
 	}

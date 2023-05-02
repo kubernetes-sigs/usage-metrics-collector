@@ -20,10 +20,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -39,6 +41,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	"k8s.io/client-go/util/retry"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -69,9 +72,13 @@ var (
 	log = commonlog.Log.WithName("collector")
 
 	electedMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "leader_elected",
+		Name: "kube_usage_leader_elected",
 		Help: "Whether or not this instance is the leader",
 	}, []string{"collector_instance"})
+	collectTimeMetric = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "kube_usage_collect_cache_time",
+		Help: "How long it took to create the last cache response",
+	})
 )
 
 // Options is set by flags
@@ -82,6 +89,7 @@ type Options struct {
 	LeaderElectionLockName     string
 	PodName                    string
 	metricsPrometheusCollector string
+	externalBindAddress        string
 }
 
 // Execute root command
@@ -98,7 +106,9 @@ func init() {
 	RootCmd.Flags().StringVar(&options.metricsPrometheusCollector, "collector-config-filepath", "", "Path to a MetricsPrometheusCollector json or yaml configuration file.")
 	_ = RootCmd.MarkFlagRequired("collector-config-filepath")
 
-	RootCmd.Flags().StringVar(&options.MetricsBindAddress, "http-addr", ":8080", "Bind address of the webservice exposing the metrics and other endpoints.")
+	RootCmd.Flags().StringVar(&options.MetricsBindAddress, "internal-http-addr", "127.0.0.1:8099", "Bind address of the webservice exposing the metrics and other endpoints.")
+	RootCmd.Flags().MarkHidden("internal-http-addr") // this is scraped internally to create a cacheable response
+	RootCmd.Flags().StringVar(&options.externalBindAddress, "http-addr", ":8080", "Bind address to read the cached metrics.")
 
 	// Default this to false so that it doesn't try to do leader election when run locally with `go run`
 	RootCmd.Flags().BoolVar(&options.LeaderElection, "leader-election", false, "Enable leader election")
@@ -126,6 +136,7 @@ func init() {
 	RootCmd.Flags().AddGoFlagSet(flag.CommandLine)
 
 	ctrlmetrics.Registry.MustRegister(electedMetric)
+	ctrlmetrics.Registry.MustRegister(collectTimeMetric)
 }
 
 // RunE this application and return error if any
@@ -154,7 +165,8 @@ func RunE(_ *cobra.Command, _ []string) error {
 
 	log.Info("initializing with options",
 		"collector-config-filepath", options.metricsPrometheusCollector,
-		"http-addr", options.MetricsBindAddress,
+		"internal-http-addr", options.MetricsBindAddress,
+		"http-addr", options.externalBindAddress,
 		"leader-election", options.LeaderElection,
 		"leader-election-namespace", options.LeaderElectionNamespace,
 		"log-level-filepath", logPath,
@@ -179,6 +191,8 @@ func RunE(_ *cobra.Command, _ []string) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	metrics.stop = stop
+	metrics.ctx = ctx
 
 	options.Options.NewCache = collector.GetNewCacheFunc(metrics.MetricsPrometheusCollector)
 
@@ -238,6 +252,12 @@ type MetricsServer struct {
 	Mgr ctrl.Manager
 	Col *collector.Collector
 	collectorcontrollerv1alpha1.MetricsPrometheusCollector
+
+	// cachedResponseBody contains a cached copy of the http response
+	// body to return from the /metrics http endpoint
+	cachedResponseBody atomic.Value
+	stop               context.CancelFunc
+	ctx                context.Context
 }
 
 func (ms *MetricsServer) ReadCollectorSpec() error {
@@ -299,18 +319,89 @@ func (ms *MetricsServer) Start(ctx context.Context) error {
 	// this shouldn't be necessary since we shutdown when we aren't the leader, but
 	// serves as a sanity check in case we don't shutdown gracefully and quickly
 
+	go ms.continouslyCacheResponse() // continuously read metrics and cache the result
+	go ms.serveMetricsFromCache()    // serve "/metrics" http requests from the cache
+
 	<-ctx.Done()
 	log.Info("ending sampler server", "reason", ctx.Err())
 	return nil
 }
 
-func (ms *MetricsServer) stopLeading(current_id string) {
-	if exitAfterLeaderElectionLoss {
-		log.Info("exiting after leader election loss")
-		// TODO: we shouldn't actually need to do this, but are seeing issues
-		// where pods never re-aquire leadership after loss.  Kicking the process
-		// to make it try to re-establish leadership.
-		os.Exit(0)
+// cache the response from making a local http request
+type cachedResponse struct {
+	data    []byte
+	headers http.Header
+}
+
+// continouslyCacheResponse continuously hits the collector metrics endpoint and
+func (ms *MetricsServer) continouslyCacheResponse() {
+	t := time.NewTicker(ms.PreComputeMetrics.Frequency)
+	defer t.Stop()
+	for {
+		start := time.Now()
+		backoff := retry.DefaultBackoff
+		backoff.Cap = time.Minute * 5
+		backoff.Duration = time.Millisecond * 100
+		err := retry.OnError(backoff,
+			func(err error) bool { return true },
+			func() error {
+				resp, err := http.Get("http://" + options.MetricsBindAddress + "/metrics")
+				if err != nil {
+					log.Error(err, "unable to read cached metrics response")
+					return err
+				}
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					log.Error(err, "unable to read cached metrics body")
+					return err
+				}
+				resp.Body.Close()
+				ms.cachedResponseBody.Store(cachedResponse{
+					data:    body,
+					headers: resp.Header,
+				})
+				return nil
+			})
+		if err != nil {
+			log.Error(err, "unable to cache metrics by reading local /metrics")
+			ms.stop()
+			os.Exit(1)
+		}
+		log.Info("finished caching metrics response",
+			"seconds", time.Since(start).Seconds())
+		collectTimeMetric.Set(time.Since(start).Seconds())
+		select {
+		case <-t.C:
+			// re-populate the cache
+			continue
+		case <-ms.ctx.Done():
+			return
+		}
+	}
+}
+
+func (ms *MetricsServer) serveMetricsFromCache() {
+	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		resp := ms.cachedResponseBody.Load()
+		if resp == nil {
+			return
+		}
+		cr := resp.(cachedResponse)
+		_, err := w.Write(cr.data)
+		if err != nil {
+			log.Error(err, "unable to write metrics response")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		for k, v := range cr.headers {
+			for i := range v {
+				w.Header().Add(k, v[i])
+			}
+		}
+	})
+	if err := http.ListenAndServe(options.externalBindAddress, nil); err != nil {
+		log.Error(err, "failed to listen on cached metrics address")
+		ms.stop() // exit
+		os.Exit(1)
 	}
 }
 
