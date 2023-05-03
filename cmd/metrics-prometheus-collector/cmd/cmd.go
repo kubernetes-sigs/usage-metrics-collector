@@ -37,6 +37,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/tools/leaderelection"
@@ -339,10 +340,11 @@ func (ms *MetricsServer) continouslyCacheResponse() {
 	defer t.Stop()
 	for {
 		start := time.Now()
-		backoff := retry.DefaultBackoff
-		backoff.Cap = time.Minute * 5
-		backoff.Duration = time.Millisecond * 100
-		err := retry.OnError(backoff,
+		err := retry.OnError(
+			wait.Backoff{
+				Duration: time.Second * 6, Factor: 1,
+				Steps: 20, Jitter: 0, Cap: time.Minute * 2,
+			},
 			func(err error) bool { return true },
 			func() error {
 				resp, err := http.Get("http://" + options.MetricsBindAddress + "/metrics")

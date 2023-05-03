@@ -82,7 +82,6 @@ type Collector struct {
 type cachedMetrics struct {
 	startTime time.Time
 	endTime   time.Time
-	metrics   []prometheus.Metric
 }
 
 // NewCollector returns a collector which publishes capacity and utilisation metrics.
@@ -128,9 +127,6 @@ func (c *Collector) InitInformers(ctx context.Context) error {
 
 // Start runs the collector
 func (c *Collector) Run(ctx context.Context) {
-	if c.PreComputeMetrics.Enabled {
-		go c.continuouslyCollect(ctx)
-	}
 	c.registerWithSamplers(ctx)
 }
 
@@ -139,39 +135,11 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	prometheus.DescribeByCollect(c, ch)
 }
 
-func (c *Collector) continuouslyCollect(ctx context.Context) {
-	for {
-		start := time.Now()
-
-		// wait until we are ready to start caching metrics
-		log.Info("caching metrics")
-		m := c.cacheMetrics()
-		log.Info("complete caching metrics", "seconds", time.Since(start).Seconds())
-
-		select {
-		case <-ctx.Done():
-			return // shutdown
-		case c.metrics <- m:
-			// write the metrics to the collect function
-		}
-	}
-}
-
-func (c *Collector) cacheMetrics() *cachedMetrics {
+func (c *Collector) computeMetrics(ch chan<- prometheus.Metric) {
 	sCh := make(chan *collectorapi.SampleList) // channel for aggregation to send SampleLists for saving locally
-	ch := make(chan prometheus.Metric)         // channel for aggregation to send Metrics for exporting to prometheus
-	cm := cachedMetrics{startTime: time.Now()}
 
 	// read metrics from the collector and add to a slice
 	done := sync.WaitGroup{}
-	done.Add(1) // wait until we've gotten the Metrics
-	go func() {
-		// read metrics as they are aggregated -- required for aggregation not to block
-		for m := range ch {
-			cm.metrics = append(cm.metrics, m)
-		}
-		done.Done()
-	}()
 
 	scrapeResult := collectorapi.ScrapeResult{}
 	if c.SaveSamplesLocally != nil {
@@ -188,11 +156,8 @@ func (c *Collector) cacheMetrics() *cachedMetrics {
 	}
 
 	c.collect(ch, sCh) // compute the metrics
-	close(ch)          // all metrics written, stop reading them
 	close(sCh)         // all scrape results written, stop reading them
 	done.Wait()        // wait until all the metrics and scrapes have been read
-
-	cm.endTime = time.Now()
 
 	// Save local copies of the metrics
 	savedLocalSuccessMetric := prometheus.NewGauge(prometheus.GaugeOpts{
@@ -212,9 +177,10 @@ func (c *Collector) cacheMetrics() *cachedMetrics {
 		Help: "The number of local metrics saved as json.",
 	})
 	defer func() {
-		cm.metrics = append(cm.metrics,
-			savedLocalSuccessMetric, savedLocalFailMetric,
-			savedJSONLocalSuccessMetric, savedJSONLocalFailMetric)
+		savedLocalSuccessMetric.Collect(ch)
+		savedLocalFailMetric.Collect(ch)
+		savedJSONLocalSuccessMetric.Collect(ch)
+		savedJSONLocalFailMetric.Collect(ch)
 	}()
 	if c.SaveSamplesLocally != nil && len(scrapeResult.Items) > 0 {
 		if err := c.NormalizeForSave(&scrapeResult); err != nil {
@@ -243,8 +209,6 @@ func (c *Collector) cacheMetrics() *cachedMetrics {
 			}
 		}
 	}
-
-	return &cm
 }
 
 // Collect returns the current state of all metrics of the collector.
@@ -257,38 +221,10 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		log.Info("skipping collection")
 		return
 	}
-
-	if !c.PreComputeMetrics.Enabled {
-		log.Info("collecting metrics without caching")
-		c.collect(ch, nil)
-		log.Info("finished collection", "seconds", time.Since(start).Seconds())
-		return
-	}
-
-	log.Info("collecting metrics from cache")
-	// write the cached metrics out as a response
-	metrics := <-c.metrics
-	for i := range metrics.metrics {
-		ch <- metrics.metrics[i]
-	}
-	metrics.metrics = nil
-
-	metricsAge := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "metrics_prometheus_collector_metrics_age_seconds",
-		Help: "The time since the metrics were computed.",
-	})
-	metricsAge.Set(float64(time.Since(metrics.endTime).Seconds()))
-	metricsAge.Collect(ch)
-
-	objectsAge := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "metrics_prometheus_collector_object_age_seconds",
-		Help: "The time since the objects were read to compute the metrics.",
-	})
-	objectsAge.Set(float64(time.Since(metrics.startTime).Seconds()))
-	objectsAge.Collect(ch)
+	c.computeMetrics(ch) // compute the new metrics
 
 	cacheCollectTime := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "metrics_prometheus_collector_cache_collect_time_seconds",
+		Name: "metrics_prometheus_collect_time_seconds",
 		Help: "The time to collect the cached metrics.",
 	})
 	cacheCollectTime.Set(float64(time.Since(start).Seconds()))
