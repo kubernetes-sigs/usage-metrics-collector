@@ -284,7 +284,7 @@ func (ms *MetricsServer) ReadCollectorSpec() error {
 		}
 	}
 
-	return collectorcontrollerv1alpha1.ValidateCollectorSpec(&ms.MetricsPrometheusCollector)
+	return collectorcontrollerv1alpha1.ValidateCollectorSpecAndApplyDefaults(&ms.MetricsPrometheusCollector)
 }
 
 // Start starts the metrics server

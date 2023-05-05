@@ -18,7 +18,9 @@ import (
 	"math"
 	"sort"
 	"sync"
+	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 )
@@ -70,7 +72,11 @@ func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quant
 
 // aggregateMetric performs an aggregation on the metrics by mapping metrics to common keys using the provided mask.
 // If resources is not defined then all ResourceNames are aggregated.
-func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.AggregationOperation, m Metric, mask collectorcontrollerv1alpha1.LabelsMask) map[collectorcontrollerv1alpha1.AggregationOperation]*Metric {
+func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.AggregationOperation, m Metric, mask collectorcontrollerv1alpha1.LabelsMask,
+	ch chan<- prometheus.Metric, metricName, aggregationName, levelName string) map[collectorcontrollerv1alpha1.AggregationOperation]*Metric {
+
+	start := time.Now()
+
 	// map the values so they are mappedValues by the new level rather than the old
 	// e.g. map multiple "containers" in the same "pod" to that "pod" key
 	indexed := map[LabelsValues][]resource.Quantity{}
@@ -114,6 +120,9 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 		}
 	}
 
+	c.publishTimer("metric_aggregation", ch, start, "mapping", metricName, aggregationName, levelName)
+
+	start = time.Now()
 	results := map[collectorcontrollerv1alpha1.AggregationOperation]*Metric{}
 	// optimization to sort the metrics only once for multiple operations
 	sorted := false
@@ -128,6 +137,9 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 		}
 	}
 
+	c.publishTimer("metric_aggregation", ch, start, "sorting", metricName, aggregationName, levelName)
+
+	start = time.Now()
 	wg := &sync.WaitGroup{}
 	mu := &sync.Mutex{}
 	for _, op := range ops {
@@ -137,6 +149,8 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 		}
 		wg.Add(1)
 		go func(o collectorcontrollerv1alpha1.AggregationOperation) {
+			// start := time.Now()
+
 			// calculate the operations in parallel
 			// reduce by applying the aggregation operation to each slice
 			for k := range indexed {
@@ -146,10 +160,15 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 			mu.Lock()
 			results[o] = res
 			mu.Unlock()
+
+			c.publishTimer("metric_aggregation_per_operation", ch, start, "aggregation_operation", metricName, aggregationName, levelName, "operation", o.String())
+
 			wg.Done()
 		}(op)
 	}
 	wg.Wait()
+
+	c.publishTimer("metric_aggregation", ch, start, "aggregation_total", metricName, aggregationName, levelName)
 
 	return results
 }
