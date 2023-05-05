@@ -138,6 +138,7 @@ func TestCollector(t *testing.T) {
 
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_collector_spec.yaml": &spec})
 		spec.SideCarConfigDirectoryPaths = []string{filepath.Dir(tc.ExpectedFilepath)}
+		require.NoError(t, collectorcontrollerv1alpha1.ValidateCollectorSpecAndApplyDefaults(&spec))
 
 		if tc.Inputs["input_ignore_metric_names.txt"] != "" {
 			ignoreMetricNames = strings.Split(tc.Inputs["input_ignore_metric_names.txt"], "\n")
@@ -248,6 +249,7 @@ func TestCollectorOverride(t *testing.T) {
 		if tc.Inputs["input_ignore_metric_names.txt"] != "" {
 			ignoreMetricNames = strings.Split(tc.Inputs["input_ignore_metric_names.txt"], "\n")
 		}
+		require.NoError(t, collectorcontrollerv1alpha1.ValidateCollectorSpecAndApplyDefaults(&spec))
 
 		instance, err := NewCollector(context.Background(), c, &spec)
 		require.NoError(t, err)
@@ -327,6 +329,7 @@ func testSave(t *testing.T, saveJSON, saveProto bool) {
 		spec.SaveSamplesLocally.SortValues = true       // sort that values so the output is stable
 		spec.SaveSamplesLocally.SaveJSON = &saveJSON
 		spec.SaveSamplesLocally.SaveProto = &saveProto
+		require.NoError(t, collectorcontrollerv1alpha1.ValidateCollectorSpecAndApplyDefaults(&spec))
 
 		// create the collector
 		instance, err := NewCollector(context.Background(), c, &spec)

@@ -1202,8 +1202,10 @@ func (c *Collector) AggregateAndCollect(
 				if l.Operation != "" {
 					l.Operations = append(l.Operations, l.Operation)
 				}
-				aggregatedMetricOps := c.aggregateMetric(l.Operations, metric, l.Mask)
 
+				aggregatedMetricOps := c.aggregateMetric(l.Operations, metric, l.Mask, ch, name.String(), a.Name, l.Name)
+
+				start := time.Now()
 				for op, aggregatedMetric := range aggregatedMetricOps {
 					// aggregate at this level for all operations
 					aggregatedName := MetricName{
@@ -1219,6 +1221,7 @@ func (c *Collector) AggregateAndCollect(
 					metric = *aggregatedMetric
 
 					if l.RetentionName != "" && c.SaveSamplesLocally != nil { // export this metric to a local file for retention
+						start := time.Now()
 						slb := c.NewAggregatedSampleListBuilder(aggregatedName.SourceType)
 						slb.SampleList.MetricName = aggregatedName.String()
 						slb.SampleList.Name = l.RetentionName
@@ -1232,6 +1235,7 @@ func (c *Collector) AggregateAndCollect(
 								aggregatedName.Source, mv...)
 						}
 						sCh <- slb.SampleList
+						c.publishTimer("metric_aggregation_per_aggregated_metric", ch, start, "local_save", name.String(), a.Name, l.Name, "aggregated_metric", aggregatedName.String())
 					}
 
 					if l.NoExport {
@@ -1240,18 +1244,46 @@ func (c *Collector) AggregateAndCollect(
 					}
 
 					// export the metric
+					start := time.Now()
 					if op == collectorcontrollerv1alpha1.HistogramOperation {
 						metric.Buckets = l.HistogramBuckets
 						c.collectHistogramMetric(metric, ch)
 					} else {
 						c.collectMetric(metric, ch)
 					}
+					c.publishTimer("metric_aggregation_per_aggregated_metric", ch, start, "collection", name.String(), a.Name, l.Name, "aggregated_metric", aggregatedName.String())
 				}
+				c.publishTimer("metric_aggregation", ch, start, "local_save", name.String(), a.Name, l.Name)
 			}
 			wg.Done()
 		}(k, *v)
 	}
 	wg.Wait()
+}
+
+func (c *Collector) publishTimer(metricName string, ch chan<- prometheus.Metric, start time.Time, phase, metric, agg, level string, fields ...string) {
+	if len(fields)%2 != 0 {
+		panic(fmt.Sprintf("fields should contain an even number of strings, got %v", fields))
+	}
+
+	names := []string{"phase", "metric_name", "aggregation_name", "level_name"}
+	values := []string{phase, metric, agg, level}
+	for i := 0; i < len(fields); i += 2 {
+		names = append(names, fields[i])
+		values = append(values, fields[i+1])
+	}
+
+	log := log
+	for i, name := range names {
+		log = log.WithValues(name, values[i])
+	}
+	log.V(2).Info("metric aggregation complete", "seconds", time.Since(start).Seconds())
+
+	if ch != nil {
+		// record how long it took
+		desc := prometheus.NewDesc(c.Prefix+"_"+metricName+"_latency_seconds", "operation latency", names, nil)
+		ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, time.Since(start).Seconds(), values...)
+	}
 }
 
 // ResourceQuotaDescriptorKey is used as a key for priority class -

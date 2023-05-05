@@ -809,6 +809,9 @@ func (a Aggregations) ByType(t SourceType) []*Aggregation {
 // Aggregation defines a set of sources of metric data and how operations are
 // applied to those sources to produce new metrics.
 type Aggregation struct {
+	// Name is used for only documentation purposes and whenever it is needed
+	// to refer to a specific aggregation.
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Sources configure which metrics are available to the Levels associated
 	// with the Aggregation.
 	//
@@ -836,6 +839,9 @@ type Levels []Level
 // containers across all pods within the same workload (represented by the
 // workload_name label).
 type Level struct {
+	// Name is an optional name that can be used for documentation purposes and
+	// also to facilitate referring to a specific level in an aggregation.
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Mask is applied to retain only the labels that should appear at this level.
 	Mask LabelsMask `json:"mask" yaml:"mask"`
 	// Operation is applied to aggregate all metrics that have the same set of
@@ -1115,7 +1121,36 @@ type SideCarMetricValue struct {
 
 const MaxExtensionLabels = 100
 
-func ValidateCollectorSpec(spec *MetricsPrometheusCollector) error {
+func ValidateCollectorSpecAndApplyDefaults(spec *MetricsPrometheusCollector) error {
+	// Set default names and validate there are no repetitions.
+	for i := range spec.Aggregations {
+		a := &spec.Aggregations[i]
+		if a.Name == "" {
+			a.Name = fmt.Sprintf("unnamed-aggregation-%d", i)
+		}
+		for j := range a.Levels {
+			l := &a.Levels[j]
+			if l.Name == "" {
+				l.Name = fmt.Sprintf("unnamed-level-%d", j)
+			}
+		}
+	}
+
+	aggNames := make(map[string]int)
+	for i, a := range spec.Aggregations {
+		if j, ok := aggNames[a.Name]; ok {
+			return fmt.Errorf("duplicate aggregation name %q found at indexes %d and %d", a.Name, i, j)
+		}
+		aggNames[a.Name] = i
+
+		levelNames := make(map[string]int)
+		for j, l := range a.Levels {
+			if k, ok := levelNames[l.Name]; ok {
+				return fmt.Errorf("duplicate level name %q found at indexes %d and %d of aggregation %q", l.Name, j, k, a.Name)
+			}
+		}
+	}
+
 	// validate extension labels
 	totalExtensionLabels := len(spec.Extensions.Pods)
 	totalExtensionLabels += len(spec.Extensions.Namespaces)

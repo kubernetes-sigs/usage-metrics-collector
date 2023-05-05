@@ -77,6 +77,7 @@ func TestMetricsPrometheusCollector(t *testing.T) {
 			"kube_usage_version",
 			"kube_usage_leader_elected",
 			"kube_usage_collect_cache_time",
+			"kube_usage_metric_aggregation_",
 		)
 		return nil
 	})
