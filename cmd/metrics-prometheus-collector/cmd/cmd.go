@@ -339,6 +339,8 @@ func (ms *MetricsServer) continouslyCacheResponse() {
 	t := time.NewTicker(ms.PreComputeMetrics.Frequency)
 	defer t.Stop()
 	for {
+		// make sure we are getting metrics with utilization
+		metricsReady := ms.Col.UtilizationServer.IsReadyResult.Load()
 		start := time.Now()
 		err := retry.OnError(
 			wait.Backoff{
@@ -362,6 +364,11 @@ func (ms *MetricsServer) continouslyCacheResponse() {
 					data:    body,
 					headers: resp.Header,
 				})
+				if metricsReady {
+					// don't declare the pod as ready until we have cached metrics
+					// that include utilization from a sufficient number of nodes.
+					ms.Col.UtilizationServer.IsCached.Store(true)
+				}
 				return nil
 			})
 		if err != nil {

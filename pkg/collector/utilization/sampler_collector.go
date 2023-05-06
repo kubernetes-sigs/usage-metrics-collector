@@ -99,6 +99,7 @@ type Server struct {
 	ttl        time.Duration
 
 	IsReadyResult   atomic.Bool
+	IsCached        atomic.Bool
 	IsHealthyResult atomic.Bool
 
 	grpcServer *grpc.Server
@@ -217,7 +218,10 @@ func (s *Server) Check(ctx context.Context, _ *grpc_health_v1.HealthCheckRequest
 // Ready returns success if the service should be accepting traffic
 func (s *Server) IsReady(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
 	if !s.IsReadyResult.Load() {
-		return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_NOT_SERVING}, fmt.Errorf("not-leader")
+		return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_NOT_SERVING}, fmt.Errorf("not-ready")
+	}
+	if !s.IsCached.Load() {
+		return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_NOT_SERVING}, fmt.Errorf("not-ready")
 	}
 	return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_SERVING}, nil
 }
