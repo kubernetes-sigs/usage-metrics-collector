@@ -35,7 +35,7 @@ import (
 
 // TestCase contains a test case parsed from a testdata directory
 type TestCase struct {
-	T *testing.T
+	T testing.TB
 
 	// Name of the test cases
 	Name string
