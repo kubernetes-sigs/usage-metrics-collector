@@ -385,6 +385,8 @@ func testSave(t *testing.T, saveJSON, saveProto bool) {
 		_, err = reg.Gather()
 		require.NoError(t, err)
 
+		instance.saveLocalDone.Wait() // wait until we finish writing the files
+
 		contains := strings.TrimSpace(tc.Inputs["input_outputfile.txt"])
 
 		// read the save resul file
