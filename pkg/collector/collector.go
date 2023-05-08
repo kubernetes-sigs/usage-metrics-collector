@@ -73,15 +73,10 @@ type Collector struct {
 	taintLabelsById        map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.NodeTaint
 	extensionLabelMaskById map[collectorcontrollerv1alpha1.LabelsMaskId]*extensionLabelsMask
 
-	startTime time.Time
-	metrics   chan *cachedMetrics
-
-	sideCarConfigs []*collectorcontrollerv1alpha1.SideCarConfig
-}
-
-type cachedMetrics struct {
-	startTime time.Time
-	endTime   time.Time
+	startTime          time.Time
+	sideCarConfigs     []*collectorcontrollerv1alpha1.SideCarConfig
+	saveLocalQueueSize atomic.Int32
+	saveLocalDone      sync.WaitGroup
 }
 
 // NewCollector returns a collector which publishes capacity and utilisation metrics.
@@ -95,7 +90,6 @@ func NewCollector(
 		MetricsPrometheusCollector: config,
 		UtilizationServer:          utilization.Server{UtilizationServer: config.UtilizationServer},
 		startTime:                  time.Now(),
-		metrics:                    make(chan *cachedMetrics),
 		IsLeaderElected:            &atomic.Bool{},
 	}
 	c.UtilizationServer.IsReadyResult.Store(false)
@@ -135,80 +129,52 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	prometheus.DescribeByCollect(c, ch)
 }
 
-func (c *Collector) computeMetrics(ch chan<- prometheus.Metric) {
-	sCh := make(chan *collectorapi.SampleList) // channel for aggregation to send SampleLists for saving locally
-
-	// read metrics from the collector and add to a slice
-	done := sync.WaitGroup{}
+func (c *Collector) saveMetricsToLocalFile(slc chan *collectorapi.SampleList) {
+	defer c.saveLocalDone.Done()
+	saveLocalQueueLength.Set(float64(c.saveLocalQueueSize.Add(1)))
+	defer func() {
+		saveLocalQueueLength.Set(float64(c.saveLocalQueueSize.Add(-1)))
+	}()
 
 	scrapeResult := collectorapi.ScrapeResult{}
-	if c.SaveSamplesLocally != nil {
-		done.Add(1) // wait until we've gotten the SampleLists
-
-		// save aggregated metrics locally
-		go func() {
-			// read scrape results as they are aggregated -- required for aggregation not to block
-			for m := range sCh {
-				scrapeResult.Items = append(scrapeResult.Items, m)
-			}
-			done.Done()
-		}()
+	for sl := range slc { // read all the results from this scrape
+		scrapeResult.Items = append(scrapeResult.Items, sl)
+	}
+	if c.SaveSamplesLocally == nil && len(scrapeResult.Items) == 0 {
+		return
 	}
 
-	c.collect(ch, sCh) // compute the metrics
-	close(sCh)         // all scrape results written, stop reading them
-	done.Wait()        // wait until all the metrics and scrapes have been read
+	// preprocess the results for saving
+	start := time.Now()
+	if err := c.NormalizeForSave(&scrapeResult); err != nil {
+		log.Error(err, "unable to save aggregated metrics locally", "reason", "normalize")
+		return
+	}
+	saveLocalLatencySeconds.WithLabelValues("normalize").Set(time.Since(start).Seconds())
 
-	// Save local copies of the metrics
-	savedLocalSuccessMetric := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "metrics_prometheus_collector_save_local_success",
-		Help: "The number of local metrics saved as json.",
-	})
-	savedLocalFailMetric := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "metrics_prometheus_collector_save_local_fail",
-		Help: "The number of local metrics saved as json.",
-	})
-	savedJSONLocalSuccessMetric := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "metrics_prometheus_collector_save_json_local_success",
-		Help: "The number of local metrics saved as json.",
-	})
-	savedJSONLocalFailMetric := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "metrics_prometheus_collector_save_json_local_fail",
-		Help: "The number of local metrics saved as json.",
-	})
-	defer func() {
-		savedLocalSuccessMetric.Collect(ch)
-		savedLocalFailMetric.Collect(ch)
-		savedJSONLocalSuccessMetric.Collect(ch)
-		savedJSONLocalFailMetric.Collect(ch)
-	}()
-	if c.SaveSamplesLocally != nil && len(scrapeResult.Items) > 0 {
-		if err := c.NormalizeForSave(&scrapeResult); err != nil {
-			log.Error(err, "unable to save aggregated metrics locally")
-			savedLocalFailMetric.Inc()
-			savedJSONLocalFailMetric.Inc()
+	// write the aggregated samples locally as a proto file
+	start = time.Now()
+	if c.SaveSamplesLocally != nil && pointer.BoolDeref(c.SaveSamplesLocally.SaveProto, false) && len(scrapeResult.Items) > 0 {
+		if err := c.SaveScrapeResultToFile(&scrapeResult); err != nil {
+			log.Error(err, "unable to save aggregated metrics locally", "reason", "proto")
+			savedLocalMetric.WithLabelValues("fail", "proto").Add(1)
 		} else {
-			// write the aggregated samples locally if configured to do so
-			if c.SaveSamplesLocally != nil && pointer.BoolDeref(c.SaveSamplesLocally.SaveProto, false) && len(scrapeResult.Items) > 0 {
-				if err := c.SaveScrapeResultToFile(&scrapeResult); err != nil {
-					log.Error(err, "unable to save aggregated metrics locally")
-					savedLocalFailMetric.Inc()
-				} else {
-					savedLocalSuccessMetric.Inc()
-				}
-			}
-
-			// write the aggregated samples locally if configured to do so
-			if c.SaveSamplesLocally != nil && pointer.BoolDeref(c.SaveSamplesLocally.SaveJSON, false) && len(scrapeResult.Items) > 0 {
-				if err := c.SaveScrapeResultToJSONFile(&scrapeResult); err != nil {
-					log.Error(err, "unable to save aggregated metrics locally as json")
-					savedJSONLocalFailMetric.Inc()
-				} else {
-					savedJSONLocalSuccessMetric.Inc()
-				}
-			}
+			savedLocalMetric.WithLabelValues("success", "proto").Add(1)
 		}
 	}
+	saveLocalLatencySeconds.WithLabelValues("proto").Set(time.Since(start).Seconds())
+
+	// write the aggregated samples locally as a json file
+	start = time.Now()
+	if c.SaveSamplesLocally != nil && pointer.BoolDeref(c.SaveSamplesLocally.SaveJSON, false) && len(scrapeResult.Items) > 0 {
+		if err := c.SaveScrapeResultToJSONFile(&scrapeResult); err != nil {
+			log.Error(err, "unable to save aggregated metrics locally as json", "reason", "json")
+			savedLocalMetric.WithLabelValues("fail", "json").Add(1)
+		} else {
+			savedLocalMetric.WithLabelValues("success", "json").Add(1)
+		}
+	}
+	saveLocalLatencySeconds.WithLabelValues("json").Set(time.Since(start).Seconds())
 }
 
 // Collect returns the current state of all metrics of the collector.
@@ -221,7 +187,12 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		log.Info("skipping collection")
 		return
 	}
-	c.computeMetrics(ch) // compute the new metrics
+
+	sCh := make(chan *collectorapi.SampleList) // channel for aggregation to send SampleLists for saving locally
+	defer close(sCh)                           // all scrape results written, stop reading them
+	c.saveLocalDone.Add(1)
+	go c.saveMetricsToLocalFile(sCh) // write the saved metrics to a file, but don't block
+	c.collect(ch, sCh)               // compute the metrics
 
 	cacheCollectTime := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "metrics_prometheus_collect_time_seconds",
@@ -1203,7 +1174,14 @@ func (c *Collector) AggregateAndCollect(
 					l.Operations = append(l.Operations, l.Operation)
 				}
 
-				aggregatedMetricOps := c.aggregateMetric(l.Operations, metric, l.Mask, ch, name.String(), a.Name, l.Name)
+				// create an operations key
+				opsStrings := make([]string, 0, len(l.Operations))
+				for _, op := range l.Operations {
+					opsStrings = append(opsStrings, op.String())
+				}
+				operationsKey := strings.Join(opsStrings, ",")
+
+				aggregatedMetricOps := c.aggregateMetric(operationsKey, l.Operations, metric, l.Mask, ch, name.String(), a.Name, l.Name)
 
 				start := time.Now()
 				for op, aggregatedMetric := range aggregatedMetricOps {
@@ -1253,7 +1231,7 @@ func (c *Collector) AggregateAndCollect(
 					}
 					c.publishTimer("metric_aggregation_per_aggregated_metric", ch, start, "collection", name.String(), a.Name, l.Name, "aggregated_metric", aggregatedName.String())
 				}
-				c.publishTimer("metric_aggregation", ch, start, "local_save", name.String(), a.Name, l.Name)
+				c.publishTimer("metric_aggregation", ch, start, "local_save", name.String(), a.Name, l.Name, "ops", operationsKey)
 			}
 			wg.Done()
 		}(k, *v)
@@ -1265,6 +1243,8 @@ func (c *Collector) publishTimer(metricName string, ch chan<- prometheus.Metric,
 	if len(fields)%2 != 0 {
 		panic(fmt.Sprintf("fields should contain an even number of strings, got %v", fields))
 	}
+
+	metric = strings.TrimLeft(metric, "_")
 
 	names := []string{"phase", "metric_name", "aggregation_name", "level_name"}
 	values := []string{phase, metric, agg, level}
@@ -1701,6 +1681,21 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 	}()
 }
 
+var saveLocalQueueLength = prometheus.NewGauge(prometheus.GaugeOpts{
+	Name: "metrics_prometheus_collector_save_local_queue_length",
+	Help: "The number of scrapes being saved locally.",
+})
+
+var saveLocalLatencySeconds = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	Name: "metrics_prometheus_collector_save_local_latency_seconds",
+	Help: "The time in seconds to save the results.",
+}, []string{"type"})
+
+var savedLocalMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "metrics_prometheus_collector_save_local_result",
+	Help: "The results from saving metrics to local files.",
+}, []string{"result", "type"})
+
 var registeredWithSamplers = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "metrics_prometheus_collector_registered_count",
 	Help: "Nodes the collector has registered with.",
@@ -1708,4 +1703,7 @@ var registeredWithSamplers = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 
 func init() {
 	ctrlmetrics.Registry.MustRegister(registeredWithSamplers)
+	ctrlmetrics.Registry.MustRegister(savedLocalMetric)
+	ctrlmetrics.Registry.MustRegister(saveLocalQueueLength)
+	ctrlmetrics.Registry.MustRegister(saveLocalLatencySeconds)
 }

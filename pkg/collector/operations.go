@@ -72,7 +72,7 @@ func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quant
 
 // aggregateMetric performs an aggregation on the metrics by mapping metrics to common keys using the provided mask.
 // If resources is not defined then all ResourceNames are aggregated.
-func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.AggregationOperation, m Metric, mask collectorcontrollerv1alpha1.LabelsMask,
+func (c *Collector) aggregateMetric(operationsKey string, ops []collectorcontrollerv1alpha1.AggregationOperation, m Metric, mask collectorcontrollerv1alpha1.LabelsMask,
 	ch chan<- prometheus.Metric, metricName, aggregationName, levelName string) map[collectorcontrollerv1alpha1.AggregationOperation]*Metric {
 
 	start := time.Now()
@@ -120,7 +120,7 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 		}
 	}
 
-	c.publishTimer("metric_aggregation", ch, start, "mapping", metricName, aggregationName, levelName)
+	c.publishTimer("metric_aggregation", ch, start, "mapping", metricName, aggregationName, levelName, "ops", operationsKey)
 
 	start = time.Now()
 	results := map[collectorcontrollerv1alpha1.AggregationOperation]*Metric{}
@@ -137,7 +137,7 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 		}
 	}
 
-	c.publishTimer("metric_aggregation", ch, start, "sorting", metricName, aggregationName, levelName)
+	c.publishTimer("metric_aggregation", ch, start, "sorting", metricName, aggregationName, levelName, "ops", operationsKey)
 
 	start = time.Now()
 	wg := &sync.WaitGroup{}
@@ -168,7 +168,7 @@ func (c *Collector) aggregateMetric(ops []collectorcontrollerv1alpha1.Aggregatio
 	}
 	wg.Wait()
 
-	c.publishTimer("metric_aggregation", ch, start, "aggregation_total", metricName, aggregationName, levelName)
+	c.publishTimer("metric_aggregation", ch, start, "aggregation_total", metricName, aggregationName, levelName, "ops", operationsKey)
 
 	return results
 }
