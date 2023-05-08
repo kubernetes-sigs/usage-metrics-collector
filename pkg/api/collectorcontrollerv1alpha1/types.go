@@ -87,6 +87,11 @@ type MetricsPrometheusCollector struct {
 
 	// SchedulerHealth if not empty configures exporting metrics on pod schedule time
 	SchedulerHealth *SchedulerHealth `json:"schedulerHealth" yaml:"schedulerHealth"`
+
+	// DefaultAggregationNames if set to true will default the aggregation name to the aggregation "type"
+	DefaultAggregationNames bool `json:"defaultAggregationNames" yaml:"defaultAggregationNames"`
+	// DefaultLevelNames if set to true will default the level name to the mask name
+	DefaultLevelNames bool `json:"defaultLevelNames" yaml:"defaultLevelNames"`
 }
 
 type SchedulerHealth struct {
@@ -1126,27 +1131,40 @@ func ValidateCollectorSpecAndApplyDefaults(spec *MetricsPrometheusCollector) err
 	for i := range spec.Aggregations {
 		a := &spec.Aggregations[i]
 		if a.Name == "" {
-			a.Name = fmt.Sprintf("unnamed-aggregation-%d", i)
+			if spec.DefaultAggregationNames {
+				a.Name = string(a.Sources.Type)
+			} else {
+				a.Name = fmt.Sprintf("unnamed-aggregation-%d", i)
+			}
 		}
 		for j := range a.Levels {
 			l := &a.Levels[j]
 			if l.Name == "" {
-				l.Name = fmt.Sprintf("unnamed-level-%d", j)
+				if spec.DefaultLevelNames {
+					l.Name = string(l.Mask.Level)
+				} else {
+					l.Name = fmt.Sprintf("unnamed-level-%d", j)
+				}
 			}
 		}
 	}
 
-	aggNames := make(map[string]int)
-	for i, a := range spec.Aggregations {
-		if j, ok := aggNames[a.Name]; ok {
-			return fmt.Errorf("duplicate aggregation name %q found at indexes %d and %d", a.Name, i, j)
-		}
-		aggNames[a.Name] = i
-
-		levelNames := make(map[string]int)
-		for j, l := range a.Levels {
-			if k, ok := levelNames[l.Name]; ok {
-				return fmt.Errorf("duplicate level name %q found at indexes %d and %d of aggregation %q", l.Name, j, k, a.Name)
+	names := sets.NewString()
+	for _, a := range spec.Aggregations {
+		for _, l := range a.Levels {
+			for _, s := range a.Sources.GetSources() {
+				n := fmt.Sprintf("%s %s %s %s", a.Name, s.String(), l.Name, l.Operation.String())
+				if names.Has(n) {
+					return fmt.Errorf("duplicate aggregation/source/level/operation combination found \"%s\"", n)
+				}
+				names.Insert(n)
+				for _, o := range l.Operations {
+					n := fmt.Sprintf("%s %s %s %s", a.Name, s.String(), l.Name, o)
+					if names.Has(n) {
+						return fmt.Errorf("duplicate aggregation/source/level/operation combination found \"%s\"", n)
+					}
+					names.Insert(n)
+				}
 			}
 		}
 	}

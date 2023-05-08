@@ -1174,7 +1174,14 @@ func (c *Collector) AggregateAndCollect(
 					l.Operations = append(l.Operations, l.Operation)
 				}
 
-				aggregatedMetricOps := c.aggregateMetric(l.Operations, metric, l.Mask, ch, name.String(), a.Name, l.Name)
+				// create an operations key
+				opsStrings := make([]string, 0, len(l.Operations))
+				for _, op := range l.Operations {
+					opsStrings = append(opsStrings, op.String())
+				}
+				operationsKey := strings.Join(opsStrings, ",")
+
+				aggregatedMetricOps := c.aggregateMetric(operationsKey, l.Operations, metric, l.Mask, ch, name.String(), a.Name, l.Name)
 
 				start := time.Now()
 				for op, aggregatedMetric := range aggregatedMetricOps {
@@ -1224,7 +1231,7 @@ func (c *Collector) AggregateAndCollect(
 					}
 					c.publishTimer("metric_aggregation_per_aggregated_metric", ch, start, "collection", name.String(), a.Name, l.Name, "aggregated_metric", aggregatedName.String())
 				}
-				c.publishTimer("metric_aggregation", ch, start, "local_save", name.String(), a.Name, l.Name)
+				c.publishTimer("metric_aggregation", ch, start, "local_save", name.String(), a.Name, l.Name, "ops", operationsKey)
 			}
 			wg.Done()
 		}(k, *v)
@@ -1236,6 +1243,8 @@ func (c *Collector) publishTimer(metricName string, ch chan<- prometheus.Metric,
 	if len(fields)%2 != 0 {
 		panic(fmt.Sprintf("fields should contain an even number of strings, got %v", fields))
 	}
+
+	metric = strings.TrimLeft(metric, "_")
 
 	names := []string{"phase", "metric_name", "aggregation_name", "level_name"}
 	values := []string{phase, metric, agg, level}
