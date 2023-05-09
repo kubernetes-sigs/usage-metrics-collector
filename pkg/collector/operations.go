@@ -76,6 +76,7 @@ func (c *Collector) aggregateMetric(operationsKey string, ops []collectorcontrol
 	ch chan<- prometheus.Metric, metricName, aggregationName, levelName string) map[collectorcontrollerv1alpha1.AggregationOperation]*Metric {
 
 	start := time.Now()
+	labelNames := c.getLabelNames(mask)
 
 	// map the values so they are mappedValues by the new level rather than the old
 	// e.g. map multiple "containers" in the same "pod" to that "pod" key
@@ -85,21 +86,21 @@ func (c *Collector) aggregateMetric(operationsKey string, ops []collectorcontrol
 		labels := c.mask(mask, k)
 
 		// compute the labels for this instance of the metric so we can drop metrics appropriately
-		names := c.getLabelNames(mask)
-		values := c.getLabelValues(mask, labels, names)
-		overrides := overrideValues(values, names)
+		values := c.getLabelValues(mask, labels, labelNames)
+		overrides := overrideValues(values, labelNames)
 
 		// reduce labels after override
 		overrideLabels := c.overrideLabels(mask, labels, overrides)
 
-		index := map[string]string{}
-		for i := range names {
-			if values[i] != "" {
-				index[names[i]] = values[i]
-			}
-		}
 		// check if we should include this metric or not based on its label values
 		ok := func() bool {
+			index := map[string]string{}
+			for i := range labelNames {
+				if values[i] != "" {
+					index[labelNames[i]] = values[i]
+				}
+			}
+
 			for _, f := range mask.Filters {
 				for _, k := range f.LabelNames {
 					if f.Present == nil {
@@ -114,8 +115,8 @@ func (c *Collector) aggregateMetric(operationsKey string, ops []collectorcontrol
 				}
 			}
 			return true
-		}()
-		if ok {
+		}
+		if len(mask.Filters) == 0 || ok() {
 			indexed[overrideLabels] = append(indexed[overrideLabels], v...)
 		}
 	}
