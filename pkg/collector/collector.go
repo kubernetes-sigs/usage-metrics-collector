@@ -1231,7 +1231,7 @@ func (c *Collector) AggregateAndCollect(
 					}
 					c.publishTimer("metric_aggregation_per_aggregated_metric", ch, start, "collection", name.String(), a.Name, l.Name, "aggregated_metric", aggregatedName.String())
 				}
-				c.publishTimer("metric_aggregation", ch, start, "local_save", name.String(), a.Name, l.Name, "ops", operationsKey)
+				c.publishTimer("metric_aggregation", ch, start, "collection_total", name.String(), a.Name, l.Name, "ops", operationsKey)
 			}
 			wg.Done()
 		}(k, *v)
