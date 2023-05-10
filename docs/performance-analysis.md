@@ -26,7 +26,13 @@ be configured via the flag `pprof-port`.
 A series of metrics is also collected tracking the time taken to process each aggregation, level, and
 operation. These metrics are named:
 
-- `kube_usage_metric_aggregation_latency_seconds`: how long it took to complete each one of the four phases of metric aggregation/collection (i.e. mapping, sorting, aggregation_total, and collection_total).
+- `kube_usage_metric_aggregation_latency_seconds`: how long it took to complete each one of the four phases of metric aggregation/collection (i.e. `mapping`, `sorting`, `aggregation_total`, and `collection_total`).
 - `kube_usage_metric_aggregation_per_aggregated_metric_latency_seconds`: how long it took to aggregate each one of the published aggregated metrics. Note that this does not include the mapping and sorting phases, common to all aggregated metrics.
 - `kube_usage_metric_aggregation_per_operation_latency_seconds`: how long it took to perform each operation at a given level. The time that takes to perform all of the operations at a given level is the `aggregation_total` phase in the first metric of this list.
 
+Note that since the operations above are performed in parallel, the actual collection time observed will always be shorter than the sum of latencies.
+In order to track these global latencies, the collector also exposes the following metrics:
+
+- `kube_usage_collection_latency_seconds`: the total collection clock time observed.
+- `kube_usage_operation_latency_seconds`: the total collection time per operation, indicated in the `operation` label with one of the following values (`collect_quotas`, `collect_cluster_scoped`, `list_namespaces`, `list_pvs`, `list_rqds`, `list_quotas`, `collect_pvcs`, `list_pvcs`, `list_cluster_scoped`, `collect_containers`, `collect_pvs`, `list_sampler_pods`, `list_nodes`, `collect_billing_units`, `collect_cgroups`, `list_pods`, `collect_nodes`, `collect_namespace`)
+- `metrics_prometheus_collector_save_local_latency_seconds`: the time that took to store the latest collection to local disk.
