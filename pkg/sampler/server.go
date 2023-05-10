@@ -149,10 +149,13 @@ func (s *Server) Start(ctx context.Context, stop context.CancelFunc) error {
 		errs <- errors.WithStack(s.cache.Start(ctx))
 	}()
 
-	pbPort := fmt.Sprintf(":%v", s.PBPort)
+	pbPort := fmt.Sprintf("%s:%v", s.Address, s.PBPort)
 	lis, err := net.Listen("tcp", pbPort)
 	if err != nil {
 		return errors.WithStack(err)
+	}
+	if s.Address == "" {
+		pbPort = "0.0.0.0" + pbPort
 	}
 
 	// run the protocol buffer service
@@ -169,7 +172,7 @@ func (s *Server) Start(ctx context.Context, stop context.CancelFunc) error {
 	// setup the json service
 	conn, err := grpc.DialContext(
 		ctx,
-		"0.0.0.0"+pbPort,
+		pbPort,
 		grpc.WithBlock(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
@@ -192,7 +195,7 @@ func (s *Server) Start(ctx context.Context, stop context.CancelFunc) error {
 	mux.Handle("/v1/", gwmux)
 	mux.Handle("/", http.DefaultServeMux)
 
-	addr := fmt.Sprintf(":%v", s.RestPort)
+	addr := fmt.Sprintf("%s:%v", s.Address, s.RestPort)
 	gwServer := &http.Server{Addr: addr, Handler: mux}
 	rpcServer := grpc.NewServer()
 	api.RegisterMetricsServer(rpcServer, s)
@@ -490,8 +493,8 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			AvgCPUThrottledNanoSec:        int64(v.avg.CPUThrottledUSec),
 			AvgCPUPercentPeriodsThrottled: float32(v.avg.CPUPercentPeriodsThrottled),
 			AvgMemoryBytes:                int64(v.avg.MemoryBytes),
-			TotalOOMCount:                 int64(v.avg.CumulativeMemoryOOM),
-			TotalOOMKillCount:             int64(v.avg.CumulativeMemoryOOMKill),
+			OomCount:                      int64(v.avg.MemoryOOM),
+			OomKillCount:                  int64(v.avg.MemoryOOMKill),
 			AvgCPUPeriodsSec:              int64(v.avg.CPUPeriodsSec),
 			AvgCPUThrottledPeriodsSec:     int64(v.avg.CPUThrottledPeriodsSec),
 		}

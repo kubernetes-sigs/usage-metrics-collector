@@ -1,3 +1,19 @@
+avg_nr_periods:
+  level: container
+  resourceList:
+    periods: "0"
+  source: avg_nr_periods
+avg_nr_throttled:
+  level: container
+  resourceList:
+    periods: "0"
+  source: avg_nr_throttled
+avg_utilization:
+  level: container
+  resourceList:
+    cpu: 2500m
+    memory: 1950m
+  source: avg_utilization
 limits_allocated:
   level: container
   resourceList:
@@ -23,14 +39,15 @@ nr_throttled:
     - "1"
     - "2"
   source: nr_throttled
+oom:
+  level: container
+  resourceList:
+    items: "5"
+  source: oom
 oom_kill:
   level: container
-  multiResourceList:
-    items:
-    - "0"
-    - "1"
-    - "1"
-    - "1"
+  resourceList:
+    items: "2"
   source: oom_kill
 requests_allocated:
   level: container

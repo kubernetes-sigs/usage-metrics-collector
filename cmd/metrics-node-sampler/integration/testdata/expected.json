@@ -20,8 +20,6 @@
 				"340",
 				"430"
 			],
-			"oomCount": [],
-			"oomKillCount": [],
 			"cpuThrottledNanoSec": [
 				"0",
 				"0",
@@ -53,8 +51,8 @@
 			"nodeName": "",
 			"avgCPUCoresNanoSec": "390",
 			"avgMemoryBytes": "310",
-			"totalOOMCount": "211",
-			"totalOOMKillCount": "29",
+			"oomCount": "28",
+			"oomKillCount": "7",
 			"avgCPUPercentPeriodsThrottled": 0.1625,
 			"avgCPUThrottledNanoSec": "70",
 			"avgCPUPeriodsSec": "800",

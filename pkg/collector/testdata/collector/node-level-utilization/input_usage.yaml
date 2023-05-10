@@ -17,7 +17,9 @@ responses:
             0,
             0,
             0
-          ]
+          ],
+          "avgCPUCoresNanoSec": 3000,
+          "avgMemoryBytes": 0
         },
         {
           "aggregationLevel": "kubelet",
@@ -34,7 +36,9 @@ responses:
             0,
             0,
             0
-          ]
+          ],
+          "avgCPUCoresNanoSec": 3000,
+          "avgMemoryBytes": 0
         },
         {
           "aggregationLevel": "kubelet/kubepods",
@@ -51,7 +55,9 @@ responses:
             600,
             800,
             1000
-          ]
+          ],
+          "avgCPUCoresNanoSec": 1200,
+          "avgMemoryBytes": 600
         },
         {
           "aggregationLevel": "kubelet/kubepods/guaranteed",
@@ -68,7 +74,9 @@ responses:
             150,
             170,
             300
-          ]
+          ],
+          "avgCPUCoresNanoSec": 1500,
+          "avgMemoryBytes": 150
         },
         {
           "aggregationLevel": "system.slice",
@@ -85,7 +93,9 @@ responses:
             0,
             0,
             0
-          ]
+          ],
+          "avgCPUCoresNanoSec": 3000,
+          "avgMemoryBytes": 0
         },
         {
           "aggregationLevel": "system.slice/kubelet.service",
@@ -102,7 +112,9 @@ responses:
             600,
             800,
             1000
-          ]
+          ],
+          "avgCPUCoresNanoSec": 11000,
+          "avgMemoryBytes": 650
         }
       ]
     }

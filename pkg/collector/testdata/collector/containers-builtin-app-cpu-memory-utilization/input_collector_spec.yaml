@@ -93,6 +93,7 @@ aggregations: # aggregate metrics and export them
     type: "container" # use container source
     container:
     - "utilization"
+    - "avg_utilization"
   levels:
   - mask:
       name: "workload" # sum all containers / pods into workload metrics

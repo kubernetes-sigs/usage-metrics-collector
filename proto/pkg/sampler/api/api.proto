@@ -66,8 +66,6 @@ message ContainerMetrics {
 
     repeated int64 cpuCoresNanoSec=3;
     repeated int64 memoryBytes=4;
-    repeated int64 oomCount=5;
-    repeated int64 oomKillCount=6;
     repeated int64 cpuThrottledNanoSec=7;
     repeated float cpuPercentPeriodsThrottled=8;
     repeated int64 cpuPeriodsSec=9;
@@ -78,8 +76,8 @@ message ContainerMetrics {
     int64 avgCPUCoresNanoSec=15;
 
     int64 avgMemoryBytes=16;
-    int64 totalOOMCount=17;
-    int64 totalOOMKillCount=18;
+    int64 oomCount=17;
+    int64 oomKillCount=18;
 
     float avgCPUPercentPeriodsThrottled=19;
     int64 avgCPUThrottledNanoSec=20;

@@ -48,6 +48,8 @@ type sampleInstant struct {
 	CumulativeCPUThrottledPeriods uint64
 	CumulativeMemoryOOM           uint64
 	CumulativeMemoryOOMKill       uint64
+	MemoryOOM                     uint64
+	MemoryOOMKill                 uint64
 	// CumulativeMemoryHigh        uint64
 
 	// These values are derived from the last sample

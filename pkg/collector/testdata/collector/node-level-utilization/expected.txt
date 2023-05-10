@@ -1,3 +1,83 @@
+# HELP kube_usage_node_hist_avg_root_utilization_cpu_cores kube_usage_node_hist_avg_root_utilization_cpu_cores
+# TYPE kube_usage_node_hist_avg_root_utilization_cpu_cores histogram
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="kubelet",exported_node="test-node-1",le="1.1e-06"} 0
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="kubelet",exported_node="test-node-1",le="2.1e-06"} 0
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="kubelet",exported_node="test-node-1",le="3.1e-06"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="kubelet",exported_node="test-node-1",le="4.1e-06"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="kubelet",exported_node="test-node-1",le="5.1e-06"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="kubelet",exported_node="test-node-1",le="+Inf"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_sum{cgroup="kubelet",exported_node="test-node-1"} 3e-06
+kube_usage_node_hist_avg_root_utilization_cpu_cores_count{cgroup="kubelet",exported_node="test-node-1"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="system.slice",exported_node="test-node-1",le="1.1e-06"} 0
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="system.slice",exported_node="test-node-1",le="2.1e-06"} 0
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="system.slice",exported_node="test-node-1",le="3.1e-06"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="system.slice",exported_node="test-node-1",le="4.1e-06"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="system.slice",exported_node="test-node-1",le="5.1e-06"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_bucket{cgroup="system.slice",exported_node="test-node-1",le="+Inf"} 1
+kube_usage_node_hist_avg_root_utilization_cpu_cores_sum{cgroup="system.slice",exported_node="test-node-1"} 3e-06
+kube_usage_node_hist_avg_root_utilization_cpu_cores_count{cgroup="system.slice",exported_node="test-node-1"} 1
+# HELP kube_usage_node_hist_avg_root_utilization_memory_bytes kube_usage_node_hist_avg_root_utilization_memory_bytes
+# TYPE kube_usage_node_hist_avg_root_utilization_memory_bytes histogram
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="kubelet",exported_node="test-node-1",le="50"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="kubelet",exported_node="test-node-1",le="100"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="kubelet",exported_node="test-node-1",le="200"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="kubelet",exported_node="test-node-1",le="400"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="kubelet",exported_node="test-node-1",le="800"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="kubelet",exported_node="test-node-1",le="1600"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="kubelet",exported_node="test-node-1",le="+Inf"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_sum{cgroup="kubelet",exported_node="test-node-1"} 0
+kube_usage_node_hist_avg_root_utilization_memory_bytes_count{cgroup="kubelet",exported_node="test-node-1"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="system.slice",exported_node="test-node-1",le="50"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="system.slice",exported_node="test-node-1",le="100"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="system.slice",exported_node="test-node-1",le="200"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="system.slice",exported_node="test-node-1",le="400"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="system.slice",exported_node="test-node-1",le="800"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="system.slice",exported_node="test-node-1",le="1600"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_bucket{cgroup="system.slice",exported_node="test-node-1",le="+Inf"} 1
+kube_usage_node_hist_avg_root_utilization_memory_bytes_sum{cgroup="system.slice",exported_node="test-node-1"} 0
+kube_usage_node_hist_avg_root_utilization_memory_bytes_count{cgroup="system.slice",exported_node="test-node-1"} 1
+# HELP kube_usage_node_hist_avg_system_utilization_cpu_cores kube_usage_node_hist_avg_system_utilization_cpu_cores
+# TYPE kube_usage_node_hist_avg_system_utilization_cpu_cores histogram
+kube_usage_node_hist_avg_system_utilization_cpu_cores_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="1.1e-06"} 0
+kube_usage_node_hist_avg_system_utilization_cpu_cores_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="2.1e-06"} 0
+kube_usage_node_hist_avg_system_utilization_cpu_cores_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="3.1e-06"} 0
+kube_usage_node_hist_avg_system_utilization_cpu_cores_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="4.1e-06"} 0
+kube_usage_node_hist_avg_system_utilization_cpu_cores_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="5.1e-06"} 0
+kube_usage_node_hist_avg_system_utilization_cpu_cores_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="+Inf"} 1
+kube_usage_node_hist_avg_system_utilization_cpu_cores_sum{cgroup="kubelet.service",exported_node="test-node-1"} 1.1000000000000001e-05
+kube_usage_node_hist_avg_system_utilization_cpu_cores_count{cgroup="kubelet.service",exported_node="test-node-1"} 1
+# HELP kube_usage_node_hist_avg_system_utilization_memory_bytes kube_usage_node_hist_avg_system_utilization_memory_bytes
+# TYPE kube_usage_node_hist_avg_system_utilization_memory_bytes histogram
+kube_usage_node_hist_avg_system_utilization_memory_bytes_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="50"} 0
+kube_usage_node_hist_avg_system_utilization_memory_bytes_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="100"} 0
+kube_usage_node_hist_avg_system_utilization_memory_bytes_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="200"} 0
+kube_usage_node_hist_avg_system_utilization_memory_bytes_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="400"} 0
+kube_usage_node_hist_avg_system_utilization_memory_bytes_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="800"} 1
+kube_usage_node_hist_avg_system_utilization_memory_bytes_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="1600"} 1
+kube_usage_node_hist_avg_system_utilization_memory_bytes_bucket{cgroup="kubelet.service",exported_node="test-node-1",le="+Inf"} 1
+kube_usage_node_hist_avg_system_utilization_memory_bytes_sum{cgroup="kubelet.service",exported_node="test-node-1"} 650
+kube_usage_node_hist_avg_system_utilization_memory_bytes_count{cgroup="kubelet.service",exported_node="test-node-1"} 1
+# HELP kube_usage_node_hist_avg_utilization_cpu_cores kube_usage_node_hist_avg_utilization_cpu_cores
+# TYPE kube_usage_node_hist_avg_utilization_cpu_cores histogram
+kube_usage_node_hist_avg_utilization_cpu_cores_bucket{cgroup=".",exported_node="test-node-1",le="1.1e-06"} 0
+kube_usage_node_hist_avg_utilization_cpu_cores_bucket{cgroup=".",exported_node="test-node-1",le="2.1e-06"} 0
+kube_usage_node_hist_avg_utilization_cpu_cores_bucket{cgroup=".",exported_node="test-node-1",le="3.1e-06"} 1
+kube_usage_node_hist_avg_utilization_cpu_cores_bucket{cgroup=".",exported_node="test-node-1",le="4.1e-06"} 1
+kube_usage_node_hist_avg_utilization_cpu_cores_bucket{cgroup=".",exported_node="test-node-1",le="5.1e-06"} 1
+kube_usage_node_hist_avg_utilization_cpu_cores_bucket{cgroup=".",exported_node="test-node-1",le="+Inf"} 1
+kube_usage_node_hist_avg_utilization_cpu_cores_sum{cgroup=".",exported_node="test-node-1"} 3e-06
+kube_usage_node_hist_avg_utilization_cpu_cores_count{cgroup=".",exported_node="test-node-1"} 1
+# HELP kube_usage_node_hist_avg_utilization_memory_bytes kube_usage_node_hist_avg_utilization_memory_bytes
+# TYPE kube_usage_node_hist_avg_utilization_memory_bytes histogram
+kube_usage_node_hist_avg_utilization_memory_bytes_bucket{cgroup=".",exported_node="test-node-1",le="50"} 1
+kube_usage_node_hist_avg_utilization_memory_bytes_bucket{cgroup=".",exported_node="test-node-1",le="100"} 1
+kube_usage_node_hist_avg_utilization_memory_bytes_bucket{cgroup=".",exported_node="test-node-1",le="200"} 1
+kube_usage_node_hist_avg_utilization_memory_bytes_bucket{cgroup=".",exported_node="test-node-1",le="400"} 1
+kube_usage_node_hist_avg_utilization_memory_bytes_bucket{cgroup=".",exported_node="test-node-1",le="800"} 1
+kube_usage_node_hist_avg_utilization_memory_bytes_bucket{cgroup=".",exported_node="test-node-1",le="1600"} 1
+kube_usage_node_hist_avg_utilization_memory_bytes_bucket{cgroup=".",exported_node="test-node-1",le="+Inf"} 1
+kube_usage_node_hist_avg_utilization_memory_bytes_sum{cgroup=".",exported_node="test-node-1"} 0
+kube_usage_node_hist_avg_utilization_memory_bytes_count{cgroup=".",exported_node="test-node-1"} 1
 # HELP kube_usage_node_hist_root_utilization_cpu_cores kube_usage_node_hist_root_utilization_cpu_cores
 # TYPE kube_usage_node_hist_root_utilization_cpu_cores histogram
 kube_usage_node_hist_root_utilization_cpu_cores_bucket{cgroup="kubelet",exported_node="test-node-1",le="1.1e-06"} 0
@@ -78,6 +158,26 @@ kube_usage_node_hist_utilization_memory_bytes_bucket{cgroup=".",exported_node="t
 kube_usage_node_hist_utilization_memory_bytes_bucket{cgroup=".",exported_node="test-node-1",le="+Inf"} 5
 kube_usage_node_hist_utilization_memory_bytes_sum{cgroup=".",exported_node="test-node-1"} 0
 kube_usage_node_hist_utilization_memory_bytes_count{cgroup=".",exported_node="test-node-1"} 5
+# HELP kube_usage_node_p95_avg_root_utilization_cpu_cores kube_usage_node_p95_avg_root_utilization_cpu_cores
+# TYPE kube_usage_node_p95_avg_root_utilization_cpu_cores gauge
+kube_usage_node_p95_avg_root_utilization_cpu_cores{cgroup="kubelet",exported_node="test-node-1"} 3e-06
+kube_usage_node_p95_avg_root_utilization_cpu_cores{cgroup="system.slice",exported_node="test-node-1"} 3e-06
+# HELP kube_usage_node_p95_avg_root_utilization_memory_bytes kube_usage_node_p95_avg_root_utilization_memory_bytes
+# TYPE kube_usage_node_p95_avg_root_utilization_memory_bytes gauge
+kube_usage_node_p95_avg_root_utilization_memory_bytes{cgroup="kubelet",exported_node="test-node-1"} 0
+kube_usage_node_p95_avg_root_utilization_memory_bytes{cgroup="system.slice",exported_node="test-node-1"} 0
+# HELP kube_usage_node_p95_avg_system_utilization_cpu_cores kube_usage_node_p95_avg_system_utilization_cpu_cores
+# TYPE kube_usage_node_p95_avg_system_utilization_cpu_cores gauge
+kube_usage_node_p95_avg_system_utilization_cpu_cores{cgroup="kubelet.service",exported_node="test-node-1"} 1.1000000000000001e-05
+# HELP kube_usage_node_p95_avg_system_utilization_memory_bytes kube_usage_node_p95_avg_system_utilization_memory_bytes
+# TYPE kube_usage_node_p95_avg_system_utilization_memory_bytes gauge
+kube_usage_node_p95_avg_system_utilization_memory_bytes{cgroup="kubelet.service",exported_node="test-node-1"} 650
+# HELP kube_usage_node_p95_avg_utilization_cpu_cores kube_usage_node_p95_avg_utilization_cpu_cores
+# TYPE kube_usage_node_p95_avg_utilization_cpu_cores gauge
+kube_usage_node_p95_avg_utilization_cpu_cores{cgroup=".",exported_node="test-node-1"} 3e-06
+# HELP kube_usage_node_p95_avg_utilization_memory_bytes kube_usage_node_p95_avg_utilization_memory_bytes
+# TYPE kube_usage_node_p95_avg_utilization_memory_bytes gauge
+kube_usage_node_p95_avg_utilization_memory_bytes{cgroup=".",exported_node="test-node-1"} 0
 # HELP kube_usage_node_p95_root_utilization_cpu_cores kube_usage_node_p95_root_utilization_cpu_cores
 # TYPE kube_usage_node_p95_root_utilization_cpu_cores gauge
 kube_usage_node_p95_root_utilization_cpu_cores{cgroup="kubelet",exported_node="test-node-1"} 4.000000000000001e-06

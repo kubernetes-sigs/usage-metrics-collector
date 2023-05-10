@@ -30,7 +30,11 @@ type MetricsNodeSampler struct {
 	PBPort int `json:"pbPort" yaml:"pbPort"`
 
 	// RestPort is the port to bind for the REST endpoint
-	RestPort                  int `json:"restPort" yaml:"restPort"`
+	RestPort int `json:"restPort" yaml:"restPort"`
+
+	// Address is used by tests to bind to localhost
+	Address string `json:"address,omitempty" yaml:"address,omitempty"`
+
 	SendPushMetricsRetryCount int `json:"sendPushMetricsRetryCount" yaml:"sendPushMetricsRetryCount"`
 
 	DEPRECATED_PushService   string `json:"pushAddress" yaml:"pushAddress"` // TODO: Remove this
