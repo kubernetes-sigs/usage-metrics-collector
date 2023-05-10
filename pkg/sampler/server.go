@@ -478,14 +478,33 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			ContainerName: k.ContainerName,
 			PodName:       k.PodName,
 			NamespaceName: k.NamespaceName,
+
+			CpuCoresNanoSec:            make([]int64, 0, len(v.values)),
+			CpuThrottledNanoSec:        make([]int64, 0, len(v.values)),
+			CpuPercentPeriodsThrottled: make([]float32, 0, len(v.values)),
+			MemoryBytes:                make([]int64, 0, len(v.values)),
+			CpuPeriodsSec:              make([]int64, 0, len(v.values)),
+			CpuThrottledPeriodsSec:     make([]int64, 0, len(v.values)),
+
+			AvgCPUCoresNanoSec:            int64(v.avg.CPUCoresNanoSec),
+			AvgCPUThrottledNanoSec:        int64(v.avg.CPUThrottledUSec),
+			AvgCPUPercentPeriodsThrottled: float32(v.avg.CPUPercentPeriodsThrottled),
+			AvgMemoryBytes:                int64(v.avg.MemoryBytes),
+			TotalOOMCount:                 int64(v.avg.CumulativeMemoryOOM),
+			TotalOOMKillCount:             int64(v.avg.CumulativeMemoryOOMKill),
+			AvgCPUPeriodsSec:              int64(v.avg.CPUPeriodsSec),
+			AvgCPUThrottledPeriodsSec:     int64(v.avg.CPUThrottledPeriodsSec),
 		}
-		for _, s := range v {
+		for i := range v.values {
+			if i == 0 {
+				// skip the first value to be consistent with how mean is calculated
+				continue
+			}
+			s := v.values[i]
 			c.CpuCoresNanoSec = append(c.CpuCoresNanoSec, int64(s.CPUCoresNanoSec))
 			c.CpuThrottledNanoSec = append(c.CpuThrottledNanoSec, int64(s.CPUThrottledUSec))
 			c.CpuPercentPeriodsThrottled = append(c.CpuPercentPeriodsThrottled, float32(s.CPUPercentPeriodsThrottled))
 			c.MemoryBytes = append(c.MemoryBytes, int64(s.MemoryBytes))
-			c.OomCount = append(c.OomCount, int64(s.CumulativeMemoryOOM))
-			c.OomKillCount = append(c.OomKillCount, int64(s.CumulativeMemoryOOMKill))
 			c.CpuPeriodsSec = append(c.CpuPeriodsSec, int64(s.CPUPeriodsSec))
 			c.CpuThrottledPeriodsSec = append(c.CpuThrottledPeriodsSec, int64(s.CPUThrottledPeriodsSec))
 		}
@@ -494,8 +513,6 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			sort.Sort(Int64Slice(c.CpuCoresNanoSec))
 			sort.Sort(Int64Slice(c.CpuThrottledNanoSec))
 			sort.Sort(Int64Slice(c.MemoryBytes))
-			sort.Sort(Int64Slice(c.OomCount))
-			sort.Sort(Int64Slice(c.OomKillCount))
 			sort.Sort(Float32Slice(c.CpuPercentPeriodsThrottled))
 			sort.Sort(Int64Slice(c.CpuPeriodsSec))
 			sort.Sort(Int64Slice(c.CpuThrottledPeriodsSec))
@@ -506,21 +523,29 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 	var node api.NodeMetrics
 
 	for level, values := range samples.node {
-		var CpuCoresNanoSec, MemoryBytes []int64
-		for _, value := range values {
-			CpuCoresNanoSec = append(CpuCoresNanoSec, int64(value.CPUCoresNanoSec))
-			MemoryBytes = append(MemoryBytes, int64(value.MemoryBytes))
+		cpuCoresNanoSec := make([]int64, 0, len(values.values)-1)
+		memoryBytes := make([]int64, 0, len(values.values)-1)
+		for i := range values.values {
+			if i == 0 {
+				// skip the first value to be consistent with how mean is calculated
+				continue
+			}
+			value := values.values[i]
+			cpuCoresNanoSec = append(cpuCoresNanoSec, int64(value.CPUCoresNanoSec))
+			memoryBytes = append(memoryBytes, int64(value.MemoryBytes))
 		}
 
 		if s.SortResults {
-			sort.Sort(Int64Slice(CpuCoresNanoSec))
-			sort.Sort(Int64Slice(MemoryBytes))
+			sort.Sort(Int64Slice(cpuCoresNanoSec))
+			sort.Sort(Int64Slice(memoryBytes))
 		}
 
 		nodeAggregatedMetrics := api.NodeAggregatedMetrics{
-			AggregationLevel: string(level),
-			CpuCoresNanoSec:  CpuCoresNanoSec,
-			MemoryBytes:      MemoryBytes,
+			AggregationLevel:   string(level),
+			CpuCoresNanoSec:    cpuCoresNanoSec,
+			MemoryBytes:        memoryBytes,
+			AvgCPUCoresNanoSec: int64(values.avg.CPUCoresNanoSec),
+			AvgMemoryBytes:     int64(values.avg.MemoryBytes),
 		}
 
 		node.AggregatedMetrics = append(node.AggregatedMetrics, &nodeAggregatedMetrics)

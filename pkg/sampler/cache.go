@@ -98,8 +98,8 @@ func (s *sampleCache) getAllSamples() (allSampleInstants, int) {
 	}()
 
 	all := allSampleInstants{
-		containers: map[ContainerKey]sampleInstantSlice{},
-		node:       map[samplerserverv1alpha1.NodeAggregationLevel]sampleInstantSlice{},
+		containers: map[ContainerKey]*sampleResult{},
+		node:       map[samplerserverv1alpha1.NodeAggregationLevel]*sampleResult{},
 	}
 	for i := range samples {
 		sample := samples[i]
@@ -117,24 +117,45 @@ func (s *sampleCache) getAllSamples() (allSampleInstants, int) {
 				// filter samples outside the acceptable range
 				continue
 			}
-			all.containers[k] = append(all.containers[k], v)
+			c, ok := all.containers[k]
+			if !ok {
+				// we don't know if this container has all sample, but allocate the space anyway
+				c = &sampleResult{values: make([]sampleInstant, 0, len(samples))}
+				all.containers[k] = c
+			}
+			c.values = append(c.values, v)
 		}
 
-		for level, values := range sample.node {
-			if !values.HasCPUData {
+		for level, v := range sample.node {
+			if !v.HasCPUData {
 				// sample is missing normalized CPU information, skip it rather than returning 0 values
 				continue
 			}
-			if values.CPUCoresNanoSec > uint64(s.metricsReader.MaxCPUCoresNanoSec) {
+			if v.CPUCoresNanoSec > uint64(s.metricsReader.MaxCPUCoresNanoSec) {
 				// filter samples outside the acceptable range
 				continue
 			}
-			if int64(values.CPUCoresNanoSec) < s.metricsReader.MinCPUCoresNanoSec {
+			if int64(v.CPUCoresNanoSec) < s.metricsReader.MinCPUCoresNanoSec {
 				// filter samples outside the acceptable range
 				continue
 			}
-			all.node[level] = append(all.node[level], values)
+
+			n, ok := all.node[level]
+			if !ok {
+				// we don't know if this container has all sample, but allocate the space anyway
+				n = &sampleResult{values: make([]sampleInstant, 0, len(samples))}
+				all.node[level] = n
+			}
+			n.values = append(n.values, v)
 		}
+	}
+	for _, c := range all.containers {
+		// populate the mean values
+		populateSummary(c)
+	}
+	for _, n := range all.node {
+		// populate the mean values
+		populateSummary(n)
 	}
 
 	log.V(3).Info("returning samples", "count", len(all.containers))
@@ -297,9 +318,15 @@ func (s *sampleCache) metricToSample(
 		CumulativeMemoryOOM:           memory.OOMs,
 	}
 
+	computeSampleDelta(&last, &sample)
+
+	return sample
+}
+
+func computeSampleDelta(last, sample *sampleInstant) {
 	if last.Time.IsZero() {
 		// only compute rate if the last sample was set
-		return sample
+		return
 	}
 
 	// this should be roughly equal to the polling period, but we don't know for sure
@@ -318,12 +345,37 @@ func (s *sampleCache) metricToSample(
 		// Avoid posting a NaN if no scheduling periods have elapsed
 		sample.CPUPercentPeriodsThrottled = (float64(sample.CumulativeCPUThrottledPeriods) - float64(last.CumulativeCPUThrottledPeriods)) / deltaPeriods
 	}
+}
 
-	return sample
+func populateSummary(sr *sampleResult) {
+	count := int64(len(sr.values))
+	if count < 2 {
+		// don't have enough samples to have a meaningful summary
+		return
+	}
+
+	// compute mean using the cumulative values from the first and last samples
+	// NOTE: the first sample has a cpu value that we will not be
+	// able to calculate because it is computed from the difference of
+	// a sample that is no longer stored
+	first := sr.values[0]
+	sr.avg = sr.values[len(sr.values)-1]
+	computeSampleDelta(&first, &sr.avg)
+
+	var b uint64
+	for i := range sr.values {
+		if i == 0 {
+			continue
+		}
+		v := sr.values[i]
+		b += v.MemoryBytes
+	}
+	b /= uint64(len(sr.values) - 1)
+	sr.avg.MemoryBytes = b
 }
 
 // getSeconds returns the number of seconds between 2 samples
-func getSeconds(old, new sampleInstant) float64 {
+func getSeconds(old, new *sampleInstant) float64 {
 	return new.Time.Sub(old.Time).Seconds()
 }
 

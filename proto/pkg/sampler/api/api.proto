@@ -56,7 +56,7 @@ message ListMetricsResponse {
 }
 
 message ContainerMetrics {
-    // nextID: 15
+    // nextID: 23
 
     string containerID =1;
     string podUID=2;
@@ -74,6 +74,17 @@ message ContainerMetrics {
     repeated int64 cpuThrottledPeriodsSec=10;
 
     string nodeName=11;
+
+    int64 avgCPUCoresNanoSec=15;
+
+    int64 avgMemoryBytes=16;
+    int64 totalOOMCount=17;
+    int64 totalOOMKillCount=18;
+
+    float avgCPUPercentPeriodsThrottled=19;
+    int64 avgCPUThrottledNanoSec=20;
+    int64 avgCPUPeriodsSec=21;
+    int64 avgCPUThrottledPeriodsSec=22;
 }
 
 message NodeMetrics {
@@ -84,6 +95,9 @@ message NodeAggregatedMetrics {
     string aggregationLevel=1;
     repeated int64 cpuCoresNanoSec=2;
     repeated int64 memoryBytes=3;
+
+    int64 avgCPUCoresNanoSec=4;
+    int64 avgMemoryBytes=5;
 }
 
 service MetricsCollector {

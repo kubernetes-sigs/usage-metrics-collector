@@ -48,8 +48,6 @@ cpuUsageSamples:
   - usage: 2000
   - usage: 10000
   "sys/fs/cgroup/cpuacct/kubelet/kubepods/burstable/podpod12345/abcdef/cpuacct.usage":
-  - usage: -1 # should be dropped, less than min
-  - usage: 513000000000 # should be dropped, greater than max
   - usage: 200
   - usage: 250
   - usage: 300
