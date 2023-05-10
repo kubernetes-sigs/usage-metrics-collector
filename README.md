@@ -22,6 +22,9 @@ Why not just use promql and recording rules?
 
 A sample of the exposed metrics is available in [METRICS.md](METRICS.md).
 
+In addition to these metrics, a series of performance related metrics are published for the collection process.
+These metrics are documented in [performance analysis document](docs/performance-analysis.md).
+
 ## Getting started
 
 **Note**: No usage-metrics-collector container image is publicly hosted.  Folks will need to build and publish
