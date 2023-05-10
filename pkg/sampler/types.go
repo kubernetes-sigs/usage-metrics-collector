@@ -80,10 +80,17 @@ type sampleInstants struct {
 
 type sampleInstantSlice []sampleInstant
 
+type sampleResult struct {
+	values       sampleInstantSlice
+	avg          sampleInstant
+	totalOOM     int64
+	totalOOMKill int64
+}
+
 // allSampleInstants are all the samples in the cache
 type allSampleInstants struct {
-	containers map[ContainerKey]sampleInstantSlice
-	node       map[samplerserverv1alpha1.NodeAggregationLevel]sampleInstantSlice
+	containers map[ContainerKey]*sampleResult
+	node       map[samplerserverv1alpha1.NodeAggregationLevel]*sampleResult
 }
 
 const (

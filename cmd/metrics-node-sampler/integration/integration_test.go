@@ -139,7 +139,9 @@ func setupTests(t *testing.T, f func([]int) string) {
 				MetricsNodeSampler: samplerserverv1alpha1.MetricsNodeSampler{
 					Buffer: samplerserverv1alpha1.Buffer{
 						PollsPerMinute: 600, // poll frequently -- the clock is faked so this is just for the ticker
-						Size:           5,   // store exactly 5 samples -- this must match the numer of samples in the testdata
+						// store exactly 5 samples -- this must match the numer of samples in the testdata +1
+						// this is because we throw away the first sample
+						Size: sampleSize + 1,
 					},
 					Reader: samplerserverv1alpha1.Reader{
 						CPUPaths: []samplerserverv1alpha1.MetricsFilepath{
@@ -180,7 +182,7 @@ func setupTests(t *testing.T, f func([]int) string) {
 				// poll until the server has populated its sample cache
 				return len(result.Containers[0].CpuCoresNanoSec) >= sampleSize
 
-			}, time.Second*60, time.Second)
+			}, time.Minute*2, 2*time.Second)
 
 			// TODO: test adding a new pod and getting the metrics within ~seconds with
 			// a reason for the new pod
@@ -316,8 +318,18 @@ func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
 		index := fakeFS.index[name] % len(val)
 		fakeFS.index[name] = (index + 1)
 		newVal := val[index]
-		b := fmt.Sprintf("oom_kill %d\n", newVal.OOMKill)
-		err := os.WriteFile(filepath.Join(fakeFS.root, name), []byte(b), 0600)
+
+		b, err := os.ReadFile(filepath.Join(fakeFS.root, name))
+		if err != nil {
+			return nil, err
+		}
+		old := strings.Split(string(b), " ")[1]
+		i, err := strconv.Atoi(old)
+		if err != nil {
+			return nil, err
+		}
+		i += newVal.OOMKill
+		err = os.WriteFile(filepath.Join(fakeFS.root, name), []byte(fmt.Sprintf("oom_kill %d", i)), 0600)
 		if err != nil {
 			return nil, err
 		}
@@ -326,8 +338,16 @@ func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
 		index := fakeFS.index[name] % len(val)
 		fakeFS.index[name] = (index + 1)
 		newVal := val[index]
-		b := fmt.Sprintf("%d", newVal)
-		err := os.WriteFile(filepath.Join(fakeFS.root, name), []byte(b), 0600)
+		b, err := os.ReadFile(filepath.Join(fakeFS.root, name))
+		if err != nil {
+			return nil, err
+		}
+		i, err := strconv.Atoi(string(b))
+		if err != nil {
+			return nil, err
+		}
+		i += int(newVal)
+		err = os.WriteFile(filepath.Join(fakeFS.root, name), []byte(fmt.Sprintf("%d", i)), 0600)
 		if err != nil {
 			return nil, err
 		}

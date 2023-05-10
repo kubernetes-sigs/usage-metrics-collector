@@ -20,20 +20,8 @@
 				"340",
 				"430"
 			],
-			"oomCount": [
-				"0",
-				"1",
-				"2",
-				"4",
-				"21"
-			],
-			"oomKillCount": [
-				"0",
-				"0",
-				"1",
-				"2",
-				"4"
-			],
+			"oomCount": [],
+			"oomKillCount": [],
 			"cpuThrottledNanoSec": [
 				"0",
 				"0",
@@ -62,7 +50,15 @@
 				"100",
 				"500"
 			],
-			"nodeName": ""
+			"nodeName": "",
+			"avgCPUCoresNanoSec": "390",
+			"avgMemoryBytes": "310",
+			"totalOOMCount": "211",
+			"totalOOMKillCount": "29",
+			"avgCPUPercentPeriodsThrottled": 0.1625,
+			"avgCPUThrottledNanoSec": "70",
+			"avgCPUPeriodsSec": "800",
+			"avgCPUThrottledPeriodsSec": "130"
 		}
 	],
 	"node": {
@@ -82,7 +78,9 @@
 					"0",
 					"0",
 					"0"
-				]
+				],
+				"avgCPUCoresNanoSec": "5000",
+				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "kubelet",
@@ -99,7 +97,9 @@
 					"0",
 					"0",
 					"0"
-				]
+				],
+				"avgCPUCoresNanoSec": "3000",
+				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "kubelet/kubepods",
@@ -116,7 +116,9 @@
 					"600",
 					"800",
 					"1000"
-				]
+				],
+				"avgCPUCoresNanoSec": "1200",
+				"avgMemoryBytes": "570"
 			},
 			{
 				"aggregationLevel": "kubelet/kubepods/guaranteed",
@@ -133,29 +135,31 @@
 					"150",
 					"170",
 					"300"
-				]
+				],
+				"avgCPUCoresNanoSec": "2740",
+				"avgMemoryBytes": "164"
 			},
 			{
 				"aggregationLevel": "max.slice",
 				"cpuCoresNanoSec": [
-					"2000",
 					"2000"
 				],
 				"memoryBytes": [
-					"0",
 					"0"
-				]
+				],
+				"avgCPUCoresNanoSec": "2000",
+				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "min.slice",
 				"cpuCoresNanoSec": [
-					"1000",
 					"1000"
 				],
 				"memoryBytes": [
-					"0",
 					"0"
-				]
+				],
+				"avgCPUCoresNanoSec": "1000",
+				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "system.slice",
@@ -172,7 +176,9 @@
 					"0",
 					"0",
 					"0"
-				]
+				],
+				"avgCPUCoresNanoSec": "2800",
+				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "system.slice/kubelet.service",
@@ -189,7 +195,9 @@
 					"600",
 					"800",
 					"1000"
-				]
+				],
+				"avgCPUCoresNanoSec": "1200",
+				"avgMemoryBytes": "570"
 			}
 		]
 	},
