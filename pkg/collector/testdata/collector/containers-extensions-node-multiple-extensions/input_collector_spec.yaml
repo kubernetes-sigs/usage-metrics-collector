@@ -5,19 +5,27 @@ resources:
 extensions:
   podLabels:
   - name: pod_annotation # set the label "pod_annotation" on metrics derived from pods
-    annotation: p-a # get the metric label value from the pod annotation "p-a"
+    annotations:
+    - p-a-1 # get the metric label value from the pod annotation "p-a"
+    - p-a-2 # get the metric label value from the pod annotation "p-a"
   - name: pod_label # set the label "pod_label" on metrics derived from pods
-    label: p-l # get the metric label value from the pod label "p-l"
+    labels:
+    - p-l-1 # get the metric label value from the pod label "p-l"
+    - p-l-2 # get the metric label value from the pod label "p-l"
   namespaceLabels:
   - name: namespace_annotation # set the label "namespace_annotation" on metrics which have namespace (container, pod, quota)
-    annotation: n-a # get the metric label value from the namespace annotation "n-a"
+    annotations:
+    - n-a # get the metric label value from the namespace annotation "n-a"
   - name: namespace_label
-    label: n-l
+    labels:
+    - n-l
   nodeLabels:
   - name: node_annotation  # set the label "node_annotation" on metrics which have a node (container, pod, node)
-    annotation: nd-a # get the metric label value from the node annotation "nd-a"
+    annotations:
+    - nd-a # get the metric label value from the node annotation "nd-a"
   - name: node_label
-    label: nd-l
+    labels:
+    - nd-l
 aggregations:
 - sources:
     type: "container" # use container sources

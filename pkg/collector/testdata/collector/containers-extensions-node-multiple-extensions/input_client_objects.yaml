@@ -5,9 +5,9 @@ metadata:
   namespace: test-namespace-1
   labels:
     app: app-1
-    "p-l": "pod-label-value"
+    "p-l-1": "pod-label-value"
   annotations:
-    "p-a": "pod-annotation-value"
+    "p-a-1": "pod-annotation-value"
   ownerReferences:
     - apiVersion: apps/v1
       controller: true
@@ -45,9 +45,9 @@ metadata:
   namespace: test-namespace-1
   labels:
     app: app-1
-    "p-l": "pod-label-value"
+    "p-l-2": "pod-label-value"
   annotations:
-    "p-a": "pod-annotation-value"
+    "p-a-2": "pod-annotation-value"
   ownerReferences:
     - apiVersion: apps/v1
       controller: true
@@ -211,4 +211,3 @@ metadata:
     nd-l: node-label-value-1
   annotations:
     nd-a: node-annotation-value-1
- 
