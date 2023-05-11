@@ -33,7 +33,8 @@ func TestGetCGroupMetricSource(t *testing.T) {
 						Name: "system",
 					},
 					"/kubepods": {
-						Name: "kubelet",
+						Name:    "kubelet",
+						AvgName: "avg_kubelet",
 					},
 					"/": {
 						Name: "node",
@@ -47,14 +48,14 @@ func TestGetCGroupMetricSource(t *testing.T) {
 	}
 	instance.UtilizationServer.IsReadyResult.Store(true)
 	instance.IsLeaderElected.Store(true)
-	expected := map[string]collectorcontrollerv1alpha1.Source{
-		"system.slice/foo/bar": "", // not present
-		"system.slice/foo":     "system",
-		"kubepods/besteffort":  "kubelet",
-		"kubepods/guaranteed":  "kubelet",
-		"system.slice":         "node",
-		"kubepods":             "node",
-		"":                     "root",
+	expected := map[string]collectorcontrollerv1alpha1.CGroupMetric{
+		"system.slice/foo/bar": {Name: ""}, // not present
+		"system.slice/foo":     {Name: "system"},
+		"kubepods/besteffort":  {Name: "kubelet", AvgName: "avg_kubelet"},
+		"kubepods/guaranteed":  {Name: "kubelet", AvgName: "avg_kubelet"},
+		"system.slice":         {Name: "node"},
+		"kubepods":             {Name: "node"},
+		"":                     {Name: "root"},
 	}
 	for k, v := range expected {
 		t.Run(k, func(t *testing.T) {

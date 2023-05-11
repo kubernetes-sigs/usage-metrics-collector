@@ -73,6 +73,15 @@ func (r ValueReader) GetValuesForContainer(
 		return values
 	}
 
+	values[collectorcontrollerv1alpha1.AvgContainerUtilizationSource] = value{
+		ResourceList: corev1.ResourceList{
+			collectorcontrollerv1alpha1.ResourceCPU:    *resource.NewScaledQuantity(usage.AvgCPUCoresNanoSec, resource.Nano),
+			collectorcontrollerv1alpha1.ResourceMemory: *resource.NewScaledQuantity(usage.AvgMemoryBytes, resource.Nano),
+		},
+		Level:  collectorcontrollerv1alpha1.ContainerLevel,
+		Source: collectorcontrollerv1alpha1.AvgContainerUtilizationSource,
+	}
+
 	values[collectorcontrollerv1alpha1.ContainerUtilizationSource] = value{
 		MultiResourceList: map[corev1.ResourceName][]resource.Quantity{},
 		Level:             collectorcontrollerv1alpha1.ContainerLevel,
@@ -145,16 +154,45 @@ func (r ValueReader) GetValuesForContainer(
 		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList[collectorcontrollerv1alpha1.ResourceMemory] = requestsMinusUtilization
 	}
 
-	if len(usage.CpuPeriodsSec) == 0 || len(usage.CpuThrottledPeriodsSec) == 0 || len(usage.OomKillCount) == 0 {
+	if len(usage.CpuPeriodsSec) == 0 || len(usage.CpuThrottledPeriodsSec) == 0 {
 		return values
 	}
 
 	// get nr_period values
 	values[collectorcontrollerv1alpha1.NRPeriodsSource] = createValue(pod, usage.CpuPeriodsSec, collectorcontrollerv1alpha1.NRPeriodsSource, collectorcontrollerv1alpha1.ResourcePeriods)
+	values[collectorcontrollerv1alpha1.AvgNRPeriodsSource] = value{
+		ResourceList: corev1.ResourceList{
+			collectorcontrollerv1alpha1.ResourcePeriods: *resource.NewQuantity(usage.AvgCPUPeriodsSec, resource.DecimalSI),
+		},
+		Level:  collectorcontrollerv1alpha1.ContainerLevel,
+		Source: collectorcontrollerv1alpha1.AvgNRPeriodsSource,
+	}
+
 	// get nr_period values
 	values[collectorcontrollerv1alpha1.NRThrottledSource] = createValue(pod, usage.CpuThrottledPeriodsSec, collectorcontrollerv1alpha1.NRThrottledSource, collectorcontrollerv1alpha1.ResourcePeriods)
-	// get oom kill counter values
-	values[collectorcontrollerv1alpha1.OOMKillCountSource] = createValue(pod, usage.OomKillCount, collectorcontrollerv1alpha1.OOMKillCountSource, collectorcontrollerv1alpha1.ResourceItems)
+	values[collectorcontrollerv1alpha1.AvgNRThrottledSource] = value{
+		ResourceList: corev1.ResourceList{
+			collectorcontrollerv1alpha1.ResourcePeriods: *resource.NewQuantity(usage.AvgCPUThrottledPeriodsSec, resource.DecimalSI),
+		},
+		Level:  collectorcontrollerv1alpha1.ContainerLevel,
+		Source: collectorcontrollerv1alpha1.AvgNRThrottledSource,
+	}
+
+	// get oom / oom kill counter values
+	values[collectorcontrollerv1alpha1.OOMKillCountSource] = value{
+		ResourceList: corev1.ResourceList{
+			collectorcontrollerv1alpha1.ResourceItems: *resource.NewQuantity(usage.OomKillCount, resource.DecimalSI),
+		},
+		Level:  collectorcontrollerv1alpha1.ContainerLevel,
+		Source: collectorcontrollerv1alpha1.OOMKillCountSource,
+	}
+	values[collectorcontrollerv1alpha1.OOMCountSource] = value{
+		ResourceList: corev1.ResourceList{
+			collectorcontrollerv1alpha1.ResourceItems: *resource.NewQuantity(usage.OomCount, resource.DecimalSI),
+		},
+		Level:  collectorcontrollerv1alpha1.ContainerLevel,
+		Source: collectorcontrollerv1alpha1.OOMCountSource,
+	}
 
 	return values
 }

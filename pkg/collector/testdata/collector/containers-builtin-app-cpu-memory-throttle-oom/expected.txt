@@ -13,7 +13,7 @@ kube_usage_workload_avg_sum_nr_throttled_per_second{app="app-1",exported_contain
 # HELP kube_usage_workload_avg_sum_oom_kill_items kube_usage_workload_avg_sum_oom_kill_items
 # TYPE kube_usage_workload_avg_sum_oom_kill_items gauge
 kube_usage_workload_avg_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 0
-kube_usage_workload_avg_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 5.25
+kube_usage_workload_avg_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 5
 kube_usage_workload_avg_sum_oom_kill_items{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 2
 kube_usage_workload_avg_sum_oom_kill_items{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 6
 # HELP kube_usage_workload_max_sum_nr_periods_per_second kube_usage_workload_max_sum_nr_periods_per_second
@@ -31,7 +31,7 @@ kube_usage_workload_max_sum_nr_throttled_per_second{app="app-1",exported_contain
 # HELP kube_usage_workload_max_sum_oom_kill_items kube_usage_workload_max_sum_oom_kill_items
 # TYPE kube_usage_workload_max_sum_oom_kill_items gauge
 kube_usage_workload_max_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 0
-kube_usage_workload_max_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 8
+kube_usage_workload_max_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 7
 kube_usage_workload_max_sum_oom_kill_items{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 2
 kube_usage_workload_max_sum_oom_kill_items{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 6
 # HELP kube_usage_workload_median_sum_nr_periods_per_second kube_usage_workload_median_sum_nr_periods_per_second
@@ -67,7 +67,7 @@ kube_usage_workload_p95_sum_nr_throttled_per_second{app="app-1",exported_contain
 # HELP kube_usage_workload_p95_sum_oom_kill_items kube_usage_workload_p95_sum_oom_kill_items
 # TYPE kube_usage_workload_p95_sum_oom_kill_items gauge
 kube_usage_workload_p95_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 0
-kube_usage_workload_p95_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 8
+kube_usage_workload_p95_sum_oom_kill_items{app="app-1",exported_container="app",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 3
 kube_usage_workload_p95_sum_oom_kill_items{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-1"} 2
 kube_usage_workload_p95_sum_oom_kill_items{app="app-1",exported_container="log-aggregator",exported_namespace="test-namespace-1",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="deployment",workload_name="test-deployment-2"} 6
 # HELP metrics_prometheus_collector_container_usage_result The number of containers missing usage information

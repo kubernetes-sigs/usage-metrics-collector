@@ -21,6 +21,20 @@
    },
    "values": [
     {
+     "source": "avg_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "avg_utilization",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
+    {
      "source": "limits_allocated",
      "resourceType": "cpu",
      "values": [
@@ -109,6 +123,20 @@
     "workload_name": "test-deployment-1"
    },
    "values": [
+    {
+     "source": "avg_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "avg_utilization",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
     {
      "source": "limits_allocated",
      "resourceType": "cpu",
@@ -199,6 +227,20 @@
    },
    "values": [
     {
+     "source": "avg_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "avg_utilization",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
+    {
      "source": "limits_allocated",
      "resourceType": "cpu",
      "values": [
@@ -287,6 +329,20 @@
     "workload_name": "test-deployment-2"
    },
    "values": [
+    {
+     "source": "avg_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "avg_utilization",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
     {
      "source": "limits_allocated",
      "resourceType": "cpu",
@@ -377,6 +433,20 @@
    },
    "values": [
     {
+     "source": "avg_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "avg_utilization",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
+    {
      "source": "limits_allocated",
      "resourceType": "cpu",
      "values": [
@@ -465,6 +535,20 @@
     "workload_name": "test-deployment-1"
    },
    "values": [
+    {
+     "source": "avg_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "avg_utilization",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
     {
      "source": "limits_allocated",
      "resourceType": "cpu",
@@ -555,6 +639,20 @@
    },
    "values": [
     {
+     "source": "avg_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "avg_utilization",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
+    {
      "source": "limits_allocated",
      "resourceType": "cpu",
      "values": [
@@ -643,6 +741,20 @@
     "workload_name": "test-deployment-2"
    },
    "values": [
+    {
+     "source": "avg_utilization",
+     "resourceType": "cpu",
+     "values": [
+      0
+     ]
+    },
+    {
+     "source": "avg_utilization",
+     "resourceType": "memory",
+     "values": [
+      0
+     ]
+    },
     {
      "source": "limits_allocated",
      "resourceType": "cpu",

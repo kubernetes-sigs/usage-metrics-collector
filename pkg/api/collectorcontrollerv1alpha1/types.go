@@ -427,6 +427,10 @@ const (
 	// And must have a non-sum operation applied before being summed.
 	ContainerUtilizationSource Source = "utilization"
 
+	// AvgContainerUtilizationSource corresponds to the pre-computed mean for the `utilization` source.
+	// The mean is computed by the node-samplers over the samples for a single container.
+	AvgContainerUtilizationSource Source = "avg_utilization"
+
 	// ContainerRequestsAllocatedMinusUtilizationSource is the source for
 	// container requests allocated minus utilization. (type: container) Note:
 	// this source contains multiple samples over-time for each container and
@@ -437,22 +441,43 @@ const (
 	// nr_periods is number of periods that any thread in the cgroup was runnable
 	NRPeriodsSource Source = "nr_periods"
 
+	// AvgNRPeriodsSource corresponds to the pre-computed mean for the `nr_periods` source.
+	// The mean is computed by the node-samplers over the samples for a single container.
+	AvgNRPeriodsSource Source = "avg_nr_periods"
+
 	// NRThrottledSource is the source for nr_throttled per sec
 	// throttled_time is the total time individual threads within the cgroup were throttled
 	NRThrottledSource Source = "nr_throttled"
 
-	// OOMKillCountSource is the source for OOM Kill counter
+	// AvgNRThrottledSource corresponds to the pre-computed mean for the `nr_throttled` source.
+	// The mean is computed by the node-samplers over the samples for a single container.
+	AvgNRThrottledSource Source = "avg_nr_throttled"
+
+	// OOMKillCountSource is the source for OOM Kill counter.  It is the total
+	// oom kill events during the sampling window on the node-sampler.
+	// This corresponds to the value read from the `memory.oom_control`` file.
+	// This corresponds to the containerd v1.Metrics field `MemoryOomControl.OomKill`.
 	OOMKillCountSource Source = "oom_kill"
+
+	// OOMCountSource is the source for OOM counter.
+	// It is the total oom events during the sampling window on the node-sampler.
+	// This corresponds to the value read from the `memory.failcnt`` file.
+	// This corresponds to the containerd v1.Metrics field `MemoryOomControl.UnderOom`.
+	OOMCountSource Source = "oom"
 )
 
 // ContainerSources contains all of the Source values of SourceType ContainerType.
 var ContainerSources = sets.New(
 	ContainerRequestsAllocatedSource,
 	ContainerLimitsAllocatedSource,
+	AvgContainerUtilizationSource,
 	ContainerUtilizationSource,
 	ContainerRequestsAllocatedMinusUtilizationSource,
+	AvgNRPeriodsSource,
 	NRPeriodsSource,
+	AvgNRThrottledSource,
 	NRThrottledSource,
+	OOMCountSource,
 	OOMKillCountSource,
 )
 
@@ -556,9 +581,6 @@ const (
 	// NodeLimitsSource is the source for node limits.
 	NodeLimitsSource Source = "node_limits"
 
-	// NodeUtilizationSource is the source for node utilization.
-	NodeUtilizationSource Source = "node_utilization"
-
 	// NodeAllocatableMinusRequests is a source that exposes metrics valued as (allocatable - requests).
 	NodeAllocatableMinusRequests Source = "node_allocatable_minus_requests"
 )
@@ -570,7 +592,6 @@ var NodeSources = sets.New(
 	NodeCapacitySource,
 	NodeRequestsSource,
 	NodeLimitsSource,
-	NodeUtilizationSource,
 	NodeAllocatableMinusRequests,
 )
 
@@ -746,17 +767,23 @@ type CGroupMetrics struct {
 	// Sources defines metrics sources from cgroups.  The key is the parent
 	// directory, and the value contains the name that is used for the source
 	// part of each metric name.
-	Sources map[string]CGroupMetric `json:"sources" yaml:"sources"`
+	Sources map[string]CGroupMetric `json:"sources,omitempty" yaml:"sources,omitempty"`
 
 	// RootSource defines the metrics source for the root cgroup. This is a
 	// special case because there is no applicable parent directory for this
 	// cgroup.
-	RootSource CGroupMetric `json:"rootSource" yaml:"rootSource"`
+	RootSource CGroupMetric `json:"rootSource,omitempty" yaml:"rootSource,omitempty"`
 }
 
 type CGroupMetric struct {
 	// Name is the source name that is used for CGroup metrics under a path
-	Name Source `json:"name" yaml:"name"`
+	// It uses the individual sample values provided by the node-sampler.
+	Name Source `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// AvgName is the source name that is used for CGgroup metrics a path.
+	// It uses the aggregate pre-computed average (mean) value provided by
+	// the node-sampler.
+	AvgName Source `json:"avgName,omitempty" yaml:"avgName,omitempty"`
 }
 
 // ClusterScopedMetrics configures how values collected from the cluster control

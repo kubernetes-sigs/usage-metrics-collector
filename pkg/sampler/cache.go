@@ -345,6 +345,9 @@ func computeSampleDelta(last, sample *sampleInstant) {
 		// Avoid posting a NaN if no scheduling periods have elapsed
 		sample.CPUPercentPeriodsThrottled = (float64(sample.CumulativeCPUThrottledPeriods) - float64(last.CumulativeCPUThrottledPeriods)) / deltaPeriods
 	}
+
+	sample.MemoryOOM = sample.CumulativeMemoryOOM - last.CumulativeMemoryOOM
+	sample.MemoryOOMKill = sample.CumulativeMemoryOOMKill - last.CumulativeMemoryOOMKill
 }
 
 func populateSummary(sr *sampleResult) {

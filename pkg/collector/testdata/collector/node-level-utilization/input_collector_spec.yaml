@@ -7,10 +7,10 @@ resources: # export metrics for these resources
   "memory": "memory_bytes"
 cgroupMetrics:
   sources:
-    "/": {name: "root_utilization"}
-    "/kubepods": {name: "kubepods_utilization"}
-    "/system.slice": {name: "system_utilization"}
-  rootSource: {name: "utilization"}
+    "/": {name: "root_utilization", avgName: "avg_root_utilization"}
+    "/kubepods": {name: "kubepods_utilization", avgName: "avg_kubepods_utilization"}
+    "/system.slice": {name: "system_utilization", avgName: "avg_system_utilization"}
+  rootSource: {name: "utilization", avgName: "avg_utilization"}
 aggregations: # aggregate metrics and export them
 - sources: # use these sources (see the API documentation for sources)
     type: "cgroup" # use container source
@@ -19,6 +19,10 @@ aggregations: # aggregate metrics and export them
     - "root_utilization"
     - "kubepods_utilization"
     - "system_utilization"
+    - "avg_utilization"
+    - "avg_root_utilization"
+    - "avg_kubepods_utilization"
+    - "avg_system_utilization"
   levels:
   - mask:
       name: "node" # sum all containers / pods into workload metrics

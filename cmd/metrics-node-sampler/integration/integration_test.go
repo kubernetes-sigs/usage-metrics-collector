@@ -159,6 +159,7 @@ func setupTests(t *testing.T, f func([]int) string) {
 					},
 					RestPort: ports[0],
 					PBPort:   ports[1],
+					Address:  "localhost",
 				},
 				FS:       fs,
 				TimeFunc: fs.Time,

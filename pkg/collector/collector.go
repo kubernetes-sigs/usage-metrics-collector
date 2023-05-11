@@ -468,12 +468,12 @@ func (c *Collector) collectQuota(o *CapacityObjects, ch chan<- prometheus.Metric
 }
 
 // getCGroupMetricSource find the name of the metric for this level
-func (c *Collector) getCGroupMetricSource(cgroup string) collectorcontrollerv1alpha1.Source {
+func (c *Collector) getCGroupMetricSource(cgroup string) collectorcontrollerv1alpha1.CGroupMetric {
 	if cgroup == "" {
 		// special case root cgroup -- there is no parent directory
-		return c.CGroupMetrics.RootSource.Name
+		return c.CGroupMetrics.RootSource
 	}
-	return c.CGroupMetrics.Sources[filepath.Dir("/"+cgroup)].Name
+	return c.CGroupMetrics.Sources[filepath.Dir("/"+cgroup)]
 }
 
 func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metric,
@@ -517,55 +517,85 @@ func (c *Collector) collectCGroups(o *CapacityObjects, ch chan<- prometheus.Metr
 				c.Labeler.SetLabelsFoCGroup(&l, m) // set the cgroup label to the base from the cgroup
 				sample := sb.NewSample(l)          // For saving locally
 
+				cpuAlias := c.Resources[collectorcontrollerv1alpha1.ResourceCPU]
+				if cpuAlias == "" {
+					cpuAlias = collectorcontrollerv1alpha1.ResourceAliasCPU
+				}
+				memoryAlias := c.Resources[collectorcontrollerv1alpha1.ResourceMemory]
+				if memoryAlias == "" {
+					memoryAlias = collectorcontrollerv1alpha1.ResourceAliasMemory
+				}
+
 				// get the source name for this level in the hiearchy
 				src := c.getCGroupMetricSource(m.AggregationLevel)
-				if src == "" {
-					// this cgroup isn't one we are tracking
-					return
-				}
+				if src.Name != "" {
+					// find the metric, initialize if necessary
+					// the metric source is a function of the cgroup parent directory (filepath.Dir) while
+					// the metric cgroup label is a function of the cgroup base directory (filepath.Base)
+					name := MetricName{Source: src.Name, ResourceAlias: cpuAlias, Resource: collectorcontrollerv1alpha1.ResourceCPU, SourceType: collectorcontrollerv1alpha1.CGroupType}
+					metric, ok := metrics[name]
+					if !ok {
+						metric = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
+						metrics[name] = metric
+					}
+					// get the values for this metric
+					cpuValues := make([]resource.Quantity, 0, len(m.CpuCoresNanoSec))
+					for _, v := range m.CpuCoresNanoSec {
+						cpuValues = append(cpuValues, *resource.NewScaledQuantity(v, resource.Nano))
+					}
+					metric.Values[l] = cpuValues
 
-				// record cpu
-				alias := c.Resources[collectorcontrollerv1alpha1.ResourceCPU]
-				if alias == "" {
-					alias = collectorcontrollerv1alpha1.ResourceAliasCPU
-				}
-				// find the metric, initialize if necessary
-				// the metric source is a function of the cgroup parent directory (filepath.Dir) while
-				// the metric cgroup label is a function of the cgroup base directory (filepath.Base)
-				name := MetricName{Source: src, ResourceAlias: alias, Resource: collectorcontrollerv1alpha1.ResourceCPU, SourceType: collectorcontrollerv1alpha1.CGroupType}
-				metric, ok := metrics[name]
-				if !ok {
-					metric = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-					metrics[name] = metric
-				}
-				// get the values for this metric
-				cpuValues := make([]resource.Quantity, 0, len(m.CpuCoresNanoSec))
-				for _, v := range m.CpuCoresNanoSec {
-					cpuValues = append(cpuValues, *resource.NewScaledQuantity(v, resource.Nano))
-				}
-				metric.Values[l] = cpuValues
+					// find the metric, initialize if necessary
+					name = MetricName{Source: src.Name, ResourceAlias: memoryAlias, Resource: collectorcontrollerv1alpha1.ResourceMemory, SourceType: collectorcontrollerv1alpha1.CGroupType}
+					metric, ok = metrics[name]
+					if !ok {
+						metric = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
+						metrics[name] = metric
+					}
+					// get the values for this metric
+					memoryValues := make([]resource.Quantity, 0, len(m.MemoryBytes))
+					for _, v := range m.MemoryBytes {
+						memoryValues = append(memoryValues, *resource.NewQuantity(v, resource.DecimalSI))
+					}
+					metric.Values[l] = memoryValues
 
-				// record memory
-				alias = c.Resources[collectorcontrollerv1alpha1.ResourceMemory]
-				if alias == "" {
-					alias = collectorcontrollerv1alpha1.ResourceAliasMemory
+					sb.AddIntValues(sample, collectorcontrollerv1alpha1.ResourceCPU, src.Name, m.CpuCoresNanoSec...) // For saving locally
+					sb.AddIntValues(sample, collectorcontrollerv1alpha1.ResourceMemory, src.Name, m.MemoryBytes...)  // For saving locally
 				}
-				// find the metric, initialize if necessary
-				name = MetricName{Source: src, ResourceAlias: alias, Resource: collectorcontrollerv1alpha1.ResourceMemory, SourceType: collectorcontrollerv1alpha1.CGroupType}
-				metric, ok = metrics[name]
-				if !ok {
-					metric = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
-					metrics[name] = metric
-				}
-				// get the values for this metric
-				memoryValues := make([]resource.Quantity, 0, len(m.MemoryBytes))
-				for _, v := range m.MemoryBytes {
-					memoryValues = append(memoryValues, *resource.NewQuantity(v, resource.DecimalSI))
-				}
-				metric.Values[l] = memoryValues
+				if src.AvgName != "" {
+					// get the pre-computed average
+					name := MetricName{
+						Source:        src.AvgName,
+						ResourceAlias: cpuAlias,
+						Resource:      collectorcontrollerv1alpha1.ResourceCPU,
+						SourceType:    collectorcontrollerv1alpha1.CGroupType,
+					}
+					metric, ok := metrics[name]
+					if !ok {
+						metric = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
+						metrics[name] = metric
+					}
+					metric.Values[l] = []resource.Quantity{*resource.NewScaledQuantity(m.AvgCPUCoresNanoSec, resource.Nano)}
 
-				sb.AddIntValues(sample, collectorcontrollerv1alpha1.ResourceMemory, src, m.MemoryBytes...)  // For saving locally
-				sb.AddIntValues(sample, collectorcontrollerv1alpha1.ResourceCPU, src, m.CpuCoresNanoSec...) // For saving locally
+					// record memory
+
+					// get the pre-computed average
+					name = MetricName{
+						Source:        src.AvgName,
+						ResourceAlias: memoryAlias,
+						Resource:      collectorcontrollerv1alpha1.ResourceMemory,
+						SourceType:    collectorcontrollerv1alpha1.CGroupType,
+					}
+					metric, ok = metrics[name]
+					if !ok {
+						metric = &Metric{Name: name, Values: map[LabelsValues][]resource.Quantity{}}
+						metrics[name] = metric
+					}
+					metric.Values[l] = []resource.Quantity{*resource.NewQuantity(m.AvgMemoryBytes, resource.DecimalSI)}
+
+					sb.AddIntValues(sample, collectorcontrollerv1alpha1.ResourceCPU, src.AvgName, m.AvgCPUCoresNanoSec) // For saving locally
+					sb.AddIntValues(sample, collectorcontrollerv1alpha1.ResourceMemory, src.AvgName, m.AvgMemoryBytes)  // For saving locally
+				}
 			}(l)
 		}
 	}

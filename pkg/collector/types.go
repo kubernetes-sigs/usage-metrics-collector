@@ -173,8 +173,14 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 				if c.CGroupMetrics.RootSource.Name == s {
 					return true
 				}
+				if "avg_"+c.CGroupMetrics.RootSource.Name == s {
+					return true
+				}
 				for _, c := range c.CGroupMetrics.Sources {
 					if c.Name == s {
+						return true
+					}
+					if "avg_"+c.Name == s {
 						return true
 					}
 				}
