@@ -46,36 +46,3 @@ aggregations:
         namespace_annotation: true
         node_label: true
         node_annotation: true
-- sources:
-    type: "pod" # use pod sources
-    pod:
-    - "pod" # pod count
-  levels:
-  - mask:
-      name: "pod_ext"
-      builtIn:
-        exported_pod: true
-        exported_namespace: true
-        priority_class: true
-      extensions:
-        pod_label: true
-        pod_annotation: true
-        namespace_label: true
-        namespace_annotation: true
-        node_label: true
-        node_annotation: true
-  - mask:
-      name: "namespace_ext"
-      builtIn:
-        exported_namespace: true
-        priority_class: true
-      extensions:
-        pod_label: true
-        pod_annotation: true
-  - mask:
-      name: "cluster_ext"
-      builtIn:
-        priority_class: true
-      extensions:
-        pod_label: true
-        pod_annotation: true

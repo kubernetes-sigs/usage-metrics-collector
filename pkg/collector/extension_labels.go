@@ -16,6 +16,7 @@ package collector
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 )
@@ -2587,7 +2588,7 @@ func (mask extensionLabelsMask) GetLabelValues(m extensionLabelsValues) []string
 }
 
 // getOverrideExtensionLabelValues overrides extension masks
-func (mask extensionLabelsMask) getOverrideExtensionLabelValues(m extensionLabelsValues, 
+func (mask extensionLabelsMask) getOverrideExtensionLabelValues(m extensionLabelsValues,
 	overrides map[string]string) extensionLabelsValues {
 	f := func(labelName, labelValue string) string {
 		if val, ok := overrides[labelName]; ok {
@@ -2721,21 +2722,49 @@ func (l extensionLabler) GetLabelNames() extensionLabelsKeys {
 	return keys
 }
 
+func (l extensionLabler) SetLabelsForMetadata(
+	labels *extensionLabelsValues,
+	ext []collectorcontrollerv1alpha1.ExtensionLabel, meta *metav1.ObjectMeta) {
+	for _, v := range ext {
+		func() {
+			// Set the metric label from the metadata.labels if a match is found
+			if v.LabelKey != "" && meta.Labels[string(v.LabelKey)] != "" {
+				labels.SetValue(v.ID, meta.Labels[string(v.LabelKey)])
+				return
+			}
+			for _, e := range v.LabelKeys {
+				if e != "" && meta.Labels[string(e)] != "" {
+					labels.SetValue(v.ID, meta.Labels[string(e)])
+					return
+				}
+			}
+			// Set the metric label from the metadata.annotations if a match is found
+			if v.AnnotationKey != "" && meta.Annotations[string(v.AnnotationKey)] != "" {
+				labels.SetValue(v.ID, meta.Annotations[string(v.AnnotationKey)])
+				return
+			}
+			for _, e := range v.AnnotationKeys {
+				if e != "" && meta.Annotations[string(e)] != "" {
+					labels.SetValue(v.ID, meta.Annotations[string(e)])
+					return
+				}
+			}
+			// Set the metric label to a default value
+			if v.Value != "" {
+				labels.SetValue(v.ID, v.Value)
+				return
+			}
+		}()
+	}
+}
+
 // SetLabelsForPod pulls label values off of the passed in Kubernetes objects
 func (l extensionLabler) SetLabelsForPod(
 	labels *extensionLabelsValues, pod *corev1.Pod, w workload,
 	node *corev1.Node, namespace *corev1.Namespace) {
 
 	if pod != nil {
-		for _, v := range l.Extensions.Pods {
-			if v.AnnotationKey != "" && pod.Annotations[string(v.AnnotationKey)] != "" {
-				labels.SetValue(v.ID, pod.Annotations[string(v.AnnotationKey)])
-			} else if v.LabelKey != "" && pod.Labels[string(v.LabelKey)] != "" {
-				labels.SetValue(v.ID, pod.Labels[string(v.LabelKey)])
-			} else if v.Value != "" {
-				labels.SetValue(v.ID, v.Value)
-			}
-		}
+		l.SetLabelsForMetadata(labels, l.Extensions.Pods, &pod.ObjectMeta)
 	}
 
 	l.SetLabelsForQuota(labels, nil, nil, namespace)
@@ -2745,15 +2774,7 @@ func (l extensionLabler) SetLabelsForPod(
 func (l extensionLabler) SetLabelsForPersistentVolume(labels *extensionLabelsValues,
 	pv *corev1.PersistentVolume, _ *corev1.PersistentVolumeClaim, node *corev1.Node) {
 	if pv != nil {
-		for _, v := range l.Extensions.PVs {
-			if v.AnnotationKey != "" && pv.Annotations[string(v.AnnotationKey)] != "" {
-				labels.SetValue(v.ID, pv.Annotations[string(v.AnnotationKey)])
-			} else if v.LabelKey != "" && pv.Labels[string(v.LabelKey)] != "" {
-				labels.SetValue(v.ID, pv.Labels[string(v.LabelKey)])
-			} else if v.Value != "" {
-				labels.SetValue(v.ID, v.Value)
-			}
-		}
+		l.SetLabelsForMetadata(labels, l.Extensions.PVs, &pv.ObjectMeta)
 	}
 	l.SetLabelsForNode(labels, node)
 }
@@ -2763,15 +2784,7 @@ func (l extensionLabler) SetLabelsForPersistentVolumeClaim(
 	pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume, namespace *corev1.Namespace,
 	pod *corev1.Pod, w workload, node *corev1.Node) {
 	if pvc != nil {
-		for _, v := range l.Extensions.PVCs {
-			if v.AnnotationKey != "" && pvc.Annotations[string(v.AnnotationKey)] != "" {
-				labels.SetValue(v.ID, pvc.Annotations[string(v.AnnotationKey)])
-			} else if v.LabelKey != "" && pv.Labels[string(v.LabelKey)] != "" {
-				labels.SetValue(v.ID, pvc.Labels[string(v.LabelKey)])
-			} else if v.Value != "" {
-				labels.SetValue(v.ID, v.Value)
-			}
-		}
+		l.SetLabelsForMetadata(labels, l.Extensions.PVCs, &pvc.ObjectMeta)
 	}
 	l.SetLabelsForPersistentVolume(labels, pv, pvc, node)
 	l.SetLabelsForPod(labels, pod, w, node, namespace)
@@ -2782,15 +2795,7 @@ func (l extensionLabler) SetLabelsForNode(labels *extensionLabelsValues, node *c
 	if node == nil {
 		return
 	}
-	for _, v := range l.Extensions.Nodes {
-		if v.AnnotationKey != "" && node.Annotations[string(v.AnnotationKey)] != "" {
-			labels.SetValue(v.ID, node.Annotations[string(v.AnnotationKey)])
-		} else if v.LabelKey != "" && node.Labels[string(v.LabelKey)] != "" {
-			labels.SetValue(v.ID, node.Labels[string(v.LabelKey)])
-		} else if v.Value != "" {
-			labels.SetValue(v.ID, v.Value)
-		}
-	}
+	l.SetLabelsForMetadata(labels, l.Extensions.Nodes, &node.ObjectMeta)
 
 	// get the labels for the taints
 	for _, v := range l.Extensions.NodeTaints {
@@ -2804,15 +2809,7 @@ func (l extensionLabler) SetLabelsForQuota(labels *extensionLabelsValues,
 	if quota == nil {
 		return
 	}
-	for _, v := range l.Extensions.Quota {
-		if v.AnnotationKey != "" && quota.Annotations[string(v.AnnotationKey)] != "" {
-			labels.SetValue(v.ID, quota.Annotations[string(v.AnnotationKey)])
-		} else if v.LabelKey != "" && quota.Labels[string(v.LabelKey)] != "" {
-			labels.SetValue(v.ID, quota.Labels[string(v.LabelKey)])
-		} else if v.Value != "" {
-			labels.SetValue(v.ID, v.Value)
-		}
-	}
+	l.SetLabelsForMetadata(labels, l.Extensions.Quota, &quota.ObjectMeta)
 }
 
 func (l extensionLabler) SetLabelsForNamespace(labels *extensionLabelsValues, namespace *corev1.Namespace) {
@@ -2820,15 +2817,7 @@ func (l extensionLabler) SetLabelsForNamespace(labels *extensionLabelsValues, na
 	if namespace == nil {
 		return
 	}
-	for _, v := range l.Extensions.Namespaces {
-		if v.AnnotationKey != "" && namespace.Annotations[string(v.AnnotationKey)] != "" {
-			labels.SetValue(v.ID, namespace.Annotations[string(v.AnnotationKey)])
-		} else if v.LabelKey != "" && namespace.Labels[string(v.LabelKey)] != "" {
-			labels.SetValue(v.ID, namespace.Labels[string(v.LabelKey)])
-		} else if v.Value != "" {
-			labels.SetValue(v.ID, v.Value)
-		}
-	}
+	l.SetLabelsForMetadata(labels, l.Extensions.Namespaces, &namespace.ObjectMeta)
 }
 
 func (l extensionLabler) SetLabelsForSideCars(labels *extensionLabelsValues) {
