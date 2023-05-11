@@ -11,6 +11,8 @@ aggregations: # aggregate metrics and export them
     container:
     - "requests_allocated"
     - "limits_allocated"
+    alias:
+      "requests_allocated": "requests"
   levels:
   - mask:
       name: "container" # base level -- no aggregations
