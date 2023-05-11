@@ -733,6 +733,9 @@ type Sources struct {
 
 	// SchedulerHealth are sources for scheduler health objects.
 	SchedulerHealth []Source `json:"scheduler_health,omitempty" yaml:"scheduler_health,omitempty"`
+
+	// Alias maps sources to different names when publishing metrics
+	Alias map[Source]string `json:"alias,omitempty" yaml:"alias,omitempty"`
 }
 
 func (s *Sources) GetSources() []Source {
