@@ -49,7 +49,7 @@ func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quant
 	case collectorcontrollerv1alpha1.AvgOperation:
 		if len(values) == 0 {
 			// avoid divide by 0 panic
-			result = *resource.NewQuantity(0, resource.DecimalSI)
+			return []resource.Quantity{}
 		}
 		for i := range values {
 			result.Add(values[i])
@@ -160,7 +160,9 @@ func (c *Collector) aggregateMetric(operationsKey string, ops []collectorcontrol
 			// reduce by applying the aggregation operation to each slice
 			for k := range indexed {
 				// go routine with wait group
-				res.Values[k] = aggregate(o, indexed[k], sorted)
+				if len(indexed[k]) > 0 {
+					res.Values[k] = aggregate(o, indexed[k], sorted)
+				}
 			}
 			mu.Lock()
 			results[o] = res
