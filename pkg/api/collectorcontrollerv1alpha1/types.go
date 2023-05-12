@@ -1055,8 +1055,15 @@ type ExtensionLabel struct {
 
 	// AnnotationKey is the name of Kubernetes object metadata annotation
 	AnnotationKey AnnotationKey `json:"annotation,omitempty" yaml:"annotation,omitempty"`
-	// LabelName is the name of Kubernetes object metadata label
+
+	// AnnotationKeys are the names of Kubernetes object metadata annotations
+	AnnotationKeys []AnnotationKey `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+
+	// LabelKey is the name of Kubernetes object metadata label
 	LabelKey LabelKey `json:"label,omitempty" yaml:"label,omitempty"`
+
+	// LabelKeys are names of Kubernetes object metadata labels
+	LabelKeys []LabelKey `json:"labels,omitempty" yaml:"labels,omitempty"`
 
 	// Value is the default value to use if the annotation or label is not present on
 	// the object.
