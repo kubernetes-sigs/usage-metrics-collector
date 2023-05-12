@@ -47,6 +47,10 @@ func aggregate(op collectorcontrollerv1alpha1.AggregationOperation, values quant
 			}
 		}
 	case collectorcontrollerv1alpha1.AvgOperation:
+		if len(values) == 0 {
+			// avoid divide by 0 panic
+			result = *resource.NewQuantity(0, resource.DecimalSI)
+		}
 		for i := range values {
 			result.Add(values[i])
 		}
