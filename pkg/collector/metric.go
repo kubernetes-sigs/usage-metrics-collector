@@ -44,6 +44,8 @@ type MetricName struct {
 
 	Source collectorcontrollerv1alpha1.Source // e.g. requests_quota_hard
 
+	SourceAlias string
+
 	ResourceAlias collectorcontrollerv1alpha1.ResourceAlias // e.g. cpu_cores
 
 	Resource collectorcontrollerv1alpha1.ResourceName // e.g. cpu
@@ -52,6 +54,9 @@ type MetricName struct {
 }
 
 func (m MetricName) String() string {
+	if m.SourceAlias != "" {
+		return strings.Join([]string{m.Prefix, string(m.Level), string(m.Operation), string(m.SourceAlias), string(m.ResourceAlias)}, "_")
+	}
 	return strings.Join([]string{m.Prefix, string(m.Level), string(m.Operation), string(m.Source), string(m.ResourceAlias)}, "_")
 }
 

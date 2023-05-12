@@ -1220,6 +1220,7 @@ func (c *Collector) AggregateAndCollect(
 						Prefix:        c.Prefix,
 						Level:         l.Mask.Level,
 						Operation:     op,
+						SourceAlias:   a.Sources.Alias[name.Source],
 						Source:        name.Source,
 						ResourceAlias: name.ResourceAlias,
 						Resource:      name.Resource,
