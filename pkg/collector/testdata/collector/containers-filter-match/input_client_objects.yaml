@@ -152,6 +152,7 @@ metadata:
   namespace: test-namespace-1
   labels:
     app: app-1
+    include: "no"
   ownerReferences:
     - apiVersion: apps/v1
       controller: true
