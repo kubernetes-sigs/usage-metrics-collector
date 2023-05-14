@@ -241,11 +241,11 @@ func (c *Collector) validateMetricsPrometheusCollector() error {
 				return errors.Errorf("level missing name %v", l)
 			}
 			for _, f := range l.Mask.Filters {
-				if f.Present == nil {
-					return errors.Errorf("present missing from filter")
+				if len(f.LabelNames) == 0 && len(f.Labels) == 0 {
+					return errors.Errorf("must specify labels or labelNames in filter")
 				}
-				if len(f.LabelNames) == 0 {
-					return errors.Errorf("label names missing from filter")
+				if len(f.LabelNames) > 0 && f.Present == nil {
+					return errors.Errorf("present missing from filter with labelNames")
 				}
 			}
 			for k := range l.HistogramBuckets {
