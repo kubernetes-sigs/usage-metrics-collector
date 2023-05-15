@@ -928,6 +928,9 @@ type Filter struct {
 	// LabelNames are the names of the labels the filter applies to
 	// LabelNames are the names of the labels the filter applies to
 	LabelNames []string `json:"labelNames,omitempty" yaml:"labelNames,omitempty"`
+
+	// Labels are the labels to match the values of
+	Labels map[string][]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 }
 
 // BuiltIn configures built in metrics and labels.

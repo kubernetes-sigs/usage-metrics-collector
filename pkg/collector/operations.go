@@ -117,6 +117,18 @@ func (c *Collector) aggregateMetric(operationsKey string, ops []collectorcontrol
 						return false // label is supposed to be present, but isn't
 					}
 				}
+				for k, v := range f.Labels {
+					ok := false
+					for _, l := range v {
+						if index[k] == l {
+							ok = true
+							break
+						}
+					}
+					if !ok {
+						return false
+					}
+				}
 			}
 			return true
 		}
