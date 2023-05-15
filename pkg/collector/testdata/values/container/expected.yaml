@@ -12,7 +12,7 @@ avg_utilization:
   level: container
   resourceList:
     cpu: 2500m
-    memory: 1950m
+    memory: 1950M
   source: avg_utilization
 limits_allocated:
   level: container

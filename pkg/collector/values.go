@@ -76,7 +76,7 @@ func (r ValueReader) GetValuesForContainer(
 	values[collectorcontrollerv1alpha1.AvgContainerUtilizationSource] = value{
 		ResourceList: corev1.ResourceList{
 			collectorcontrollerv1alpha1.ResourceCPU:    *resource.NewScaledQuantity(usage.AvgCPUCoresNanoSec, resource.Nano),
-			collectorcontrollerv1alpha1.ResourceMemory: *resource.NewScaledQuantity(usage.AvgMemoryBytes, resource.Nano),
+			collectorcontrollerv1alpha1.ResourceMemory: *resource.NewQuantity(usage.AvgMemoryBytes, resource.DecimalSI),
 		},
 		Level:  collectorcontrollerv1alpha1.ContainerLevel,
 		Source: collectorcontrollerv1alpha1.AvgContainerUtilizationSource,
