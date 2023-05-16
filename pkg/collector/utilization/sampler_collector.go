@@ -119,6 +119,18 @@ func (c *Server) Collect(ch chan<- prometheus.Metric, metrics map[string]*api.Li
 	severErrorsTotal.Collect(ch)
 }
 
+// AdditionalGrpcServer contains the information necessary to add a new gRPC server to be registered.
+type AdditionalGrpcServer struct {
+	// RegisterServer is called to register a grpc server for both protobuf and json serving via gRPC gateway.
+	RegisterServer func(s grpc.ServiceRegistrar)
+
+	// RegisterHandler is called only to register for json serving via gRPC gateway, it won't be called when nil.
+	RegisterHandler func(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error
+}
+
+// AdditionalGrpcServers are registered as additional services.
+var AdditionalGrpcServers []AdditionalGrpcServer
+
 func (s *Server) Start(ctx context.Context) error {
 	// parse the utilization server configuration values
 	var err error
@@ -160,6 +172,12 @@ func (s *Server) Start(ctx context.Context) error {
 	s.grpcServer = grpc.NewServer()
 	api.RegisterMetricsCollectorServer(s.grpcServer, s)
 	api.RegisterHealthServer(s.grpcServer, s)
+
+	// register additional gRPC services
+	for _, server := range AdditionalGrpcServers {
+		server.RegisterServer(s.grpcServer)
+	}
+
 	log.V(1).Info("listening for utilization metrics", "port", s.ProtoBindPort)
 
 	errs := make(chan error)
@@ -189,6 +207,18 @@ func (s *Server) Start(ctx context.Context) error {
 	gwServer := &http.Server{Addr: fmt.Sprintf(":%v", s.JSONBindPort), Handler: gwmux}
 	rpcServer := grpc.NewServer()
 	api.RegisterHealthServer(rpcServer, s)
+
+	// register additional gRPC services on the gateway
+	for _, server := range AdditionalGrpcServers {
+		if server.RegisterHandler == nil {
+			continue
+		}
+		if err := server.RegisterHandler(context.Background(), gwmux, conn); err != nil {
+			return fmt.Errorf("could not register handler for additional server: %w", err)
+		}
+		server.RegisterServer(rpcServer)
+	}
+
 	go func() {
 		log.V(1).Info("serving json", "port", s.JSONBindPort)
 		defer rpcServer.GracefulStop()                                      // stop the server when we are done
