@@ -1,0 +1,60 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "cpu": "cpu_cores"
+  "memory": "memory_bytes"
+preComputeMetrics:
+  enabled: true
+extensions:
+  namespaceLabels:
+  - name: ns_annotation
+    annotation: n-a
+  - name: ns_label
+    label: n-l
+  nodeLabels:
+  - name: node_annotation
+    annotation: nd-a
+  - name: node_label
+    label: nd-l
+  - name: node_pool
+    annotation: "nodes/pool"
+cgroupMetrics:
+  sources:
+    "/": {name: "root_utilization"}
+    "/kubepods": {name: "kubepods_utilization"}
+    "/system.slice": {name: "system_utilization"}
+  rootSource: {name: "utilization"}
+aggregations: # aggregate metrics and export them
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "utilization"
+  levels:
+  - name: "workload_hist"
+    mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_namespace: true
+        exported_container: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+    operation: "hist"
+    retentionName: "workload_hist"
+    retentionExponentialBuckets:
+      cpu:
+        minimumBase: 2
+        compression: 0
+        exponentOffset: 0
+        saveMaxOnly: false
+      memory:
+        minimumBase: 2
+        compression: 0
+        exponentOffset: 0
+        saveMaxOnly: true
+saveSamplesLocally: {}
