@@ -497,6 +497,24 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			OomKillCount:                  int64(v.avg.MemoryOOMKill),
 			AvgCPUPeriodsSec:              int64(v.avg.CPUPeriodsSec),
 			AvgCPUThrottledPeriodsSec:     int64(v.avg.CPUThrottledPeriodsSec),
+			AvgNetwork:                    make(map[string]*api.AvgNetwork, len(v.avg.Network)),
+			Network:                       make(map[string]*api.Network, len(v.avg.Network)),
+		}
+		// pull out the network metrics for each interface
+		for k, v := range v.avg.Network {
+			c.AvgNetwork[k] = &api.AvgNetwork{
+				Name: k,
+
+				RxBytes:   v.RXBytes,
+				RxPackets: v.RXPackets,
+				RxErrors:  v.RXErrors,
+				RxDropped: v.RXDropped,
+
+				TxBytes:   v.RXBytes,
+				TxPackets: v.TXPackets,
+				TxErrors:  v.TXErrors,
+				TxDropped: v.TXDropped,
+			}
 		}
 		for i := range v.values {
 			if i == 0 {
@@ -510,6 +528,21 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			c.MemoryBytes = append(c.MemoryBytes, int64(s.MemoryBytes))
 			c.CpuPeriodsSec = append(c.CpuPeriodsSec, int64(s.CPUPeriodsSec))
 			c.CpuThrottledPeriodsSec = append(c.CpuThrottledPeriodsSec, int64(s.CPUThrottledPeriodsSec))
+
+			for k, v := range s.Network {
+				if c.Network[k] == nil {
+					c.Network[k] = &api.Network{}
+				}
+				c.Network[k].RxBytes = append(c.Network[k].RxBytes, v.RXBytes)
+				c.Network[k].RxPackets = append(c.Network[k].RxPackets, v.RXPackets)
+				c.Network[k].RxErrors = append(c.Network[k].RxErrors, v.RXErrors)
+				c.Network[k].RxDropped = append(c.Network[k].RxDropped, v.RXDropped)
+
+				c.Network[k].TxBytes = append(c.Network[k].TxBytes, v.TXBytes)
+				c.Network[k].TxPackets = append(c.Network[k].TxPackets, v.TXPackets)
+				c.Network[k].TxErrors = append(c.Network[k].TxErrors, v.TXErrors)
+				c.Network[k].TxDropped = append(c.Network[k].TxDropped, v.TXDropped)
+			}
 		}
 		if s.SortResults {
 			// sort the values so the results are stable

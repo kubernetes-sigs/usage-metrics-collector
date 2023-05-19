@@ -56,33 +56,62 @@ message ListMetricsResponse {
 }
 
 message ContainerMetrics {
-    // nextID: 23
+  // nextID: 23
+  string containerID =1;
+  string podUID=2;
+  string containerName=12;
+  string podName=13;
+  string namespaceName=14;
 
-    string containerID =1;
-    string podUID=2;
-    string containerName=12;
-    string podName=13;
-    string namespaceName=14;
+  repeated int64 cpuCoresNanoSec=3;
+  repeated int64 memoryBytes=4;
+  repeated int64 cpuThrottledNanoSec=7;
+  repeated float cpuPercentPeriodsThrottled=8;
+  repeated int64 cpuPeriodsSec=9;
+  repeated int64 cpuThrottledPeriodsSec=10;
 
-    repeated int64 cpuCoresNanoSec=3;
-    repeated int64 memoryBytes=4;
-    repeated int64 cpuThrottledNanoSec=7;
-    repeated float cpuPercentPeriodsThrottled=8;
-    repeated int64 cpuPeriodsSec=9;
-    repeated int64 cpuThrottledPeriodsSec=10;
+  string nodeName=11;
 
-    string nodeName=11;
+  int64 avgCPUCoresNanoSec=15;
 
-    int64 avgCPUCoresNanoSec=15;
+  int64 avgMemoryBytes=16;
+  int64 oomCount=17;
+  int64 oomKillCount=18;
 
-    int64 avgMemoryBytes=16;
-    int64 oomCount=17;
-    int64 oomKillCount=18;
+  float avgCPUPercentPeriodsThrottled=19;
+  int64 avgCPUThrottledNanoSec=20;
+  int64 avgCPUPeriodsSec=21;
+  int64 avgCPUThrottledPeriodsSec=22;
 
-    float avgCPUPercentPeriodsThrottled=19;
-    int64 avgCPUThrottledNanoSec=20;
-    int64 avgCPUPeriodsSec=21;
-    int64 avgCPUThrottledPeriodsSec=22;
+  map<string, Network> network=23;
+
+  map<string, AvgNetwork> avgNetwork=24;
+}
+
+message AvgNetwork {
+  string name=1;
+
+  uint64 rxBytes=2;
+  uint64 rxPackets=3;
+  uint64 rxErrors=4;
+  uint64 rxDropped=5;
+
+  uint64 txBytes=6;
+  uint64 txPackets=7;
+  uint64 txErrors=8;
+  uint64 txDropped=9;
+}
+
+message Network {
+  repeated uint64 rxBytes=1;
+  repeated uint64 rxPackets=2;
+  repeated uint64 rxErrors=3;
+  repeated uint64 rxDropped=4;
+
+  repeated uint64 txBytes=5;
+  repeated uint64 txPackets=6;
+  repeated uint64 txErrors=7;
+  repeated uint64 txDropped=8;
 }
 
 message NodeMetrics {

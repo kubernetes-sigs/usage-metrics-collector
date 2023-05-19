@@ -168,12 +168,13 @@ func (s *sampleCache) fetchSample() error {
 
 	var cpuMetrics cpuMetrics
 	var memoryMetrics memoryMetrics
+	var networkMetrics NetworkMetrics
 	var err error
 
 	if s.UseContainerMonitor {
-		cpuMetrics, memoryMetrics, err = s.getContainerCPUAndMemoryCM()
+		cpuMetrics, memoryMetrics, networkMetrics, err = s.getContainerCPUAndMemoryCM()
 	} else {
-		cpuMetrics, memoryMetrics, err = s.getContainerCPUAndMemory()
+		cpuMetrics, memoryMetrics, networkMetrics, err = s.getContainerCPUAndMemory()
 	}
 
 	if err != nil {
@@ -187,8 +188,9 @@ func (s *sampleCache) fetchSample() error {
 	}
 	for key, cpu := range cpuMetrics {
 		memory := memoryMetrics[key]
+		network := networkMetrics[key]
 
-		sample := s.containerToSample(key, cpu, memory)
+		sample := s.containerToSample(key, cpu, memory, network)
 		log.V(5).Info("got sample", "sample", sample, "container", key, "found")
 		results.containers[key] = sample
 	}
@@ -219,27 +221,27 @@ func (s *sampleCache) fetchSample() error {
 	return nil
 }
 
-func (s *sampleCache) getContainerCPUAndMemory() (cpuMetrics, memoryMetrics, error) {
+func (s *sampleCache) getContainerCPUAndMemory() (cpuMetrics, memoryMetrics, NetworkMetrics, error) {
 	cpuMetrics, err := s.metricsReader.GetContainerCPUMetrics()
 	if err != nil {
 		log.Error(err, "failed to get cpu metrics")
-		return nil, nil, err
+		return nil, nil, NetworkMetrics{}, err
 	}
 	if len(cpuMetrics) == 0 {
 		log.Info("no cacheable results for cpu metrics", "paths", s.metricsReader.CPUPaths)
-		return nil, nil, err
+		return nil, nil, NetworkMetrics{}, err
 	}
 
 	memoryMetrics, err := s.metricsReader.GetContainerMemoryMetrics()
 	if err != nil {
 		log.Error(err, "failed to get memory metrics")
-		return nil, nil, err
+		return nil, nil, NetworkMetrics{}, err
 	}
 	if len(memoryMetrics) == 0 {
 		log.Info("no cacheable results for memory metrics", "paths", s.metricsReader.MemoryPaths)
-		return nil, nil, err
+		return nil, nil, NetworkMetrics{}, err
 	}
-	return cpuMetrics, memoryMetrics, nil
+	return cpuMetrics, memoryMetrics, NetworkMetrics{}, nil
 }
 
 // AddSample adds a sample read from containerd.
@@ -257,9 +259,10 @@ func (s *sampleCache) containerToSample(
 	id ContainerKey,
 	cpu containerCPUMetrics,
 	memory containerMemoryMetrics,
+	network ContainerNetworkMetrics,
 ) sampleInstant {
 	last := s.lastSampleForContainer(id)
-	sample := s.metricToSample(last, cpu, memory)
+	sample := s.metricToSample(last, cpu, memory, network)
 	return sample
 }
 
@@ -270,7 +273,7 @@ func (s *sampleCache) nodeToSample(
 	last := s.lastSampleForNode()
 	samples := map[samplerserverv1alpha1.NodeAggregationLevel]sampleInstant{}
 	for level := range cpu { // assume cpu and memory have the same aggregation levels
-		samples[level] = s.metricToSample(last[level], cpu[level], memory[level])
+		samples[level] = s.metricToSample(last[level], cpu[level], memory[level], ContainerNetworkMetrics{})
 	}
 	return samples
 }
@@ -305,7 +308,8 @@ func (s *sampleCache) lastSampleForNode() map[samplerserverv1alpha1.NodeAggregat
 func (s *sampleCache) metricToSample(
 	last sampleInstant,
 	cpu containerCPUMetrics,
-	memory containerMemoryMetrics) sampleInstant {
+	memory containerMemoryMetrics,
+	network ContainerNetworkMetrics) sampleInstant {
 
 	sample := sampleInstant{
 		Time:                          cpu.usage.Time,
@@ -316,6 +320,7 @@ func (s *sampleCache) metricToSample(
 		MemoryBytes:                   memory.RSS + memory.Cache,
 		CumulativeMemoryOOMKill:       memory.OOMKills,
 		CumulativeMemoryOOM:           memory.OOMs,
+		Network:                       network.Usage,
 	}
 
 	computeSampleDelta(&last, &sample)
@@ -348,6 +353,29 @@ func computeSampleDelta(last, sample *sampleInstant) {
 
 	sample.MemoryOOM = sample.CumulativeMemoryOOM - last.CumulativeMemoryOOM
 	sample.MemoryOOMKill = sample.CumulativeMemoryOOMKill - last.CumulativeMemoryOOMKill
+
+	avgN := make(map[string]ContainerNetworkUsageMetrics, len(sample.Network))
+	for k, v := range sample.Network {
+		vLast, ok := last.Network[k]
+		if !ok {
+			// this network interface isn't in both
+			continue
+		}
+		// compute the avg network stats
+		m := ContainerNetworkUsageMetrics{
+			RXBytes:   normalizeSeconds(vLast.CumulativeRXBytes, v.CumulativeRXBytes, sec),
+			RXPackets: normalizeSeconds(vLast.CumulativeRXPackets, v.CumulativeRXPackets, sec),
+			RXErrors:  normalizeSeconds(vLast.CumulativeRXErrors, v.CumulativeRXErrors, sec),
+			RXDropped: normalizeSeconds(vLast.CumulativeRXDropped, v.CumulativeRXDropped, sec),
+
+			TXBytes:   normalizeSeconds(vLast.CumulativeTXBytes, v.CumulativeTXBytes, sec),
+			TXPackets: normalizeSeconds(vLast.CumulativeTXPackets, v.CumulativeTXPackets, sec),
+			TXErrors:  normalizeSeconds(vLast.CumulativeTXErrors, v.CumulativeTXErrors, sec),
+			TXDropped: normalizeSeconds(vLast.CumulativeTXDropped, v.CumulativeTXDropped, sec),
+		}
+		avgN[k] = m
+	}
+	sample.Network = avgN
 }
 
 func populateSummary(sr *sampleResult) {
@@ -361,9 +389,9 @@ func populateSummary(sr *sampleResult) {
 	// NOTE: the first sample has a cpu value that we will not be
 	// able to calculate because it is computed from the difference of
 	// a sample that is no longer stored
-	first := sr.values[0]
-	sr.avg = sr.values[len(sr.values)-1]
-	computeSampleDelta(&first, &sr.avg)
+	first := sr.values[0]                // this is the oldest value
+	sr.avg = sr.values[len(sr.values)-1] // set this as the newest value
+	computeSampleDelta(&first, &sr.avg)  // compute the dela between the newest and oldest values
 
 	var b uint64
 	for i := range sr.values {

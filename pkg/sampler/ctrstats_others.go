@@ -18,8 +18,8 @@ package sampler
 
 import "runtime"
 
-func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, error) {
+func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, NetworkMetrics, error) {
 	// Not implemented on Mac
 	log.Info("getContainerCPUAndMemoryCM not implemented for platform", "goos", runtime.GOOS, "goarch", runtime.GOARCH)
-	return nil, nil, nil
+	return nil, nil, NetworkMetrics{}, nil
 }

@@ -56,7 +56,9 @@
 			"avgCPUPercentPeriodsThrottled": 0.1625,
 			"avgCPUThrottledNanoSec": "70",
 			"avgCPUPeriodsSec": "800",
-			"avgCPUThrottledPeriodsSec": "130"
+			"avgCPUThrottledPeriodsSec": "130",
+			"network": {},
+			"avgNetwork": {}
 		}
 	],
 	"node": {

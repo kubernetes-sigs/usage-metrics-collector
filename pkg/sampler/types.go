@@ -62,6 +62,8 @@ type sampleInstant struct {
 	CPUPeriodsSec              uint64
 	CPUThrottledPeriodsSec     uint64
 
+	Network map[string]ContainerNetworkUsageMetrics
+
 	// MemoryHighEvents uint64
 	// MemoryLowEvents  uint64
 	// OOMEvents        uint64
@@ -83,10 +85,8 @@ type sampleInstants struct {
 type sampleInstantSlice []sampleInstant
 
 type sampleResult struct {
-	values       sampleInstantSlice
-	avg          sampleInstant
-	totalOOM     int64
-	totalOOMKill int64
+	values sampleInstantSlice
+	avg    sampleInstant
 }
 
 // allSampleInstants are all the samples in the cache
@@ -102,3 +102,32 @@ const (
 	CPUUsageMetricType      ContainerMetricType = "cpu-usage"
 	CPUThrottlingMetricType ContainerMetricType = "cpu-throttling"
 )
+
+// networkMetrics is a map of the networkMetrics for each container running in a Pod
+type NetworkMetrics map[ContainerKey]ContainerNetworkMetrics
+
+type ContainerNetworkMetrics struct {
+	Time time.Time
+
+	Usage map[string]ContainerNetworkUsageMetrics
+}
+
+type ContainerNetworkUsageMetrics struct {
+	RXBytes   uint64
+	RXPackets uint64
+	RXErrors  uint64
+	RXDropped uint64
+	TXBytes   uint64
+	TXPackets uint64
+	TXErrors  uint64
+	TXDropped uint64
+
+	CumulativeRXBytes   uint64
+	CumulativeRXPackets uint64
+	CumulativeRXErrors  uint64
+	CumulativeRXDropped uint64
+	CumulativeTXBytes   uint64
+	CumulativeTXPackets uint64
+	CumulativeTXErrors  uint64
+	CumulativeTXDropped uint64
+}

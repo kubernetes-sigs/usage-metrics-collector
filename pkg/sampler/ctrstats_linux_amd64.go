@@ -24,20 +24,21 @@ import (
 	"sigs.k8s.io/usage-metrics-collector/pkg/ctrstats"
 )
 
-func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, error) {
+func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, NetworkMetrics, error) {
 	containers, err := ctrstats.GetContainers(s.ContainerdClient)
 	if err != nil {
 		log.Error(err, "failed to list containers")
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	if err := s.metricsReader.initCM(); err != nil {
 		log.Error(err, "failed to initialize metrics reader")
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	cpuResult := cpuMetrics{}
 	memResult := memoryMetrics{}
+	networkResult := NetworkMetrics{}
 	knownPods := sets.NewString()
 
 	for _, c := range containers {
@@ -65,6 +66,14 @@ func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, e
 					"container", c.ContainerName,
 				)
 			}
+			ntwk, err := cmStatsToNetworkResult(stats, readTime)
+			if err != nil {
+				log.Error(err, "no network stats available for container",
+					"namespace", c.NamespaceName,
+					"pod", c.PodName,
+					"container", c.ContainerName,
+				)
+			}
 
 			var container ContainerKey
 			container.ContainerID = c.ContainerID
@@ -75,12 +84,13 @@ func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, e
 
 			cpuResult[container] = cpu
 			memResult[container] = mem
+			networkResult[container] = ntwk
 			knownPods.Insert(c.PodID)
 		}
 	}
 
 	s.metricsReader.knownContainersSet.Store(knownPods)
-	return cpuResult, memResult, nil
+	return cpuResult, memResult, networkResult, nil
 }
 
 // cmStatsToCPUResult converts cpu stats read from containerd into a compatible type.
@@ -123,6 +133,32 @@ func cmStatsToMemoryResult(stats *v1.Metrics, readTime time.Time) (containerMemo
 		metrics.OOMs = stats.MemoryOomControl.UnderOom
 	} else {
 		log.V(10).Info("no OOM stats available")
+	}
+
+	return metrics, nil
+}
+
+// cmStatsToMemoryResult converts memory stats read from containerd into a compatible type.
+func cmStatsToNetworkResult(stats *v1.Metrics, readTime time.Time) (ContainerNetworkMetrics, error) {
+	metrics := ContainerNetworkMetrics{
+		Usage: make(map[string]ContainerNetworkUsageMetrics, len(stats.Network)),
+	}
+	if stats.Network == nil {
+		err := errors.New("no network stats available")
+		return metrics, err
+	}
+
+	for _, n := range stats.Network {
+		metrics.Usage[n.Name] = ContainerNetworkUsageMetrics{
+			CumulativeRXBytes:   n.RxBytes,
+			CumulativeRXPackets: n.RxPackets,
+			CumulativeRXErrors:  n.RxErrors,
+			CumulativeRXDropped: n.RxDropped,
+			CumulativeTXBytes:   n.TxBytes,
+			CumulativeTXPackets: n.TxPackets,
+			CumulativeTXErrors:  n.TxErrors,
+			CumulativeTXDropped: n.TxDropped,
+		}
 	}
 
 	return metrics, nil
