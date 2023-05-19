@@ -1241,7 +1241,8 @@ func (c *Collector) AggregateAndCollect(
 							s.Operation = aggregatedName.Operation.String()
 							s.Level = aggregatedName.Level.String()
 							// save samples in histogram format
-							if aggregatedName.Operation == collectorcontrollerv1alpha1.HistogramOperation && l.RetentionExponentialBuckets != nil {
+							if aggregatedName.Operation == collectorcontrollerv1alpha1.HistogramOperation && l.RetentionExponentialBuckets != nil &&
+								l.RetentionExponentialBuckets[aggregatedName.Resource.String()] != nil {
 								slb.AddHistogramValues(s,
 									aggregatedName.Resource,
 									aggregatedName.Source,

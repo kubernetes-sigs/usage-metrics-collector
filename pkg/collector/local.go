@@ -107,7 +107,7 @@ func (sb *SampleListBuilder) AddQuantityValues(s *collectorapi.Sample, resourceT
 
 // AddHistogramValues adds a Metric to the sample with values in histogram format
 func (sb *SampleListBuilder) AddHistogramValues(s *collectorapi.Sample, resourceType collectorcontrollerv1alpha1.ResourceName,
-	source collectorcontrollerv1alpha1.Source, buckets collectorcontrollerv1alpha1.ExponentialBuckets, v ...resource.Quantity) {
+	source collectorcontrollerv1alpha1.Source, buckets *collectorcontrollerv1alpha1.ExponentialBuckets, v ...resource.Quantity) {
 	if sb == nil {
 		return
 	}
