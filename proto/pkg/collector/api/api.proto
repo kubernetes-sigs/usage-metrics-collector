@@ -57,4 +57,25 @@ message Metric {
 
   // values are the sample values
   repeated double values = 3;
+
+  // use histogram instead of values
+  optional ExponentialBuckets histogram = 4;
+}
+
+message ExponentialBuckets {
+  double base = 1;
+  sint32 baseScale = 2;
+  int64 zeroCount = 3; // Count of values exactly at zero.
+  double maxValue = 4; // Max value in this histogram
+  ExponentialBucketCounts counts = 5;
+}
+
+// "repeated double bucketCounts" represents an array of N numbers from bucketCounts[0] to bucketCounts[N-1].
+// With i starting at 0, ending at N-1, BucketCounts defines N buckets, where
+// bucket[i].startBound = base ^ (i + exponentOffset)
+// bucket[i].endBound = base ^ (i + 1 + exponentOffset)
+// bucket[i].count = bucketCounts[i]
+message ExponentialBucketCounts {
+  sint32 exponentOffset = 1; // offset may be negative.
+  repeated int64 bucketCounts = 2;
 }

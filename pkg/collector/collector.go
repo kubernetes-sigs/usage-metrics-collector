@@ -1235,14 +1235,25 @@ func (c *Collector) AggregateAndCollect(
 						slb.SampleList.MetricName = aggregatedName.String()
 						slb.SampleList.Name = l.RetentionName
 						slb.Mask = l.Mask
+
 						for mk, mv := range metric.Values {
 							s := slb.NewSample(mk)
 							s.Operation = aggregatedName.Operation.String()
 							s.Level = aggregatedName.Level.String()
-							slb.AddQuantityValues(s,
-								aggregatedName.Resource,
-								aggregatedName.Source, mv...)
+							// save samples in histogram format
+							if aggregatedName.Operation == collectorcontrollerv1alpha1.HistogramOperation && l.RetentionExponentialBuckets != nil {
+								slb.AddHistogramValues(s,
+									aggregatedName.Resource,
+									aggregatedName.Source,
+									l.RetentionExponentialBuckets[aggregatedName.Resource.String()],
+									mv...)
+							} else {
+								slb.AddQuantityValues(s,
+									aggregatedName.Resource,
+									aggregatedName.Source, mv...)
+							}
 						}
+
 						sCh <- slb.SampleList
 						c.publishTimer("metric_aggregation_per_aggregated_metric", ch, start, "local_save", name.String(), a.Name, l.Name, "aggregated_metric", aggregatedName.String())
 					}

@@ -896,6 +896,31 @@ type Level struct {
 	// written locally to a file for retention.
 	// The will be set in the "name" field of the SampleList.
 	RetentionName string `json:"retentionName,omitempty" yaml:"retentionName,omitempty"`
+
+	// RetentionExponentialBuckets if RetentionName is specified and the current Operation is a histogram operation
+	// then this defines an exponential histogram for each resource's raw samples .
+	RetentionExponentialBuckets map[string]ExponentialBuckets `json:"retentionExponentialBuckets,omitempty" yaml:"retentionExponentialBuckets,omitempty"`
+}
+
+// ExponentialBuckets histogram buckets for saving raw samples
+type ExponentialBuckets struct {
+	// MinimumBase is the smallest exponent base that can be used for any histogram
+	MinimumBase float64 `json:"minimumBase" yaml:"minimumBase"`
+
+	// Compression power-of-two level of compression at which buckets from the MinBase are merged together to form larger buckets
+	// Compression = 0, base=2. This is the basic case.
+	// Compression < 0, each base2 bucket is subdivided into 2^Compression log scale sub-buckets.
+	// Compression > 0, every 2^Compression base2 buckets are merged.
+	Compression int64 `json:"compression" yaml:"compression"`
+
+	// ExponentOffset is offset to start bounds for exponential histogram
+	// base = MinimumBase ^ (2 ^ Compression)
+	// start bound = base ^ (index + ExponentOffset)
+	// end bound = base ^ (index + 1 + ExponentOffset)
+	ExponentOffset int64 `json:"exponentOffset" yaml:"exponentOffset"`
+
+	// SaveMaxOnly indicates that only max value should be saved for resource instead of full histogram
+	SaveMaxOnly bool `json:"saveMaxOnly,omitempty" yaml:"saveMaxOnly,omitempty"`
 }
 
 // LabelsMask defines which labels to keep at a level.

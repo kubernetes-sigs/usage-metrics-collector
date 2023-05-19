@@ -17,6 +17,7 @@ package collector
 import (
 	"bytes"
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -102,6 +103,62 @@ func (sb *SampleListBuilder) AddQuantityValues(s *collectorapi.Sample, resourceT
 	for i := range v {
 		m.Values = append(m.Values, v[i].AsApproximateFloat64())
 	}
+}
+
+// AddHistogramValues adds a Metric to the sample with values in histogram format
+func (sb *SampleListBuilder) AddHistogramValues(s *collectorapi.Sample, resourceType collectorcontrollerv1alpha1.ResourceName,
+	source collectorcontrollerv1alpha1.Source, buckets collectorcontrollerv1alpha1.ExponentialBuckets, v ...resource.Quantity) {
+	if sb == nil {
+		return
+	}
+
+	m := &collectorapi.Metric{Source: string(source), ResourceType: string(resourceType)}
+	s.Values = append(s.Values, m)
+
+	m.Histogram = &collectorapi.ExponentialBuckets{Counts: &collectorapi.ExponentialBucketCounts{}}
+	// base = MinBase ^ (2 ^ Compression)
+	m.Histogram.Base = math.Pow(buckets.MinimumBase, math.Pow(2, float64(buckets.Compression)))
+
+	// lowerBound of histogram
+	// any values below lowerBound are considered zero
+	lowerBound := math.Pow(m.Histogram.Base, float64(buckets.ExponentOffset))
+
+	// max value stored in this histogram
+	maxVal := math.Inf(-1)
+	for i := range v {
+		val := v[i].AsApproximateFloat64()
+		if val < lowerBound {
+			m.Histogram.ZeroCount++
+		}
+		maxVal = math.Max(maxVal, val)
+	}
+
+	m.Histogram.MaxValue = maxVal
+	m.Histogram.BaseScale = int32(buckets.Compression)
+	m.Histogram.Counts.ExponentOffset = int32(buckets.ExponentOffset)
+
+	// store only maxvalue
+	if buckets.SaveMaxOnly || maxVal < lowerBound {
+		return
+	}
+
+	// max bucket index
+	// max index = log(maxVal)/log(base) -  exponentOffset + 1
+	maxIndex := int64(math.Round(math.Log(maxVal)/math.Log(m.Histogram.Base))) - buckets.ExponentOffset 
+
+	bucketCounts := make([]int64, maxIndex+1)
+
+	// set histogram bucket counts
+	for i := range v {
+		val := v[i].AsApproximateFloat64()
+		if val < lowerBound {
+			continue
+		}
+		index := int64(math.Round(math.Log(val)/math.Log(m.Histogram.Base))) - buckets.ExponentOffset
+		bucketCounts[index]++
+	}
+
+	m.Histogram.Counts.BucketCounts = append(m.Histogram.Counts.BucketCounts, bucketCounts...)
 }
 
 // AddIntValues adds a Metric to the sample with the provided values
