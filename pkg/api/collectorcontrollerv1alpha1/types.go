@@ -899,7 +899,7 @@ type Level struct {
 
 	// RetentionExponentialBuckets if RetentionName is specified and the current Operation is a histogram operation
 	// then this defines an exponential histogram for each resource's raw samples .
-	RetentionExponentialBuckets map[string]ExponentialBuckets `json:"retentionExponentialBuckets,omitempty" yaml:"retentionExponentialBuckets,omitempty"`
+	RetentionExponentialBuckets map[string]*ExponentialBuckets `json:"retentionExponentialBuckets,omitempty" yaml:"retentionExponentialBuckets,omitempty"`
 }
 
 // ExponentialBuckets histogram buckets for saving raw samples
