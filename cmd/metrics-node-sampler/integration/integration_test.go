@@ -40,9 +40,12 @@ import (
 	"sigs.k8s.io/usage-metrics-collector/pkg/testutil"
 )
 
-const (
-	sampleSize = 5
-)
+type testConfig struct {
+	SampleSize          int                                      `json:"sampleSize" yaml:"sampleSize"`
+	MinContainerSamples int                                      `json:"minContainerSamples" yaml:"minContainerSamples"`
+	MinNodeSamples      int                                      `json:"minNodeSamples" yaml:"minNodeSamples"`
+	Config              samplerserverv1alpha1.MetricsNodeSampler `json:"config" yaml:"config"`
+}
 
 func TestMetricsNodeSamplerGRPC(t *testing.T) {
 	setupTests(t, func(ports []int) string {
@@ -97,7 +100,11 @@ func setupTests(t *testing.T, f func([]int) string) {
 			t := tc.T
 			// create a new container client
 			var samples samples
-			tc.UnmarshalInputsStrict(map[string]interface{}{"input_samples.yaml": &samples})
+			var cfg testConfig
+			tc.UnmarshalInputsStrict(map[string]interface{}{
+				"input_samples.yaml": &samples,
+				"input_test.yaml":    &cfg,
+			})
 
 			// setup the testdata by copying it to a tmp directory
 			// this is so the test doesn't modify the testdata directory, and so multiple copies
@@ -139,9 +146,7 @@ func setupTests(t *testing.T, f func([]int) string) {
 				MetricsNodeSampler: samplerserverv1alpha1.MetricsNodeSampler{
 					Buffer: samplerserverv1alpha1.Buffer{
 						PollsPerMinute: 600, // poll frequently -- the clock is faked so this is just for the ticker
-						// store exactly 5 samples -- this must match the numer of samples in the testdata +1
-						// this is because we throw away the first sample
-						Size: sampleSize + 1,
+						Size:           cfg.SampleSize,
 					},
 					Reader: samplerserverv1alpha1.Reader{
 						CPUPaths: []samplerserverv1alpha1.MetricsFilepath{
@@ -155,7 +160,10 @@ func setupTests(t *testing.T, f func([]int) string) {
 							samplerserverv1alpha1.NodeAggregationLevel("*"),
 							samplerserverv1alpha1.NodeAggregationLevel(""),
 						),
-						ParentDirectories: []string{"burstable", "kubepods", "guaranteed"},
+						ParentDirectories:  []string{"burstable", "kubepods", "guaranteed"},
+						MaxCPUCoresNanoSec: cfg.Config.Reader.MaxCPUCoresNanoSec,
+						MinCPUCoresNanoSec: cfg.Config.Reader.MinCPUCoresNanoSec,
+						DropFirstValue:     cfg.Config.Reader.DropFirstValue,
 					},
 					RestPort: ports[0],
 					PBPort:   ports[1],
@@ -181,8 +189,17 @@ func setupTests(t *testing.T, f func([]int) string) {
 					return false
 				}
 				// poll until the server has populated its sample cache
-				return len(result.Containers[0].CpuCoresNanoSec) >= sampleSize
-
+				for _, c := range result.Containers {
+					if len(c.CpuCoresNanoSec) < cfg.MinContainerSamples {
+						return false
+					}
+				}
+				for _, c := range result.Node.AggregatedMetrics {
+					if len(c.CpuCoresNanoSec) < cfg.MinNodeSamples {
+						return false
+					}
+				}
+				return true
 			}, time.Minute*2, 2*time.Second)
 
 			// TODO: test adding a new pod and getting the metrics within ~seconds with

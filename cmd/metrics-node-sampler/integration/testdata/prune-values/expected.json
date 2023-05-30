@@ -7,56 +7,38 @@
 			"podName": "",
 			"namespaceName": "",
 			"cpuCoresNanoSec": [
-				"200",
-				"250",
-				"300",
-				"400",
-				"800"
+				"6500",
+				"6500"
 			],
 			"memoryBytes": [
-				"210",
-				"250",
-				"320",
-				"340",
-				"430"
+				"7",
+				"7"
 			],
 			"cpuThrottledNanoSec": [
 				"0",
-				"0",
-				"50",
-				"100",
-				"200"
+				"0"
 			],
 			"cpuPercentPeriodsThrottled": [
 				0,
-				0,
-				0.05,
-				0.1,
-				0.5
+				0
 			],
 			"cpuPeriodsSec": [
-				"0",
-				"1000",
-				"1000",
 				"1000",
 				"1000"
 			],
 			"cpuThrottledPeriodsSec": [
 				"0",
-				"0",
-				"50",
-				"100",
-				"500"
+				"0"
 			],
 			"nodeName": "",
-			"avgCPUCoresNanoSec": "390",
-			"avgMemoryBytes": "310",
-			"oomCount": "28",
-			"oomKillCount": "7",
-			"avgCPUPercentPeriodsThrottled": 0.1625,
-			"avgCPUThrottledNanoSec": "70",
-			"avgCPUPeriodsSec": "800",
-			"avgCPUThrottledPeriodsSec": "130"
+			"avgCPUCoresNanoSec": "6500",
+			"avgMemoryBytes": "7",
+			"oomCount": "9",
+			"oomKillCount": "6",
+			"avgCPUPercentPeriodsThrottled": 0,
+			"avgCPUThrottledNanoSec": "0",
+			"avgCPUPeriodsSec": "1000",
+			"avgCPUThrottledPeriodsSec": "0"
 		}
 	],
 	"node": {
@@ -64,138 +46,154 @@
 			{
 				"aggregationLevel": "",
 				"cpuCoresNanoSec": [
-					"2000",
-					"3000",
-					"4000",
-					"8000",
-					"8000"
+					"9000",
+					"9000"
 				],
 				"memoryBytes": [
 					"0",
-					"0",
-					"0",
-					"0",
 					"0"
 				],
-				"avgCPUCoresNanoSec": "5000",
+				"avgCPUCoresNanoSec": "9000",
 				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "kubelet",
 				"cpuCoresNanoSec": [
-					"2000",
-					"2000",
-					"3000",
-					"4000",
-					"4000"
-				],
-				"memoryBytes": [
+					"0",
 					"0",
 					"0",
 					"0",
 					"0",
 					"0"
 				],
-				"avgCPUCoresNanoSec": "3000",
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "0",
 				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "kubelet/kubepods",
 				"cpuCoresNanoSec": [
-					"1000",
-					"1000",
-					"1000",
-					"1000",
-					"2000"
+					"0",
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
 				],
 				"memoryBytes": [
 					"150",
-					"300",
-					"600",
-					"800",
-					"1000"
+					"150",
+					"150",
+					"150",
+					"150",
+					"150"
 				],
-				"avgCPUCoresNanoSec": "1200",
-				"avgMemoryBytes": "570"
+				"avgCPUCoresNanoSec": "0",
+				"avgMemoryBytes": "150"
 			},
 			{
 				"aggregationLevel": "kubelet/kubepods/guaranteed",
 				"cpuCoresNanoSec": [
-					"200",
-					"500",
-					"1000",
-					"2000",
-					"10000"
+					"0",
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
 				],
 				"memoryBytes": [
-					"100",
-					"100",
-					"150",
-					"170",
-					"300"
+					"75",
+					"75",
+					"75",
+					"75",
+					"75",
+					"75"
 				],
-				"avgCPUCoresNanoSec": "2740",
-				"avgMemoryBytes": "164"
+				"avgCPUCoresNanoSec": "0",
+				"avgMemoryBytes": "75"
 			},
 			{
 				"aggregationLevel": "max.slice",
 				"cpuCoresNanoSec": [
-					"2000"
-				],
-				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0",
 					"0"
 				],
-				"avgCPUCoresNanoSec": "2000",
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "0",
 				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "min.slice",
 				"cpuCoresNanoSec": [
-					"1000"
-				],
-				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0",
 					"0"
 				],
-				"avgCPUCoresNanoSec": "1000",
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "0",
 				"avgMemoryBytes": "0"
 			},
 			{
 				"aggregationLevel": "system.slice",
 				"cpuCoresNanoSec": [
-					"2000",
-					"2000",
-					"3000",
-					"3000",
-					"4000"
+					"8000",
+					"8000"
 				],
 				"memoryBytes": [
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "8000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "system.slice/kubelet.service",
+				"cpuCoresNanoSec": [
+					"0",
 					"0",
 					"0",
 					"0",
 					"0",
 					"0"
 				],
-				"avgCPUCoresNanoSec": "2800",
-				"avgMemoryBytes": "0"
-			},
-			{
-				"aggregationLevel": "system.slice/kubelet.service",
-				"cpuCoresNanoSec": [
-					"1000",
-					"1000",
-					"1000",
-					"1000",
-					"2000"
-				],
 				"memoryBytes": [
-					"150",
 					"300",
-					"600",
-					"800",
-					"1000"
+					"300",
+					"300",
+					"300",
+					"300",
+					"300"
 				],
-				"avgCPUCoresNanoSec": "1200",
-				"avgMemoryBytes": "570"
+				"avgCPUCoresNanoSec": "0",
+				"avgMemoryBytes": "300"
 			}
 		]
 	},

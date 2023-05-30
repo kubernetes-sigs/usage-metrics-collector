@@ -23,6 +23,7 @@ import (
 
 	"github.com/containerd/containerd"
 	"k8s.io/client-go/util/retry"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 )
@@ -113,7 +114,7 @@ func (s *sampleCache) getAllSamples() (allSampleInstants, int) {
 				// filter samples outside the acceptable range
 				continue
 			}
-			if int64(v.CPUCoresNanoSec) < s.metricsReader.MinCPUCoresNanoSec {
+			if v.CPUThrottledUSec > uint64(s.metricsReader.MaxCPUCoresNanoSec) {
 				// filter samples outside the acceptable range
 				continue
 			}
@@ -135,14 +136,14 @@ func (s *sampleCache) getAllSamples() (allSampleInstants, int) {
 				// filter samples outside the acceptable range
 				continue
 			}
-			if int64(v.CPUCoresNanoSec) < s.metricsReader.MinCPUCoresNanoSec {
+			if v.CPUThrottledUSec > uint64(s.metricsReader.MaxCPUCoresNanoSec) {
 				// filter samples outside the acceptable range
 				continue
 			}
 
 			n, ok := all.node[level]
 			if !ok {
-				// we don't know if this container has all sample, but allocate the space anyway
+				// we don't know if this container has all samples, but allocate the space anyway
 				n = &sampleResult{values: make([]sampleInstant, 0, len(samples))}
 				all.node[level] = n
 			}
@@ -151,13 +152,12 @@ func (s *sampleCache) getAllSamples() (allSampleInstants, int) {
 	}
 	for _, c := range all.containers {
 		// populate the mean values
-		populateSummary(c)
+		s.populateSummary(c)
 	}
 	for _, n := range all.node {
 		// populate the mean values
-		populateSummary(n)
+		s.populateSummary(n)
 	}
-
 	log.V(3).Info("returning samples", "count", len(all.containers))
 	return all, count
 }
@@ -318,12 +318,12 @@ func (s *sampleCache) metricToSample(
 		CumulativeMemoryOOM:           memory.OOMs,
 	}
 
-	computeSampleDelta(&last, &sample)
+	s.computeSampleDelta(&last, &sample)
 
 	return sample
 }
 
-func computeSampleDelta(last, sample *sampleInstant) {
+func (s *sampleCache) computeSampleDelta(last, sample *sampleInstant) {
 	if last.Time.IsZero() {
 		// only compute rate if the last sample was set
 		return
@@ -350,7 +350,7 @@ func computeSampleDelta(last, sample *sampleInstant) {
 	sample.MemoryOOMKill = sample.CumulativeMemoryOOMKill - last.CumulativeMemoryOOMKill
 }
 
-func populateSummary(sr *sampleResult) {
+func (s *sampleCache) populateSummary(sr *sampleResult) {
 	count := int64(len(sr.values))
 	if count < 2 {
 		// don't have enough samples to have a meaningful summary
@@ -363,18 +363,39 @@ func populateSummary(sr *sampleResult) {
 	// a sample that is no longer stored
 	first := sr.values[0]
 	sr.avg = sr.values[len(sr.values)-1]
-	computeSampleDelta(&first, &sr.avg)
+	s.computeSampleDelta(&first, &sr.avg)
 
-	var b uint64
+	var mem, cpuCoresNanoSec, cpuThrottledUSec uint64
+	var l uint64
 	for i := range sr.values {
-		if i == 0 {
+		if i == 0 && pointer.BoolDeref(s.metricsReader.DropFirstValue, false) {
+			// skip the first value (see comment above)
 			continue
 		}
+		l++
 		v := sr.values[i]
-		b += v.MemoryBytes
+		mem += v.MemoryBytes
+		cpuCoresNanoSec += v.CPUCoresNanoSec
+		cpuThrottledUSec += v.CPUThrottledUSec
 	}
-	b /= uint64(len(sr.values) - 1)
-	sr.avg.MemoryBytes = b
+
+	sr.avg.MemoryBytes = mem / l
+
+	// Fallback on average of individual values if we found any anomalous values
+	// Anomalous values will be thrown away, so first check if we don't have
+	// the full count of values for the container.
+	// Also do a secondary defensive sanity check to make sure the average falls
+	// in the expected range.
+	if len(sr.values) < s.Size ||
+		sr.avg.CPUCoresNanoSec > s.metricsReader.MaxCPUCoresNanoSec ||
+		int64(sr.avg.CPUCoresNanoSec) < s.metricsReader.MinCPUCoresNanoSec {
+		sr.avg.CPUCoresNanoSec = cpuCoresNanoSec / l
+	}
+	if len(sr.values) < s.Size ||
+		sr.avg.CPUThrottledUSec > s.metricsReader.MaxCPUCoresNanoSec ||
+		int64(sr.avg.CPUThrottledUSec) < s.metricsReader.MinCPUCoresNanoSec {
+		sr.avg.CPUThrottledUSec = cpuThrottledUSec / l
+	}
 }
 
 // getSeconds returns the number of seconds between 2 samples

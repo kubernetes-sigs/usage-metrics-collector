@@ -1,131 +1,37 @@
 cpuUsageSamples:
   "sys/fs/cgroup/cpuacct/cpuacct.usage":
-  - usage: 8000
-  - usage: 8000
-  - usage: 4000
-  - usage: 2000
-  - usage: 3000
-  "sys/fs/cgroup/cpuacct/kubelet/cpuacct.usage":
-  - usage: 4000
-  - usage: 4000
-  - usage: 2000
-  - usage: 2000
-  - usage: 3000
-  "sys/fs/cgroup/cpuacct/max.slice/cpuacct.usage":
-  - usage: 1000000000000000
-  - usage: 1000000000000000
-  - usage: 2000
-  - usage: 2000
-  - usage: 1000000000000000
-  "sys/fs/cgroup/cpuacct/min.slice/cpuacct.usage":
-  - usage: -1
-  - usage: -1
-  - usage: 1000
-  - usage: 1000
-  - usage: -1
+  - usage: -1 # drop anomaly -- too small
+  - usage: 2000000 # drop anomaly -- too big
+  - usage: 9000
   "sys/fs/cgroup/cpuacct/system.slice/cpuacct.usage":
-  - usage: 3000
-  - usage: 4000
-  - usage: 2000
-  - usage: 2000
-  - usage: 3000
-  "sys/fs/cgroup/cpuacct/system.slice/kubelet.service/cpuacct.usage":
-  - usage: 1000
-  - usage: 1000
-  - usage: 1000
-  - usage: 2000
-  - usage: 1000
-  "sys/fs/cgroup/cpuacct/kubelet/kubepods/cpuacct.usage":
-  - usage: 1000
-  - usage: 1000
-  - usage: 1000
-  - usage: 2000
-  - usage: 1000
-  "sys/fs/cgroup/cpuacct/kubelet/kubepods/guaranteed/cpuacct.usage":
-  - usage: 500
-  - usage: 1000
-  - usage: 200
-  - usage: 2000
-  - usage: 10000
+  - usage: -1
+  - usage: 2000000
+  - usage: 8000
   "sys/fs/cgroup/cpuacct/kubelet/kubepods/burstable/podpod12345/abcdef/cpuacct.usage":
-  - usage: 200
-  - usage: 250
-  - usage: 300
-  - usage: 400
-  - usage: 800
+  - usage: -1
+  - usage: 2000000
+  - usage: 6500
 cpuThrottlingSamples:
   "sys/fs/cgroup/cpu/kubelet/kubepods/burstable/podpod12345/abcdef/cpu.stat":
   - throttled_time: 0
     nr_periods: 1000
     nr_throttled: 0
-  - throttled_time: 0
-    nr_periods: 0
-    nr_throttled: 0
-  - throttled_time: 100
-    nr_periods: 1000
-    nr_throttled: 100
-  - throttled_time: 50
-    nr_periods: 1000
-    nr_throttled: 50
-  - throttled_time: 200
-    nr_periods: 1000
-    nr_throttled: 500
 memorySamples:
   "sys/fs/cgroup/memory/system.slice/kubelet.service/memory.stat":
-  - total_rss: 100
-    total_cache: 50
   - total_rss: 200
     total_cache: 100
-  - total_rss: 300
-    total_cache: 300
-  - total_rss: 400
-    total_cache: 400
-  - total_rss: 500
-    total_cache: 500
   "sys/fs/cgroup/memory/kubelet/kubepods/memory.stat":
   - total_rss: 100
     total_cache: 50
-  - total_rss: 200
-    total_cache: 100
-  - total_rss: 300
-    total_cache: 300
-  - total_rss: 400
-    total_cache: 400
-  - total_rss: 500
-    total_cache: 500
   "sys/fs/cgroup/memory/kubelet/kubepods/guaranteed/memory.stat":
   - total_rss: 50
-    total_cache: 50
-  - total_rss: 50
-    total_cache: 50
-  - total_rss: 50
-    total_cache: 100
-  - total_rss: 60
-    total_cache: 110
-  - total_rss: 100
-    total_cache: 200
+    total_cache: 25
   "sys/fs/cgroup/memory/kubelet/kubepods/burstable/podpod12345/abcdef/memory.stat":
-  - total_rss: 100
-    total_cache: 110
-  - total_rss: 100
-    total_cache: 150
-  - total_rss: 200
-    total_cache: 120
-  - total_rss: 200
-    total_cache: 140
-  - total_rss: 300
-    total_cache: 130
+  - total_rss: 5
+    total_cache: 2
 oomSamples:
   "sys/fs/cgroup/memory/kubelet/kubepods/burstable/podpod12345/abcdef/memory.oom_control":
-  - "oom_kill": 0
-  - "oom_kill": 0
-  - "oom_kill": 1
-  - "oom_kill": 2
-  - "oom_kill": 4
+  - "oom_kill": 2 # 2x6 samples = 12
 oomKillSamples:
   "sys/fs/cgroup/memory/kubelet/kubepods/burstable/podpod12345/abcdef/memory.failcnt":
-  - 0
-  - 1
-  - 2
-  - 4
-  - 21
+  - 3 # 3x6 samples == 18 total

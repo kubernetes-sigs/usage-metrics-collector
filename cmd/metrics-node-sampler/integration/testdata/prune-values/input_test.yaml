@@ -1,0 +1,8 @@
+sampleSize: 6
+minContainerSamples: 2 # 2/3 of the samples should be dropped -- 6 samples should return 2 with 4 dropped
+minNodeSamples: 2 # 2/3 of the samples should be dropped -- 6 samples should return 2 with 4 dropped
+config:
+  reader:
+    minCPUCoresNanoSec: 0
+    maxCPUCoresNanoSec: 1e6
+
