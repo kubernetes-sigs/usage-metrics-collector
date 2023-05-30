@@ -1,0 +1,206 @@
+{
+	"containers": [
+		{
+			"containerID": "abcdef",
+			"podUID": "pod12345",
+			"containerName": "",
+			"podName": "",
+			"namespaceName": "",
+			"cpuCoresNanoSec": [
+				"200",
+				"250",
+				"300",
+				"400",
+				"800"
+			],
+			"memoryBytes": [
+				"210",
+				"250",
+				"320",
+				"340",
+				"430"
+			],
+			"cpuThrottledNanoSec": [
+				"0",
+				"0",
+				"50",
+				"100",
+				"200"
+			],
+			"cpuPercentPeriodsThrottled": [
+				0,
+				0,
+				0.05,
+				0.1,
+				0.5
+			],
+			"cpuPeriodsSec": [
+				"0",
+				"1000",
+				"1000",
+				"1000",
+				"1000"
+			],
+			"cpuThrottledPeriodsSec": [
+				"0",
+				"0",
+				"50",
+				"100",
+				"500"
+			],
+			"nodeName": "",
+			"avgCPUCoresNanoSec": "390",
+			"avgMemoryBytes": "310",
+			"oomCount": "28",
+			"oomKillCount": "7",
+			"avgCPUPercentPeriodsThrottled": 0.1625,
+			"avgCPUThrottledNanoSec": "70",
+			"avgCPUPeriodsSec": "800",
+			"avgCPUThrottledPeriodsSec": "130"
+		}
+	],
+	"node": {
+		"aggregatedMetrics": [
+			{
+				"aggregationLevel": "",
+				"cpuCoresNanoSec": [
+					"2000",
+					"3000",
+					"4000",
+					"8000",
+					"8000"
+				],
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "5000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "kubelet",
+				"cpuCoresNanoSec": [
+					"2000",
+					"2000",
+					"3000",
+					"4000",
+					"4000"
+				],
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "3000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "kubelet/kubepods",
+				"cpuCoresNanoSec": [
+					"1000",
+					"1000",
+					"1000",
+					"1000",
+					"2000"
+				],
+				"memoryBytes": [
+					"150",
+					"300",
+					"600",
+					"800",
+					"1000"
+				],
+				"avgCPUCoresNanoSec": "1200",
+				"avgMemoryBytes": "570"
+			},
+			{
+				"aggregationLevel": "kubelet/kubepods/guaranteed",
+				"cpuCoresNanoSec": [
+					"200",
+					"500",
+					"1000",
+					"2000",
+					"10000"
+				],
+				"memoryBytes": [
+					"100",
+					"100",
+					"150",
+					"170",
+					"300"
+				],
+				"avgCPUCoresNanoSec": "2740",
+				"avgMemoryBytes": "164"
+			},
+			{
+				"aggregationLevel": "max.slice",
+				"cpuCoresNanoSec": [
+					"2000"
+				],
+				"memoryBytes": [
+					"0"
+				],
+				"avgCPUCoresNanoSec": "2000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "min.slice",
+				"cpuCoresNanoSec": [
+					"1000"
+				],
+				"memoryBytes": [
+					"0"
+				],
+				"avgCPUCoresNanoSec": "1000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "system.slice",
+				"cpuCoresNanoSec": [
+					"2000",
+					"2000",
+					"3000",
+					"3000",
+					"4000"
+				],
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "2800",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "system.slice/kubelet.service",
+				"cpuCoresNanoSec": [
+					"1000",
+					"1000",
+					"1000",
+					"1000",
+					"2000"
+				],
+				"memoryBytes": [
+					"150",
+					"300",
+					"600",
+					"800",
+					"1000"
+				],
+				"avgCPUCoresNanoSec": "1200",
+				"avgMemoryBytes": "570"
+			}
+		]
+	},
+	"nodeName": "",
+	"podName": "",
+	"timestamp": null,
+	"reason": "pull"
+}
