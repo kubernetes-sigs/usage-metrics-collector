@@ -1,0 +1,37 @@
+cpuUsageSamples:
+  "sys/fs/cgroup/cpuacct/cpuacct.usage":
+  - usage: -1 # drop anomaly -- too small
+  - usage: 2000000 # drop anomaly -- too big
+  - usage: 9000
+  "sys/fs/cgroup/cpuacct/system.slice/cpuacct.usage":
+  - usage: -1
+  - usage: 2000000
+  - usage: 8000
+  "sys/fs/cgroup/cpuacct/kubelet/kubepods/burstable/podpod12345/abcdef/cpuacct.usage":
+  - usage: -1
+  - usage: 2000000
+  - usage: 6500
+cpuThrottlingSamples:
+  "sys/fs/cgroup/cpu/kubelet/kubepods/burstable/podpod12345/abcdef/cpu.stat":
+  - throttled_time: 0
+    nr_periods: 1000
+    nr_throttled: 0
+memorySamples:
+  "sys/fs/cgroup/memory/system.slice/kubelet.service/memory.stat":
+  - total_rss: 200
+    total_cache: 100
+  "sys/fs/cgroup/memory/kubelet/kubepods/memory.stat":
+  - total_rss: 100
+    total_cache: 50
+  "sys/fs/cgroup/memory/kubelet/kubepods/guaranteed/memory.stat":
+  - total_rss: 50
+    total_cache: 25
+  "sys/fs/cgroup/memory/kubelet/kubepods/burstable/podpod12345/abcdef/memory.stat":
+  - total_rss: 5
+    total_cache: 2
+oomSamples:
+  "sys/fs/cgroup/memory/kubelet/kubepods/burstable/podpod12345/abcdef/memory.oom_control":
+  - "oom_kill": 2 # 2x6 samples = 12
+oomKillSamples:
+  "sys/fs/cgroup/memory/kubelet/kubepods/burstable/podpod12345/abcdef/memory.failcnt":
+  - 3 # 3x6 samples == 18 total

@@ -35,6 +35,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/ctrstats"
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler/api"
@@ -499,7 +500,7 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			AvgCPUThrottledPeriodsSec:     int64(v.avg.CPUThrottledPeriodsSec),
 		}
 		for i := range v.values {
-			if i == 0 {
+			if i == 0 && pointer.BoolDeref(s.Reader.DropFirstValue, false) {
 				// skip the first value to be consistent with how mean is calculated
 				continue
 			}
@@ -529,7 +530,7 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 		cpuCoresNanoSec := make([]int64, 0, len(values.values)-1)
 		memoryBytes := make([]int64, 0, len(values.values)-1)
 		for i := range values.values {
-			if i == 0 {
+			if i == 0 && pointer.BoolDeref(s.Reader.DropFirstValue, false) {
 				// skip the first value to be consistent with how mean is calculated
 				continue
 			}

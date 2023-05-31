@@ -119,6 +119,11 @@ type Reader struct {
 	MinCPUCoresNanoSec int64 `json:"minCPUCoresNanoSec" yaml:"minCPUCoresNanoSec"`
 	// MaxCPUCoresNanoSec is defaulted from MaxCPUCoresSampleValue
 	MaxCPUCoresNanoSec uint64 `json:"maxCPUCoresNanoSec" yaml:"maxCPUCoresNanoSec"`
+
+	// DropFirstValue if true will drop the first sample value so the average
+	// by computing the last-first values more closely matches the average
+	// by computing the average of the individual samples.
+	DropFirstValue *bool `json:"dropFirstValue,omitempty" yaml:"dropFirstValue,omitempty"`
 }
 
 type NodeAggregationLevel string
