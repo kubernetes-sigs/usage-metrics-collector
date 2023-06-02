@@ -144,7 +144,7 @@ func (sb *SampleListBuilder) AddHistogramValues(s *collectorapi.Sample, resource
 
 	// max bucket index
 	// max index = log(maxVal)/log(base) -  exponentOffset + 1
-	maxIndex := int64(math.Round(math.Log(maxVal)/math.Log(m.Histogram.Base))) - buckets.ExponentOffset 
+	maxIndex := int64(math.Floor(math.Log(maxVal)/math.Log(m.Histogram.Base))) - buckets.ExponentOffset 
 
 	bucketCounts := make([]int64, maxIndex+1)
 
@@ -154,7 +154,7 @@ func (sb *SampleListBuilder) AddHistogramValues(s *collectorapi.Sample, resource
 		if val < lowerBound {
 			continue
 		}
-		index := int64(math.Round(math.Log(val)/math.Log(m.Histogram.Base))) - buckets.ExponentOffset
+		index := int64(math.Floor(math.Log(val)/math.Log(m.Histogram.Base))) - buckets.ExponentOffset
 		bucketCounts[index]++
 	}
 
