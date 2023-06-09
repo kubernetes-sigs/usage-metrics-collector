@@ -98,6 +98,7 @@ type Server struct {
 	expireFreq time.Duration
 	ttl        time.Duration
 
+	ServeResults    atomic.Bool
 	IsReadyResult   atomic.Bool
 	IsCached        atomic.Bool
 	IsHealthyResult atomic.Bool
