@@ -1591,7 +1591,14 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 					if cyclesCount > c.UtilizationServer.WaitSamplerRegistrationsBeforeServe {
 						c.UtilizationServer.ServeResults.Store(true)
 					}
-
+log := log.WithValues("running-minutes", time.Since(c.startTime).Minutes(),
+						"nodes-with-results-count", nodesWithResults.Len(),
+						"nodes-with-samplers-count", nodesWithSamplers.Len(),
+						"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
+						"nodes-missing-results", nodesMissingResults.List(),
+						"ready-pct", readyPct,
+						"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady,
+						"remaining-cycles", waitReadyCyclesCount)
 					if waitReadyCyclesCount <= 0 {
 						// Have enough utilization results to say we are ready
 						log.Info("collector ready",
