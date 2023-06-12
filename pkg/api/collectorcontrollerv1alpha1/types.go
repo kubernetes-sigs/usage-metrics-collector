@@ -179,6 +179,10 @@ type UtilizationServer struct {
 	// WaitSamplerRegistrationsBeforeReady if set will wait this many additional registration cycles after reaching
 	// MinResultPctBeforeReady before becoming ready.
 	WaitSamplerRegistrationsBeforeReady int `json:"waitSamplerRegistrationsBeforeReady" yaml:"waitSamplerRegistrationsBeforeReady"`
+
+	// WaitSamplerRegistrationsBeforeServe if set will wait this many additional registration cycles after reaching
+	// MinResultPctBeforeReady before serving results.
+	WaitSamplerRegistrationsBeforeServe int `json:"waitSamplerRegistrationsBeforeServe" yaml:"waitSamplerRegistrationsBeforeServe"`
 }
 
 // Condition matches a node condition to determine whether a node is unhealthy.

@@ -340,7 +340,7 @@ func (ms *MetricsServer) continouslyCacheResponse() {
 	defer t.Stop()
 	for {
 		// make sure we are getting metrics with utilization
-		metricsReady := ms.Col.UtilizationServer.IsReadyResult.Load()
+		metricsReady := ms.Col.UtilizationServer.ServeResults.Load()
 		start := time.Now()
 		err := retry.OnError(
 			wait.Backoff{

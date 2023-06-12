@@ -174,6 +174,7 @@ func TestCollector(t *testing.T) {
 		require.NoError(t, err)
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
 		instance.UtilizationServer.IsReadyResult.Store(true)
+		instance.UtilizationServer.ServeResults.Store(true)
 		instance.IsLeaderElected.Store(true)
 
 		if os.Getenv("TEST_COLLECTOR_FUNCS_OVERRIDE") == "true" {
@@ -237,6 +238,7 @@ func BenchmarkCollector(b *testing.B) {
 			require.NoError(b, err)
 			tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
 			instance.UtilizationServer.IsReadyResult.Store(true)
+			instance.UtilizationServer.ServeResults.Store(true)
 			instance.IsLeaderElected.Store(true)
 
 			reg := prometheus.NewPedanticRegistry()
@@ -292,6 +294,7 @@ func TestCollectorOverride(t *testing.T) {
 		require.NoError(t, err)
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
 		instance.UtilizationServer.IsReadyResult.Store(true)
+		instance.UtilizationServer.ServeResults.Store(true)
 		instance.IsLeaderElected.Store(true)
 
 		reg := prometheus.NewPedanticRegistry()
@@ -373,6 +376,7 @@ func testSave(t *testing.T, saveJSON, saveProto bool) {
 		require.NoError(t, err)
 		tc.UnmarshalInputsStrict(map[string]interface{}{"input_usage.yaml": &instance.UtilizationServer})
 		instance.UtilizationServer.IsReadyResult.Store(true)
+		instance.UtilizationServer.ServeResults.Store(true)
 		instance.IsLeaderElected.Store(true)
 
 		ctx, cancelCtx := context.WithCancel(context.Background())

@@ -92,6 +92,7 @@ func NewCollector(
 		startTime:                  time.Now(),
 		IsLeaderElected:            &atomic.Bool{},
 	}
+	c.UtilizationServer.ServeResults.Store(false)
 	c.UtilizationServer.IsReadyResult.Store(false)
 	c.IsLeaderElected.Store(false)
 
@@ -181,7 +182,7 @@ func (c *Collector) saveMetricsToLocalFile(slc chan *collectorapi.SampleList) {
 // This there are cached metrics, Collect will return the cached metrics.
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	start := time.Now()
-	if !c.IsLeaderElected.Load() || !c.UtilizationServer.IsReadyResult.Load() {
+	if !c.IsLeaderElected.Load() || !c.UtilizationServer.ServeResults.Load() {
 		// Never export metrics if we aren't the leader or aren't ready to report them.
 		// e.g. have sufficient utilization metrics
 		log.Info("skipping collection")
@@ -1500,6 +1501,7 @@ func (c *Collector) wait(fns map[string]func() error, metricCh chan<- prometheus
 func (c *Collector) registerWithSamplers(ctx context.Context) {
 	if c.UtilizationServer.MinResultPctBeforeReady == 0 {
 		// don't register with samplers
+		c.UtilizationServer.ServeResults.Store(true)
 		c.UtilizationServer.IsReadyResult.Store(true)
 		log.Info("not using min utilization results for ready check")
 	}
@@ -1513,6 +1515,7 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 	go func() {
 		tick := time.NewTicker(time.Minute)
 		waitReadyCyclesCount := c.UtilizationServer.WaitSamplerRegistrationsBeforeReady
+		cyclesCount := 0
 		for {
 			log.V(1).Info("ensuring collector is registered with samplers")
 			// since we can't get the status.ips list from the downward api,
@@ -1584,6 +1587,18 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 
 				readyPct := (nodesWithResults.Len() * 100 / nodesWithSamplers.Len())
 				if nodesWithSamplers.Len() > 0 && readyPct > c.UtilizationServer.MinResultPctBeforeReady {
+					cyclesCount++
+					if cyclesCount > c.UtilizationServer.WaitSamplerRegistrationsBeforeServe {
+						c.UtilizationServer.ServeResults.Store(true)
+					}
+log := log.WithValues("running-minutes", time.Since(c.startTime).Minutes(),
+						"nodes-with-results-count", nodesWithResults.Len(),
+						"nodes-with-samplers-count", nodesWithSamplers.Len(),
+						"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
+						"nodes-missing-results", nodesMissingResults.List(),
+						"ready-pct", readyPct,
+						"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady,
+						"remaining-cycles", waitReadyCyclesCount)
 					if waitReadyCyclesCount <= 0 {
 						// Have enough utilization results to say we are ready
 						log.Info("collector ready",
@@ -1596,6 +1611,7 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 							"min-ready-pct", c.UtilizationServer.MinResultPctBeforeReady,
 							"remaining-cycles", waitReadyCyclesCount,
 						)
+						c.UtilizationServer.ServeResults.Store(true)
 						c.UtilizationServer.IsReadyResult.Store(true)
 					} else {
 						log.Info("collector has required sampler results, waiting on WaitSamplerRegistrationsBeforeReady to be ready",
