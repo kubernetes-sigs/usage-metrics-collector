@@ -331,7 +331,7 @@ func (ms *MetricsServer) Start(ctx context.Context) error {
 // cache the response from making a local http request
 type cachedResponse struct {
 	data    []byte
-	headers http.Header
+	headers map[string][]string
 }
 
 // continouslyCacheResponse continuously hits the collector metrics endpoint and
@@ -363,16 +363,23 @@ func (ms *MetricsServer) continouslyCacheResponse() {
 					log.Error(err, "unable to read cached metrics response")
 					return err
 				}
+
 				body, err := io.ReadAll(resp.Body)
 				if err != nil {
 					log.Error(err, "unable to read cached metrics body")
 					return err
 				}
 				resp.Body.Close()
-				ms.cachedResponseBody.Store(cachedResponse{
+
+				cached := cachedResponse{
 					data:    body,
-					headers: resp.Header,
-				})
+					headers: map[string][]string{},
+				}
+				for k, v := range resp.Header {
+					cached.headers[k] = append(cached.headers[k], v...)
+				}
+
+				ms.cachedResponseBody.Store(cached)
 				if metricsReady {
 					// don't declare the pod as ready until we have cached metrics
 					// that include utilization from a sufficient number of nodes.
@@ -405,16 +412,22 @@ func (ms *MetricsServer) serveMetricsFromCache() {
 			return
 		}
 		cr := resp.(cachedResponse)
-		_, err := w.Write(cr.data)
-		if err != nil {
-			log.Error(err, "unable to write metrics response")
-			w.WriteHeader(http.StatusInternalServerError)
-		}
 		for k, v := range cr.headers {
 			for i := range v {
 				w.Header().Add(k, v[i])
 			}
 		}
+		for k, v := range ms.ResponseCacheOptions.ResponseHeaders {
+			w.Header().Set(k, v)
+		}
+
+		_, err := w.Write(cr.data)
+		if err != nil {
+			log.Error(err, "unable to write metrics response")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	})
 	if err := http.ListenAndServe(options.externalBindAddress, nil); err != nil {
 		log.Error(err, "failed to listen on cached metrics address")

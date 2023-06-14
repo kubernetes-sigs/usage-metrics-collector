@@ -15,27 +15,34 @@
 package integration
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/matttproud/golang_protobuf_extensions/pbutil"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/require"
+	yaml "gopkg.in/yaml.v3"
+	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/testutil"
 )
 
 // Update test data by running with `TESTUTIL_UPDATE_EXPECTED=true`
 func TestMetricsPrometheusCollector(t *testing.T) {
-	suite := &testutil.IntegrationTestSuite{}
-	suite.SetupTestSuite(t)
-	defer suite.TearDownTestSuite(t)
-
 	// Create all the test objects
 	parser := &testutil.TestCaseParser{ExpectedSuffix: ".txt"}
 	parser.TestDir(t, func(tc *testutil.TestCase) error {
 		t := tc.T
+
+		suite := &testutil.IntegrationTestSuite{}
+		suite.SetupTestSuite(t)
+		defer suite.TearDownTestSuite(t)
 
 		suite.SetupTest(t, *tc)
 		defer suite.TearDownTest(t)
@@ -69,7 +76,29 @@ func TestMetricsPrometheusCollector(t *testing.T) {
 		}
 
 		// Get the metrics
-		out := suite.GetMetrics(t, "http://localhost:"+port1+"/metrics", buff)
+		out, headers := suite.GetMetrics(t, "http://localhost:"+port1+"/metrics", buff)
+
+		config := &collectorcontrollerv1alpha1.MetricsPrometheusCollector{}
+		require.NoError(t, yaml.Unmarshal([]byte(tc.Inputs["input_collector.yaml"]), config))
+
+		if strings.Contains(config.ResponseCacheOptions.RequestHeaders["Accept"], "application/vnd.google.protobuf") {
+			reader := bytes.NewBufferString(out)
+			results := []string{}
+			var ierr error
+			for ierr != io.EOF {
+				mf := &dto.MetricFamily{}
+				if _, ierr := pbutil.ReadDelimited(reader, mf); ierr != nil {
+					if ierr == io.EOF {
+						break
+					}
+					require.NoError(t, err)
+				}
+				b, err := json.Marshal(mf)
+				require.NoError(t, err)
+				results = append(results, string(b))
+			}
+			out = strings.Join(results, "\n") + "\n"
+		}
 
 		tc.Actual = filterMetrics(out,
 			"go_", "rest_client_", "_latency_seconds", "prometheus_",
@@ -78,7 +107,7 @@ func TestMetricsPrometheusCollector(t *testing.T) {
 			"kube_usage_leader_elected",
 			"kube_usage_collect_cache_time",
 			"kube_usage_metric_aggregation_",
-		)
+		) + "---\n" + headers + "\n"
 		return nil
 	})
 }
