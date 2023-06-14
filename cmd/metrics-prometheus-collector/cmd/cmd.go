@@ -349,7 +349,16 @@ func (ms *MetricsServer) continouslyCacheResponse() {
 			},
 			func(err error) bool { return true },
 			func() error {
-				resp, err := http.Get("http://" + options.MetricsBindAddress + "/metrics")
+				client := &http.Client{}
+				req, err := http.NewRequest("GET", "http://"+options.MetricsBindAddress+"/metrics", nil)
+				if err != nil {
+					log.Error(err, "unable to get cached metrics")
+					return err
+				}
+				for k, v := range ms.ResponseCacheOptions.RequestHeaders {
+					req.Header.Add(k, v)
+				}
+				resp, err := client.Do(req)
 				if err != nil {
 					log.Error(err, "unable to read cached metrics response")
 					return err

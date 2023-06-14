@@ -92,6 +92,12 @@ type MetricsPrometheusCollector struct {
 	DefaultAggregationNames bool `json:"defaultAggregationNames" yaml:"defaultAggregationNames"`
 	// DefaultLevelNames if set to true will default the level name to the mask name
 	DefaultLevelNames bool `json:"defaultLevelNames" yaml:"defaultLevelNames"`
+
+	ResponseCacheOptions ResponseCacheOptions `json:"responseCacheOptions" yaml:"responseCacheOptions"`
+}
+
+type ResponseCacheOptions struct {
+	RequestHeaders map[string]string `json:"requestHeaders" yaml:"requestHeaders"`
 }
 
 type SchedulerHealth struct {
