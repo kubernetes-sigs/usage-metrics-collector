@@ -143,3 +143,5 @@ kube_usage_workload_sum_requests_allocated_cpu_cores{app="foo",exported_namespac
 # TYPE kube_usage_workload_sum_requests_allocated_memory_bytes gauge
 kube_usage_workload_sum_requests_allocated_memory_bytes{app="",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="core",workload_api_version="v1",workload_kind="pod",workload_name="test-container"} 7.340032e+07
 kube_usage_workload_sum_requests_allocated_memory_bytes{app="foo",exported_namespace="test",level="workload",priority_class="p1",workload_api_group="apps",workload_api_version="v1",workload_kind="replicaset",workload_name="test-replicasset-1-deployment-1"} 7.340032e+07
+---
+Content-Type:[text/plain; version=0.0.4; charset=utf-8]

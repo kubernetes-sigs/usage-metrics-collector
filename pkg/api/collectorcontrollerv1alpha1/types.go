@@ -97,7 +97,8 @@ type MetricsPrometheusCollector struct {
 }
 
 type ResponseCacheOptions struct {
-	RequestHeaders map[string]string `json:"requestHeaders" yaml:"requestHeaders"`
+	RequestHeaders  map[string]string `json:"requestHeaders" yaml:"requestHeaders"`
+	ResponseHeaders map[string]string `json:"responseHeaders" yaml:"responseHeaders"`
 }
 
 type SchedulerHealth struct {

@@ -405,16 +405,22 @@ func (ms *MetricsServer) serveMetricsFromCache() {
 			return
 		}
 		cr := resp.(cachedResponse)
-		_, err := w.Write(cr.data)
-		if err != nil {
-			log.Error(err, "unable to write metrics response")
-			w.WriteHeader(http.StatusInternalServerError)
-		}
 		for k, v := range cr.headers {
 			for i := range v {
 				w.Header().Add(k, v[i])
 			}
 		}
+		for k, v := range ms.ResponseCacheOptions.ResponseHeaders {
+			w.Header().Set(k, v)
+		}
+
+		_, err := w.Write(cr.data)
+		if err != nil {
+			log.Error(err, "unable to write metrics response")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 	})
 	if err := http.ListenAndServe(options.externalBindAddress, nil); err != nil {
 		log.Error(err, "failed to listen on cached metrics address")
