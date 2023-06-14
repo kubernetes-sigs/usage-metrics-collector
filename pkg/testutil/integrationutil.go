@@ -17,6 +17,7 @@ package testutil
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -226,9 +227,10 @@ func (suite *IntegrationTestSuite) CheckDeleted(t testing.TB) bool {
 
 // GetMetrics reads the metrics from the metrics endpoint
 // nolint: gosec
-func (suite *IntegrationTestSuite) GetMetrics(t testing.TB, url string, cmdOut *bytes.Buffer, prefixes ...string) string {
+func (suite *IntegrationTestSuite) GetMetrics(t testing.TB, url string, cmdOut *bytes.Buffer, prefixes ...string) (string, string) {
 
 	var out []byte
+	var headers []string
 	require.Eventually(t, func() bool {
 		// Read the metrics from the metrics endpoint
 		// nolint: gosec,noctx
@@ -248,12 +250,18 @@ func (suite *IntegrationTestSuite) GetMetrics(t testing.TB, url string, cmdOut *
 		if resp.StatusCode != http.StatusOK {
 			return false
 		}
+		for k, v := range resp.Header {
+			if k == "Date" {
+				continue
+			}
+			headers = append(headers, fmt.Sprintf("%s:%s", k, v))
+		}
 
 		return true
 	}, time.Minute*5, time.Second, cmdOut)
 
 	if len(prefixes) == 0 {
-		return string(out)
+		return string(out), strings.Join(headers, "\n")
 	}
 
 	var lines []string
@@ -266,7 +274,7 @@ func (suite *IntegrationTestSuite) GetMetrics(t testing.TB, url string, cmdOut *
 			}
 		}
 	}
-	return strings.Join(lines, "\n")
+	return strings.Join(lines, "\n"), strings.Join(headers, "\n")
 }
 
 // SetupTestSuite implements SetupSuite
