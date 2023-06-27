@@ -17,14 +17,19 @@ package sampler
 import (
 	"container/ring"
 	"context"
+	"fmt"
 	"math"
 	"sync"
 	"time"
 
 	"github.com/containerd/containerd"
+	"github.com/google/cadvisor/client"
+	v1 "github.com/google/cadvisor/info/v1"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/utils/pointer"
+
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
+	"sigs.k8s.io/usage-metrics-collector/pkg/cadvisor"
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 )
 
@@ -50,6 +55,10 @@ type sampleCache struct {
 	// useContainerMonitor use container monitor for metrics
 	UseContainerMonitor bool
 	ContainerdClient    *containerd.Client
+
+	// UseCadvisorMonitor to collect cadvisor metrics
+	UseCadvisorMonitor bool
+	CadvisorClient     *client.Client
 }
 
 // Start starts the cache reading from /sys/fs/cgroup
@@ -162,6 +171,54 @@ func (s *sampleCache) getAllSamples() (allSampleInstants, int) {
 	return all, count
 }
 
+func ContainerKeyFromContainerInfo(info v1.ContainerInfo) ContainerKey {
+	labels := info.Spec.Labels
+	containerName := labels[cadvisor.ContainerLabelContainerName]
+	podNamespace := labels[cadvisor.ContainerLabelPodNamespace]
+	podName := labels[cadvisor.ContainerLabelPodName]
+	podUID := labels[cadvisor.ContainerLabelPodUID]
+	return ContainerKey{
+		ContainerID:   containerName,
+		NamespaceName: podNamespace,
+		PodName:       podName,
+		PodUID:        podUID,
+		ContainerName: containerName,
+	}
+}
+
+func (s *sampleCache) fetchCAdvisorSample(samples *sampleInstants) error {
+	if samples == nil {
+		return nil
+	}
+	containers, err := s.CadvisorClient.SubcontainersInfo("kubelet", &v1.ContainerInfoRequest{})
+	if err != nil {
+		return fmt.Errorf("failed to retrieve kubelet containers: %w", err)
+	}
+
+	for _, container := range containers {
+		// Assert pod containers.
+		key := ContainerKeyFromContainerInfo(container)
+		if key.PodUID == "" {
+			continue // Skip all non-pod containers.
+		}
+
+		// Assert containers for current samples.
+		sample, found := samples.containers[key]
+		if !found {
+			// Skip containers that are not found in the provided samples.
+			continue
+		}
+
+		// Assert container with stats.
+		if len(container.Stats) == 0 {
+			continue // Skip all containers without stats.
+		}
+		// Use the most recent container stats values.
+		sample.CAdvisorContainerStats = *container.Stats[0]
+	}
+	return nil
+}
+
 // fetchSample fetches a new Sample from containerd
 func (s *sampleCache) fetchSample() error {
 	log := log.WithName("fetch-sample")
@@ -193,8 +250,15 @@ func (s *sampleCache) fetchSample() error {
 		results.containers[key] = sample
 	}
 
-	// node level
+	// Fetch Cadvisor metrics.
+	if s.UseCadvisorMonitor {
+		if err := s.fetchCAdvisorSample(&results); err != nil {
+			log.Error(err, "failed to fetch cadvisor metrics")
+			return err
+		}
+	}
 
+	// Node level metrics
 	nodeCPUMetrics := map[samplerserverv1alpha1.NodeAggregationLevel]containerCPUMetrics{}
 	for level, files := range s.metricsReader.nodeCPUFiles {
 		metrics, err := s.metricsReader.GetLevelCPUMetrics(files)
@@ -323,6 +387,9 @@ func (s *sampleCache) metricToSample(
 	return sample
 }
 
+// cgroups resource file was not updated between two consecutive fetches.
+// Most of the sample metrics set/updated in this routine are derived using a variation of
+// "new" - "old"!
 func (s *sampleCache) computeSampleDelta(last, sample *sampleInstant) {
 	if last.Time.IsZero() {
 		// only compute rate if the last sample was set
@@ -361,11 +428,27 @@ func (s *sampleCache) populateSummary(sr *sampleResult) {
 	// NOTE: the first sample has a cpu value that we will not be
 	// able to calculate because it is computed from the difference of
 	// a sample that is no longer stored
+	// NOTE(2): cadvisor samples are not calculated using this mechanism since the
+	// first and/or the last samples may not contain (populated) cadvisor metrics.
 	first := sr.values[0]
 	sr.avg = sr.values[len(sr.values)-1]
 	s.computeSampleDelta(&first, &sr.avg)
 
 	var mem, cpuCoresNanoSec, cpuThrottledUSec uint64
+
+	// Use networkSampelCount to track total sample count since not all samples may have cadvisor metrics.
+	var (
+		networkSamplesCount uint64
+		networkRxBytes      uint64
+		networkRxPackets    uint64
+		networkRxErrors     uint64
+		networkRxDropped    uint64
+		networkTxBytes      uint64
+		networkTxPackets    uint64
+		networkTxErrors     uint64
+		networkTxDropped    uint64
+	)
+
 	var l uint64
 	for i := range sr.values {
 		if i == 0 && pointer.BoolDeref(s.metricsReader.DropFirstValue, false) {
@@ -377,9 +460,35 @@ func (s *sampleCache) populateSummary(sr *sampleResult) {
 		mem += v.MemoryBytes
 		cpuCoresNanoSec += v.CPUCoresNanoSec
 		cpuThrottledUSec += v.CPUThrottledUSec
+
+		// Sum network metrics for all sample values, using stats.Timestamp value
+		// to detect missing stats values, since all CAdvisorContainerStats have Timestamp value > 0.
+		if v.CAdvisorContainerStats.Timestamp.Unix() > 0 {
+			networkSamplesCount++
+			networkRxBytes += v.CAdvisorContainerStats.Network.RxBytes
+			networkRxPackets += v.CAdvisorContainerStats.Network.RxPackets
+			networkRxErrors += v.CAdvisorContainerStats.Network.RxErrors
+			networkRxDropped += v.CAdvisorContainerStats.Network.RxDropped
+			networkTxBytes += v.CAdvisorContainerStats.Network.TxBytes
+			networkTxPackets += v.CAdvisorContainerStats.Network.TxPackets
+			networkTxErrors += v.CAdvisorContainerStats.Network.TxErrors
+			networkTxDropped += v.CAdvisorContainerStats.Network.TxDropped
+		}
 	}
 
 	sr.avg.MemoryBytes = mem / l
+
+	// Follow the same suite as "MemoryBytes" for cadvisor metrics.
+	if networkSamplesCount > 0 {
+		sr.avg.CAdvisorContainerStats.Network.RxBytes = networkRxBytes / networkSamplesCount
+		sr.avg.CAdvisorContainerStats.Network.RxPackets = networkRxPackets / networkSamplesCount
+		sr.avg.CAdvisorContainerStats.Network.RxErrors = networkRxErrors / networkSamplesCount
+		sr.avg.CAdvisorContainerStats.Network.RxDropped = networkRxDropped / networkSamplesCount
+		sr.avg.CAdvisorContainerStats.Network.TxBytes = networkTxBytes / networkSamplesCount
+		sr.avg.CAdvisorContainerStats.Network.TxPackets = networkTxPackets / networkSamplesCount
+		sr.avg.CAdvisorContainerStats.Network.TxErrors = networkTxErrors / networkSamplesCount
+		sr.avg.CAdvisorContainerStats.Network.TxDropped = networkTxDropped / networkSamplesCount
+	}
 
 	// Fallback on average of individual values if we found any anomalous values
 	// Anomalous values will be thrown away, so first check if we don't have

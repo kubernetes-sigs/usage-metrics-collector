@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package cadvisor.api;
+option go_package = "./api";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+service ContainerInfoService {
+  rpc NodeCapacityStatus (ContainerInfoRequest) returns (ContainerInfoResponse) {
+    option (google.api.http) = {get: "/v1/containers"};
+  }
+}
+
+// ContainerInfoRequest is used when users check a container info from the REST API.
+// It specifies how much data users want to get about a container
+message ContainerInfoRequest {
+  // Max number of stats to return. Specify -1 for all stats currently available.
+  // cAdvisor's default: 60
+  int64 numStats = 1;
+  // Start time for which to query information.
+  // If omitted, the beginning of time is assumed.
+  google.protobuf.Timestamp startTime = 2;
+  // End time for which to query information.
+  // If omitted, current time is assumed.
+  google.protobuf.Timestamp endTime = 3;
+}
+
+message ContainerInfoResponse {
+  repeated ContainerInfo containers = 1;
+}
+
+message ContainerInfo {
+  // Container Reference
+  string containerID = 2;
+  string containerName = 3;
+  string podUID = 4;
+  string podName = 5;
+  string podNamespace = 6;
+  // Stats
+  repeated ContainerStats stats = 7;
+}
+
+// ContainerStats CPU usage time statistics.
+message ContainerStats {
+  google.protobuf.Timestamp timestamp = 1;
+  CPUStats cpuStats = 2;
+  DiskIoStats diskStats = 3;
+}
+
+// CPUStats Cpu Completely Fair Scheduler statistics.
+message CPUStats {
+  CPUUsage usage = 1;
+  CPUCFS cfs = 2;
+  CPUSchedulerStats schedulerStats = 3;
+  // Smoothed average of number of runnable threads x 1000.
+  // We multiply by thousand to avoid using floats, but preserving precision.
+  // Load is smoothed over the last 10 seconds. Instantaneous value can be read
+  // from LoadStats.NrRunning.
+  int32 loadAverage = 4;
+}
+
+// CPUUsage time statistics.
+message CPUUsage {
+  // Total CPU usage.
+  // Unit: nanoseconds.
+  uint64 total = 1;
+
+  // Per CPU/core usage of the container.
+  // Unit: nanoseconds.
+  repeated uint64 perCpu = 2;
+
+  // Time spent in user space.
+  // Unit: nanoseconds.
+  uint64 user = 3;
+
+  // Time spent in kernel space.
+  // Unit: nanoseconds.
+  uint64 system = 4;
+}
+
+// CPUCFS Completely Fair Scheduler statistics.
+message CPUCFS {
+  // Total number of elapsed enforcement intervals.
+  uint64 periods = 1;
+
+  // Total number of times tasks in the cgroup have been throttled.
+  uint64 throttledPeriods = 2;
+
+  // Total time duration for which tasks in the cgroup have been throttled.
+  // Unit: nanoseconds.
+  uint64 throttledTime = 3;
+}
+
+// Cpu Aggregated scheduler statistics
+message CPUSchedulerStats {
+  // time spent on the cpu
+  uint64 runTime = 1;
+  // time spent waiting on a runqueue
+  uint64 runqueueTime = 2;
+  // # of timeslices run on this cpu
+  uint64 runPeriods = 3;
+}
+
+message DiskIoStats {
+  repeated PerDiskStats ioServiceBytes = 1;
+  repeated PerDiskStats ioServiced = 2;
+  repeated PerDiskStats ioQueued = 3;
+  repeated PerDiskStats sectors = 4;
+  repeated PerDiskStats ioServiceTime = 5;
+  repeated PerDiskStats ioWaitTime = 6;
+  repeated PerDiskStats ioMerged = 7;
+  repeated PerDiskStats ioTime = 8;
+}
+
+message PerDiskStats {
+  string device = 1;
+  uint64 major = 2;
+  uint64 minor = 3;
+  map<string, uint64> stats = 4;
+}
+
+message MemoryNumaStats {
+  map <uint32, uint64> file = 1;
+  map<uint32, uint64> anon = 2;
+  map<uint32, uint64> unevictable = 3;
+}
+
+message MemoryStatsMemoryData {
+  uint64 pgfault = 1;
+  uint64 pgmajfault = 2;
+  MemoryNumaStats numaStats = 3;
+}
+
+message MemoryStats  {
+  // Current memory usage, this includes all memory regardless of when it was
+  // accessed.
+  // Units: Bytes.
+  uint64 usage = 1;
+
+  // Maximum memory usage recorded.
+  // Units: Bytes.
+  uint64 maxUsage = 2;
+
+  // Number of bytes of page cache memory.
+  // Units: Bytes.
+  uint64 cache = 3;
+
+  // The amount of anonymous and swap cache memory (includes transparent
+  // hugepages).
+  // Units: Bytes.
+  uint64 rss = 4;
+
+  // The amount of swap currently used by the processes in this cgroup
+  // Units: Bytes.
+  uint64 swap = 5;
+
+  // The amount of memory used for mapped files (includes tmpfs/shmem)
+  uint64 mappedFile = 6;
+
+  // The amount of working set memory, this includes recently accessed memory,
+  // dirty memory, and kernel memory. Working set is <= "usage".
+  // Units: Bytes.
+  uint64 workingSet = 7;
+
+  uint64 failcnt = 8;
+
+  MemoryStatsMemoryData containerData = 9;
+  MemoryStatsMemoryData hierarchicalData = 10;
+}
+
+

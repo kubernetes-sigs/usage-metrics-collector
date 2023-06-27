@@ -17,6 +17,8 @@ package sampler
 import (
 	"time"
 
+	cadvisorv1 "github.com/google/cadvisor/info/v1"
+
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
 )
 
@@ -69,6 +71,12 @@ type sampleInstant struct {
 
 	// MemoryUsageLifetimeMaxBytes uint64
 	// MemoryLimitBytes            uint64
+
+	// CAdvisor stats.
+	// Although, currently, we only collect and report network metrics,
+	// we [re]use ContainerStats as sample value holder since in the future
+	// we may chose to collect addition values (other than Network)
+	CAdvisorContainerStats cadvisorv1.ContainerStats
 }
 
 // ContainerMetricType identifies a type of metrics that corresponds to a specific cgroups file

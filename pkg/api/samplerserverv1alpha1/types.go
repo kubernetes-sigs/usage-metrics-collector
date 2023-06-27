@@ -44,6 +44,11 @@ type MetricsNodeSampler struct {
 
 	ExitOnConfigChange bool `json:"exitOnConfigChange" yaml:"exitOnConfigChange"`
 
+	// UseCadvisorMonitor bool
+	UseCadvisorMonitor bool `json:"useCadvisorMonitor" yaml:"useContainerMonitor"`
+	// CadvisorEndpoint to retrieve cadvisor metrics.
+	CadvisorEndpoint string `json:"cadvisorEndpoint" yaml:"cadvisorEndpoint"`
+
 	// UseContainerMonitor enables container monitor metrics from containerd
 	UseContainerMonitor bool `json:"useContainerMonitor" yaml:"useContainerMonitor"`
 
