@@ -260,6 +260,7 @@ func (s *Server) IsReady(context.Context, *grpc_health_v1.HealthCheckRequest) (*
 // expireEntries periodically cleans up expired utilization responses from the cache
 func (s *Server) expireEntries() {
 	ticker := time.NewTicker(s.expireFreq)
+	defer ticker.Stop()
 	for range ticker.C {
 		m := s.getMetrics(false)
 		for k, v := range m {

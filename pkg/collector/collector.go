@@ -1514,6 +1514,7 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 	// continuously register with node samplers that we don't have results from
 	go func() {
 		tick := time.NewTicker(time.Minute)
+		defer tick.Stop()
 		waitReadyCyclesCount := c.UtilizationServer.WaitSamplerRegistrationsBeforeReady
 		cyclesCount := 0
 		for {
@@ -1591,7 +1592,7 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 					if cyclesCount > c.UtilizationServer.WaitSamplerRegistrationsBeforeServe {
 						c.UtilizationServer.ServeResults.Store(true)
 					}
-log := log.WithValues("running-minutes", time.Since(c.startTime).Minutes(),
+					log := log.WithValues("running-minutes", time.Since(c.startTime).Minutes(),
 						"nodes-with-results-count", nodesWithResults.Len(),
 						"nodes-with-samplers-count", nodesWithSamplers.Len(),
 						"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
