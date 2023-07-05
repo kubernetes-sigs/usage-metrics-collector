@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 	"syscall"
 	"testing"
@@ -250,7 +251,14 @@ func (suite *IntegrationTestSuite) GetMetrics(t testing.TB, url string, cmdOut *
 		if resp.StatusCode != http.StatusOK {
 			return false
 		}
-		for k, v := range resp.Header {
+
+		var h []string
+		for k := range resp.Header {
+			h = append(h, k)
+		}
+		sort.Strings(h)
+		for _, k := range h {
+			v := resp.Header[k]
 			if k == "Date" {
 				continue
 			}

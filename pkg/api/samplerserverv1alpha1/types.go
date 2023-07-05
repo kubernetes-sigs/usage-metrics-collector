@@ -16,7 +16,6 @@ package samplerserverv1alpha1
 
 import (
 	"path/filepath"
-	"time"
 
 	"k8s.io/utils/pointer"
 )
@@ -60,15 +59,7 @@ type MetricsNodeSampler struct {
 }
 
 type DNSSpec struct {
-	PollSeconds        int `json:"pollSeconds" yaml:"pollSeconds"`
-	FailuresBeforeExit int `json:"failuresBeforeExit" yaml:"failuresBeforeExit"`
-	BackoffSeconds     int `json:"backoffSeconds" yaml:"backoffSeconds"`
-
-	// CollectorServerExpiration sets the time to stop trying to re-establish grpc connections to
-	// collector servers after we last saw them in DNS or through direct registrations.
-	// Metrics will continue to be published to collectors until the connection is closed by the collector
-	// or until the sampler terminates.
-	CollectorServerExpiration time.Duration `json:"collectorServerExpiration" yaml:"collectorServerExpiration"`
+	PollSeconds int `json:"pollSeconds" yaml:"pollSeconds"`
 }
 
 // Buffer configures the window of buffered metric samples.
