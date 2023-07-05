@@ -38,7 +38,23 @@
 			"avgCPUPercentPeriodsThrottled": 0,
 			"avgCPUThrottledNanoSec": "0",
 			"avgCPUPeriodsSec": "1000",
-			"avgCPUThrottledPeriodsSec": "0"
+			"avgCPUThrottledPeriodsSec": "0",
+			"networkRxBytes": [],
+			"networkRxPackets": [],
+			"networkRxErrors": [],
+			"networkRxDropped": [],
+			"networkTxBytes": [],
+			"networkTxPackets": [],
+			"networkTxErrors": [],
+			"networkTxDropped": [],
+			"avgNetworkRxBytes": "0",
+			"avgNetworkRxPackets": "0",
+			"avgNetworkRxErrors": "0",
+			"avgNetworkRxDropped": "0",
+			"avgNetworkTxBytes": "0",
+			"avgNetworkTxPackets": "0",
+			"avgNetworkTxErrors": "0",
+			"avgNetworkTxDropped": "0"
 		}
 	],
 	"node": {
