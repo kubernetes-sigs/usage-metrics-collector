@@ -190,6 +190,14 @@ type UtilizationServer struct {
 	// WaitSamplerRegistrationsBeforeServe if set will wait this many additional registration cycles after reaching
 	// MinResultPctBeforeReady before serving results.
 	WaitSamplerRegistrationsBeforeServe int `json:"waitSamplerRegistrationsBeforeServe" yaml:"waitSamplerRegistrationsBeforeServe"`
+
+	// DeleteUnregisteredPodsAfterAgeMinutes will delete node-sampler pods if the collector cannot register with them
+	// and they are this many minutes old
+	DeleteUnregisteredPodsAfterAgeMinutes int `json:"deleteUnregisteredPodsAfterAgeMinutes" yaml:"deleteUnregisteredPodsAfterAgeMinutes"`
+
+	// DeleteUnregisteredPodsAfterCycles will delete node-sampler pods if the collector cannot register with them
+	// after this many initial cycles.
+	DeleteUnregisteredPodsAfterCycles int `json:"deleteUnregisteredPodsAfterCycles" yaml:"deleteUnregisteredPodsAfterCycles"`
 }
 
 // Condition matches a node condition to determine whether a node is unhealthy.
@@ -1272,6 +1280,13 @@ func ValidateCollectorSpecAndApplyDefaults(spec *MetricsPrometheusCollector) err
 				return fmt.Errorf("collector config specifies a source that requires rqd, but rqd is not enabled; aggregation[%v].sources[%v]", ii, jj)
 			}
 		}
+	}
+
+	if spec.UtilizationServer.DeleteUnregisteredPodsAfterAgeMinutes == 0 {
+		spec.UtilizationServer.DeleteUnregisteredPodsAfterAgeMinutes = 30
+	}
+	if spec.UtilizationServer.DeleteUnregisteredPodsAfterCycles == 0 {
+		spec.UtilizationServer.DeleteUnregisteredPodsAfterCycles = 10
 	}
 
 	return nil

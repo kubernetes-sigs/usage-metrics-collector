@@ -1499,6 +1499,7 @@ func (c *Collector) wait(fns map[string]func() error, metricCh chan<- prometheus
 // so that it can start getting metrics before it marks itself as "Ready"
 // and before it appears in the DNS ips for the service.
 func (c *Collector) registerWithSamplers(ctx context.Context) {
+	deleteAge := time.Minute * time.Duration(c.UtilizationServer.DeleteUnregisteredPodsAfterAgeMinutes)
 	if c.UtilizationServer.MinResultPctBeforeReady == 0 {
 		// don't register with samplers
 		c.UtilizationServer.ServeResults.Store(true)
@@ -1591,7 +1592,7 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 					if cyclesCount > c.UtilizationServer.WaitSamplerRegistrationsBeforeServe {
 						c.UtilizationServer.ServeResults.Store(true)
 					}
-log := log.WithValues("running-minutes", time.Since(c.startTime).Minutes(),
+					log := log.WithValues("running-minutes", time.Since(c.startTime).Minutes(),
 						"nodes-with-results-count", nodesWithResults.Len(),
 						"nodes-with-samplers-count", nodesWithSamplers.Len(),
 						"nodes-with-running-samplers-count", nodesWithRunningSamplers.Len(),
@@ -1670,7 +1671,7 @@ log := log.WithValues("running-minutes", time.Since(c.startTime).Minutes(),
 
 				// register the collector with the each node sampler
 				wg.Add(1)
-				go func() {
+				go func(pod *corev1.Pod) {
 					defer wg.Done()
 					// build the address for us to register with the sampler
 					address := pod.Status.PodIP
@@ -1699,23 +1700,34 @@ log := log.WithValues("running-minutes", time.Since(c.startTime).Minutes(),
 					}
 
 					// register ourself with this node sampler
-					c := samplerapi.NewMetricsClient(conn)
-					resp, err := c.RegisterCollectors(ctx, req)
+					client := samplerapi.NewMetricsClient(conn)
+					_, err := client.RegisterCollectors(ctx, req)
 					if err != nil {
 						errorCount.Add(1)
-						log.Error(err, "failed to register with node sampler",
-							"node", pod.Spec.NodeName,
-							"pod", pod.Name,
-						)
+						age := time.Since(pod.CreationTimestamp.Time)
+						if age > deleteAge && cyclesCount > c.UtilizationServer.DeleteUnregisteredPodsAfterCycles {
+							// delete pods that we are unable to register with
+							deleteErr := c.Client.Delete(context.Background(), pod)
+							if deleteErr == nil {
+								log.Info("deleted pod after failed registration",
+									"node", pod.Spec.NodeName,
+									"pod", pod.Name,
+									"age-minutes", age/time.Minute,
+									"registration-err", err,
+								)
+							} else {
+								log.Info("unable to delete pod after failed registration",
+									"node", pod.Spec.NodeName,
+									"pod", pod.Name,
+									"age-minutes", age/time.Minute,
+									"registration-err", err,
+									"delete-error", deleteErr)
+							}
+						}
 					} else {
 						registeredCount.Add(1)
-						log.Info("registered with node sampler",
-							"node", pod.Spec.NodeName,
-							"pod", pod.Name,
-							"sent", req,
-							"got", resp.IpAddresses)
 					}
-				}()
+				}(&pod)
 			}
 			wg.Wait()
 
