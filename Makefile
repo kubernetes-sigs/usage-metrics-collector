@@ -112,11 +112,6 @@ proto: protoc
 		./proto/pkg/sampler/api/api.proto
 	protoc -I ./proto \
 		--go_out . --go_opt paths=source_relative \
-		--go-grpc_out . --go-grpc_opt paths=source_relative \
-		--grpc-gateway_out . --grpc-gateway_opt paths=source_relative \
-		./proto/pkg/cadvisor/api/cadvisor.proto
-	protoc -I ./proto \
-		--go_out . --go_opt paths=source_relative \
 		./proto/pkg/collector/api/api.proto
 
 

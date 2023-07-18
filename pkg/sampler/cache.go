@@ -194,11 +194,14 @@ func (s *sampleCache) fetchCAdvisorSample(samples *sampleInstants) error {
 	if err != nil {
 		return fmt.Errorf("failed to retrieve kubelet containers: %w", err)
 	}
-
+	log := log.WithName("fetch-cadvisor")
 	for _, container := range containers {
 		// Assert pod containers.
 		key := ContainerKeyFromContainerInfo(container)
+		log := log.WithValues("container", key)
+
 		if key.PodUID == "" {
+			log.V(5).Info("skipping container without pod uid")
 			continue // Skip all non-pod containers.
 		}
 
@@ -206,11 +209,13 @@ func (s *sampleCache) fetchCAdvisorSample(samples *sampleInstants) error {
 		sample, found := samples.containers[key]
 		if !found {
 			// Skip containers that are not found in the provided samples.
+			log.V(5).Info("skipping container with not-found key")
 			continue
 		}
 
 		// Assert container with stats.
 		if len(container.Stats) == 0 {
+			log.V(5).Info("skipping container without stats")
 			continue // Skip all containers without stats.
 		}
 		// Use the most recent container stats values.
@@ -387,9 +392,6 @@ func (s *sampleCache) metricToSample(
 	return sample
 }
 
-// cgroups resource file was not updated between two consecutive fetches.
-// Most of the sample metrics set/updated in this routine are derived using a variation of
-// "new" - "old"!
 func (s *sampleCache) computeSampleDelta(last, sample *sampleInstant) {
 	if last.Time.IsZero() {
 		// only compute rate if the last sample was set
