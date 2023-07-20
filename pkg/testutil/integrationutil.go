@@ -289,6 +289,9 @@ func (suite *IntegrationTestSuite) GetMetrics(t testing.TB, url string, cmdOut *
 func (suite *IntegrationTestSuite) SetupTestSuite(t testing.TB) {
 	// Fake out the PodMetrics APIs -- this is actually an aggregated API in a real cluster
 	suite.Environment.CRDs = []*apiextensionsv1.CustomResourceDefinition{&PodMetricsCRD, &ResourceQuotaDescriptorCRD}
+	// Disable the admission plugin that taints all nodes by default.
+	args := suite.Environment.ControlPlane.GetAPIServer().Configure()
+	args.Append("disable-admission-plugins", "TaintNodesByCondition")
 	cfg, err := suite.Environment.Start()
 	require.NoError(t, err)
 	suite.Config = cfg
