@@ -1697,6 +1697,26 @@ func (c *Collector) registerWithSamplers(ctx context.Context) {
 							"pod", pod.Name,
 						)
 						errorCount.Add(1)
+						age := time.Since(pod.CreationTimestamp.Time)
+						if age > deleteAge && cyclesCount > c.UtilizationServer.DeleteUnregisteredPodsAfterCycles {
+							// delete pods that we are unable to register with
+							deleteErr := c.Client.Delete(context.Background(), pod)
+							if deleteErr == nil {
+								log.Info("deleted pod after failed registration",
+									"node", pod.Spec.NodeName,
+									"pod", pod.Name,
+									"age-minutes", age/time.Minute,
+									"registration-err", err,
+								)
+							} else {
+								log.Info("unable to delete pod after failed registration",
+									"node", pod.Spec.NodeName,
+									"pod", pod.Name,
+									"age-minutes", age/time.Minute,
+									"registration-err", err,
+									"delete-error", deleteErr)
+							}
+						}
 						return
 					}
 
