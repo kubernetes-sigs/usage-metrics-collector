@@ -25,6 +25,19 @@ extensions:
     label: nd-l
 aggregations:
 - sources:
+    type: "container"
+    container:
+    - "container"
+  levels:
+  - mask:
+      name: "namespace_images"
+      builtIn:
+        exported_namespace: true
+        container_image: true
+      extensions:
+        namespace_label: true
+        namespace_annotation: true
+- sources:
     type: "pod"
     pod:
     - "pod"

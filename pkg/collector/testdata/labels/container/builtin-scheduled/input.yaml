@@ -11,6 +11,7 @@ pod:
     priorityClassName: p1
 container:
   name: app
+  image: foo
 node:
   apiVersion: v1
   kind: Node
@@ -35,6 +36,7 @@ spec:
         name: "container"
         builtIn:
           exported_container: true
+          container_image: true
           exported_pod: true
           exported_namespace: true
           exported_node: true
@@ -46,7 +48,7 @@ spec:
           priority_class: true
           scheduled: true
         extensions:
-          pod_label: true 
+          pod_label: true
           pod_label_2: true
           pod_annotation: true
           namespace_label: true

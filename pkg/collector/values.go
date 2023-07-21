@@ -47,9 +47,18 @@ type ValueReader struct{}
 // - nr_periods
 // - nr_throttled
 // - oom_kill
+// - container (items)
 func (r ValueReader) GetValuesForContainer(
 	container *corev1.Container, pod *corev1.Pod, usage *api.ContainerMetrics) map[collectorcontrollerv1alpha1.Source]value {
 	values := map[collectorcontrollerv1alpha1.Source]value{}
+
+	values[collectorcontrollerv1alpha1.ContainerItemsSource] = value{
+		ResourceList: map[corev1.ResourceName]resource.Quantity{
+			collectorcontrollerv1alpha1.ResourceItems: *resource.NewQuantity(1, resource.DecimalSI),
+		},
+		Level:  collectorcontrollerv1alpha1.ContainerLevel,
+		Source: collectorcontrollerv1alpha1.ContainerItemsSource,
+	}
 
 	// get requests and limits values
 	if pod.Status.Phase != corev1.PodSucceeded && pod.Status.Phase != corev1.PodFailed {

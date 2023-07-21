@@ -26,6 +26,7 @@ aggregations: # aggregate metrics and export them
         app: true
         priority_class: true
         scheduled: true
+        container_image: true
   - mask:
       name: "workload" # sum all containers / pods into workload metrics
       builtIn:
