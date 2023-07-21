@@ -272,6 +272,9 @@ const (
 	// Defined by the pod spec
 	ExportedContainerLabel = "exported_container"
 
+	// ContainerImageLabel is the label for the container image
+	ContainerImageLabel = "container_image"
+
 	// ExportedNamespaceLabel is the label name of the namespace for a pod
 	// Defined by the pod namespace
 	ExportedNamespaceLabel = "exported_namespace"
@@ -485,8 +488,14 @@ const (
 	OOMCountSource Source = "oom"
 )
 
+const (
+	// ContainerItemsSource the source for container object count
+	ContainerItemsSource Source = "container"
+)
+
 // ContainerSources contains all of the Source values of SourceType ContainerType.
 var ContainerSources = sets.New(
+	ContainerItemsSource,
 	ContainerRequestsAllocatedSource,
 	ContainerLimitsAllocatedSource,
 	AvgContainerUtilizationSource,
@@ -1066,6 +1075,8 @@ type BuiltInLabelsMask struct {
 	Phase bool `json:"phase,omitempty" yaml:"phase,omitempty"`
 
 	PVType bool `json:"pv_type,omitempty" yaml:"pv_type,omitempty"`
+
+	ContainerImage bool `json:"container_image,omitempty" yaml:"container_image,omitempty"`
 }
 
 // ExtensionsLabelMask is a mask for user defined metric labels.

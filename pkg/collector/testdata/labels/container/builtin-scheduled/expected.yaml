@@ -1,4 +1,5 @@
 app: app-1
+container_image: foo
 exported_container: app
 exported_namespace: test-namespace-1
 exported_node: test-node-1
