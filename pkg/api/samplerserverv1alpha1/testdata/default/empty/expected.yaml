@@ -1,6 +1,7 @@
 buffer:
   pollsPerMinute: 60
   size: 900
+cadvisorEndpoint: ""
 checkCreatedPodFrequencyDuration: 6s
 containerdAddress: /run/containerd/containerd.sock
 containerdNamespace: default
@@ -54,4 +55,5 @@ reader:
   - .scope
 restPort: 8090
 sendPushMetricsRetryCount: 0
+useCadvisorMonitor: false
 useContainerMonitor: false

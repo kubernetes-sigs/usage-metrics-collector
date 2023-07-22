@@ -1,6 +1,7 @@
 buffer:
   pollsPerMinute: 10
   size: 500
+cadvisorEndpoint: "localhost:8080"
 checkCreatedPodFrequencyDuration: 10s
 containerdAddress: /var/run/containerd/containerd.sock
 containerdNamespace: k8s.io
@@ -36,4 +37,5 @@ reader:
   podSuffix: []
 restPort: 6060
 sendPushMetricsRetryCount: 10
+useCadvisorMonitor: true
 useContainerMonitor: true
