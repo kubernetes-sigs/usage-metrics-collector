@@ -16,6 +16,8 @@
 package testutil
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"io/fs"
 	"os"
@@ -24,12 +26,17 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
+	dto "github.com/prometheus/client_model/go"
+	"github.com/prometheus/common/expfmt"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/yaml"
 )
 
@@ -65,6 +72,28 @@ type TestCase struct {
 	// ClearMeta if set to true will clear metadata that shouldn't be set
 	// at creation time
 	ClearMeta bool
+
+	// ExpectedObjects are the expected objects read from expected_objects.yaml if present
+	ExpectedObjects string
+
+	// ExpectedEvents are the expected events read from expected_events.yaml if present
+	ExpectedEvents string
+
+	// ExpectedMetrics are the expected metrics to read from expected_metrics.txt if present
+	ExpectedMetrics string
+
+	// CompareObjects is set to lists' of object types to read from the apiserver and compare
+	// to ExpectedObjects
+	CompareObjects []client.ObjectList
+
+	// CompareMetrics is set to a list of metric names to compare the results of
+	CompareMetrics []string
+
+	// FakeRecorder is set when requesting a fake recorder and used to compare ExpectedEvents
+	FakeRecorder *record.FakeRecorder
+
+	// Client is set when requesting a fake client and used to compare ExpectedObjects
+	Client client.Client
 }
 
 // TestCaseParser parses tests cases from testdata directories.
@@ -92,6 +121,17 @@ type TestCaseParser struct {
 	// ClearMeta if set to true will clear metadata that shouldn't be set
 	// at creation time
 	ClearMeta bool
+
+	// CompareObjects is set to a lists' of objects to read from the apiserver and
+	// compare to the objects in expected_objects.yaml.
+	CompareObjects []client.ObjectList
+
+	// CompareMetrics is set to a list of metrics to compare the results of
+	CompareMetrics []string
+
+	// CompareEvents if set to true will compare the events from the FakeRecorder to
+	// the events in expected_events.yaml.
+	CompareEvents bool
 }
 
 // TestDir invokes fn for each TestCase for in a "testdata" directory
@@ -109,6 +149,15 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.Name+p.NameSuffix, func(t *testing.T) {
+			env := tc.Inputs["input_env.env"]
+			for _, s := range strings.Split(env, "\n") {
+				if !strings.Contains(s, "=") {
+					continue
+				}
+				kv := strings.SplitN(s, "=", 2)
+				os.Setenv(kv[0], kv[1])
+			}
+
 			tc.T = t
 			if tc.Error != "" {
 				err := fn(&tc)
@@ -121,6 +170,19 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 					strings.TrimSpace(tc.Actual),
 				)
 			}
+
+			if len(tc.ExpectedObjects) > 0 {
+				objects := p.GetActualObjects(t, &tc)
+				require.Equal(t, tc.ExpectedObjects, objects, "actual objects do not match expected")
+			}
+			if len(tc.ExpectedEvents) > 0 {
+				events := p.GetActualEvents(t, &tc)
+				require.Equal(t, tc.ExpectedEvents, events, "actual events do not match expected")
+			}
+			if len(tc.ExpectedMetrics) > 0 {
+				metrics := p.GetActualMetrics(t, p.CompareMetrics)
+				require.Equal(t, tc.ExpectedMetrics, metrics, "actual metrics do not match expected")
+			}
 		})
 	}
 }
@@ -131,6 +193,15 @@ func (p TestCaseParser) UpdateExpectedDir(t *testing.T, cases []TestCase, fn fun
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.Name+p.NameSuffix, func(t *testing.T) {
+			env := tc.Inputs["input_env.env"]
+			for _, s := range strings.Split(env, "\n") {
+				if !strings.Contains(s, "=") {
+					continue
+				}
+				kv := strings.SplitN(s, "=", 2)
+				os.Setenv(kv[0], kv[1])
+			}
+
 			tc.T = t
 			err := fn(&tc)
 			if err != nil {
@@ -145,8 +216,81 @@ func (p TestCaseParser) UpdateExpectedDir(t *testing.T, cases []TestCase, fn fun
 			} else {
 				_ = os.Remove(tc.ExpectedFilepath)
 			}
+			if p.CompareObjects != nil {
+				objects := p.GetActualObjects(t, &tc)
+				objectsFilepath := filepath.Join(filepath.Dir(tc.ExpectedFilepath), "expected_objects.yaml")
+				require.NoError(t,
+					os.WriteFile(objectsFilepath, []byte(objects), 0600))
+			}
+			if p.CompareEvents {
+				events := p.GetActualEvents(t, &tc)
+				eventsFilepath := filepath.Join(filepath.Dir(tc.ExpectedFilepath), "expected_events.yaml")
+				require.NoError(t,
+					os.WriteFile(eventsFilepath, []byte(events), 0600))
+			}
+			if p.CompareMetrics != nil {
+				metrics := p.GetActualMetrics(t, p.CompareMetrics)
+				metricsFilepath := filepath.Join(filepath.Dir(tc.ExpectedFilepath), "expected_metrics.txt")
+				require.NoError(t,
+					os.WriteFile(metricsFilepath, []byte(metrics), 0600))
+			}
 		})
 	}
+}
+
+// GetActualMetrics gathers the metrics from the registry and returns a string value
+func (p TestCaseParser) GetActualMetrics(t *testing.T, names []string) string {
+	metrics, err := metrics.Registry.Gather()
+	require.NoError(t, err)
+	var filtered []*dto.MetricFamily
+	keep := sets.NewString(names...)
+
+	for _, m := range metrics {
+		if !keep.Has(m.GetName()) {
+			continue
+		}
+		filtered = append(filtered, m)
+	}
+	var b bytes.Buffer
+	for _, a := range filtered {
+		_, err := expfmt.MetricFamilyToText(&b, a)
+		require.NoError(t, err)
+	}
+	return b.String()
+}
+
+// GetActualObjects reads objects from the apiserver and returns them as yaml
+func (p TestCaseParser) GetActualObjects(t *testing.T, tc *TestCase) string {
+	var actual string
+	for _, o := range tc.CompareObjects {
+		o = o.DeepCopyObject().(client.ObjectList)
+		require.NoError(t, tc.Client.List(context.Background(), o))
+		b, err := yaml.Marshal(o)
+		require.NoError(t, err, "error marshaling yaml for object")
+		actual += "---\n" + string(b)
+	}
+	return actual
+}
+
+// GetActualEvents reads objects from the FakeRecorder and returns them as yaml
+func (p TestCaseParser) GetActualEvents(t *testing.T, tc *TestCase) string {
+	if tc.FakeRecorder == nil {
+		return ""
+	}
+	var actual string
+	func() {
+		for {
+			select {
+			case e := <-tc.FakeRecorder.Events:
+				b, err := yaml.Marshal(&e)
+				require.NoError(t, err, "error marshaling yaml for event")
+				actual = actual + "---\n" + string(b)
+			default:
+				return
+			}
+		}
+	}()
+	return actual
 }
 
 // UnmarshalInputsStrict Unmarshals the TestCase Inputs (i.e. by filename) into
@@ -249,15 +393,28 @@ func (tc TestCase) GetObjects(s *runtime.Scheme) ([]client.Object, []client.Obje
 // `_client_runtime_objects.yaml`
 //
 //nolint:gocognit
-func (tc TestCase) GetFakeClient(s *runtime.Scheme) (client.Client, error) {
+func (tc *TestCase) GetFakeClient(s *runtime.Scheme) (client.Client, error) {
+	if tc.Client != nil {
+		return tc.Client, nil
+	}
 	objs, objLists, err := tc.GetObjects(s)
 	if err != nil {
 		return nil, err
 	}
-	return fake.NewClientBuilder().
+	tc.Client = fake.NewClientBuilder().
 		WithScheme(s).
 		WithObjects(objs...).
-		WithLists(objLists...).Build(), nil
+		WithLists(objLists...).Build()
+	return tc.Client, nil
+}
+
+// GetFakeRecorder returns a fake recorder which can be used to compare events
+func (tc *TestCase) GetFakeRecorder() *record.FakeRecorder {
+	if tc.FakeRecorder != nil {
+		return tc.FakeRecorder
+	}
+	tc.FakeRecorder = record.NewFakeRecorder(100)
+	return tc.FakeRecorder
 }
 
 // GetTestCases parses the test cases from the testdata dir
@@ -303,6 +460,33 @@ func (p TestCaseParser) GetTestCases() ([]TestCase, error) {
 			return nil
 		}
 
+		var expectedObjects []byte
+		if len(p.CompareObjects) > 0 {
+			expectedFilepath := filepath.Clean(filepath.Join(path, "expected_objects.yaml"))
+			expectedObjects, err = os.ReadFile(expectedFilepath)
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+		}
+
+		var expectedEvents []byte
+		if p.CompareEvents {
+			expectedFilepath := filepath.Clean(filepath.Join(path, "expected_events.yaml"))
+			expectedEvents, err = os.ReadFile(expectedFilepath)
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+		}
+
+		var expectedMetrics []byte
+		if len(p.CompareMetrics) > 0 {
+			expectedFilepath := filepath.Clean(filepath.Join(path, "expected_metrics.txt"))
+			expectedMetrics, err = os.ReadFile(expectedFilepath)
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+		}
+
 		// expected is optional
 		expectedFilepath := filepath.Clean(filepath.Join(path, "expected"+p.ExpectedSuffix))
 		expected, err := os.ReadFile(expectedFilepath)
@@ -330,6 +514,11 @@ func (p TestCaseParser) GetTestCases() ([]TestCase, error) {
 			ExpectedFilepath:   expectedFilepath,
 			ClientInputsSuffix: p.ClientInputsSuffix,
 			ClearMeta:          p.ClearMeta,
+			ExpectedObjects:    string(expectedObjects),
+			ExpectedEvents:     string(expectedEvents),
+			ExpectedMetrics:    string(expectedMetrics),
+			CompareObjects:     p.CompareObjects,
+			CompareMetrics:     p.CompareMetrics,
 		})
 		return nil
 	})
