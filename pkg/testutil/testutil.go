@@ -62,8 +62,16 @@ type TestCase struct {
 	// ExpectedFilepath is where the expected results were read from
 	ExpectedFilepath string
 
+	// ExpectedValues are the expected values read from files configured
+	// through ExpectedFiles in the TestCaseParser
+	ExpectedValues map[string]string
+
 	// Actual is the actual results observed
 	Actual string
+
+	// ActualValues are the actual values to compare to the ExpectedValues read from
+	// the ExpectedFiles configured in the TestCaseParser
+	ActualValues map[string]string
 
 	// ClientInputsSuffix is a suffix to append to files which
 	// should be parsed as inputs for a fake client.Client.
@@ -107,6 +115,13 @@ type TestCaseParser struct {
 
 	// Subdir is an optional subdirectory
 	Subdir string
+
+	// ExpectedFiles is a list of expected files.  The "expected_" prefix is applied to each
+	// item when matching files. e.g. ExpectedFiles: [ "values.txt" ] will look for "expected_values.txt".
+	// These are compared to the ActualValues map in the TestCase.  e.g. ActualValues[ "values.txt" ]
+	// will be compared to the values read from the "expected_values.txt" file in the test directory
+	// and is configured by setting ExpectedFiles to [ "values.txt" ] in the TestCaseParser.
+	ExpectedFiles []string
 
 	// InputSuffix is a suffix to append to the expected file
 	ExpectedSuffix string
@@ -171,6 +186,13 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 				)
 			}
 
+			for k, v := range tc.ExpectedValues {
+				require.Equal(t,
+					strings.TrimSpace(v),
+					strings.TrimSpace(tc.ActualValues[k]),
+				)
+			}
+
 			if len(tc.ExpectedObjects) > 0 {
 				objects := p.GetActualObjects(t, &tc)
 				require.Equal(t, tc.ExpectedObjects, objects, "actual objects do not match expected")
@@ -216,6 +238,15 @@ func (p TestCaseParser) UpdateExpectedDir(t *testing.T, cases []TestCase, fn fun
 			} else {
 				_ = os.Remove(tc.ExpectedFilepath)
 			}
+
+			for k, v := range tc.ActualValues {
+				if v != "" {
+					require.NoError(t, os.WriteFile(filepath.Join(filepath.Dir(tc.ExpectedFilepath), "expected_"+k), []byte(v), 0600))
+				} else {
+					_ = os.Remove(k)
+				}
+			}
+
 			if p.CompareObjects != nil {
 				objects := p.GetActualObjects(t, &tc)
 				objectsFilepath := filepath.Join(filepath.Dir(tc.ExpectedFilepath), "expected_objects.yaml")
@@ -487,6 +518,17 @@ func (p TestCaseParser) GetTestCases() ([]TestCase, error) {
 			}
 		}
 
+		// additional expected files
+		expectedValues := map[string]string{}
+		for i := range p.ExpectedFiles {
+			expectedFilepath := filepath.Clean(filepath.Join(path, "expected_"+p.ExpectedFiles[i]))
+			expected, err := os.ReadFile(expectedFilepath)
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+			expectedValues[p.ExpectedFiles[i]] = string(expected)
+		}
+
 		// expected is optional
 		expectedFilepath := filepath.Clean(filepath.Join(path, "expected"+p.ExpectedSuffix))
 		expected, err := os.ReadFile(expectedFilepath)
@@ -519,6 +561,7 @@ func (p TestCaseParser) GetTestCases() ([]TestCase, error) {
 			ExpectedMetrics:    string(expectedMetrics),
 			CompareObjects:     p.CompareObjects,
 			CompareMetrics:     p.CompareMetrics,
+			ExpectedValues:     expectedValues,
 		})
 		return nil
 	})
