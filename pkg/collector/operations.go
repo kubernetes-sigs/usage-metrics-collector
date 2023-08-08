@@ -130,8 +130,15 @@ func (c *Collector) aggregateMetric(operationsKey string, ops []collectorcontrol
 						return false
 					}
 				}
-				if f.ClusterName != "" && f.ClusterName != os.Getenv("CLUSTER_NAME") {
-					// cluster name doesn't match
+				ok := len(f.ClusterNames) == 0
+				cn := os.Getenv("CLUSTER_NAME")
+				for _, n := range f.ClusterNames {
+					if n == cn {
+						ok = true
+						break
+					}
+				}
+				if !ok {
 					return false
 				}
 			}
