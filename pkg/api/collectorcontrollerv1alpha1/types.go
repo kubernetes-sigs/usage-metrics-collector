@@ -986,7 +986,7 @@ type Filter struct {
 	Labels map[string][]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 
 	// ClusterName if set will filter matching the environment variable CLUSTER_NAME
-	ClusterName string `json:"clusterName,omitempty" yaml:"clusterName,omitempty"`
+	ClusterNames []string `json:"clusterNames,omitempty" yaml:"clusterNames,omitempty"`
 }
 
 // BuiltIn configures built in metrics and labels.
