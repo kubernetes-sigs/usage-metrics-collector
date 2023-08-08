@@ -16,6 +16,7 @@ package collector
 
 import (
 	"math"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -128,6 +129,10 @@ func (c *Collector) aggregateMetric(operationsKey string, ops []collectorcontrol
 					if !ok {
 						return false
 					}
+				}
+				if f.ClusterName != "" && f.ClusterName != os.Getenv("CLUSTER_NAME") {
+					// cluster name doesn't match
+					return false
 				}
 			}
 			return true
