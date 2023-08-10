@@ -221,7 +221,7 @@ func fetchCAdvisorSample(client *client.Client, samples *sampleInstants) error {
 			continue // Skip all containers without stats.
 		}
 		// Use the most recent container stats values.
-		sample.CAdvisorNetworkStats = cadvisorNetworkStats{
+		sample.CAdvisorNetworkStats = &cadvisorNetworkStats{
 			Timestamp: container.Stats[0].Timestamp,
 			RxBytes:   container.Stats[0].Network.RxBytes,
 			RxPackets: container.Stats[0].Network.RxPackets,
@@ -458,7 +458,7 @@ func populateCadvisorSummary(sr *sampleResult, dropFirstRecord bool) {
 
 		// Sum network metrics for all sample values, using stats.Timestamp value
 		// to detect missing stats values, since all CAdvisorContainerStats have Timestamp value > 0.
-		if v.CAdvisorNetworkStats.Timestamp.Unix() > 0 {
+		if v.CAdvisorNetworkStats != nil {
 			networkSamplesCount++
 			networkRxBytes += v.CAdvisorNetworkStats.RxBytes
 			networkRxPackets += v.CAdvisorNetworkStats.RxPackets
@@ -472,14 +472,16 @@ func populateCadvisorSummary(sr *sampleResult, dropFirstRecord bool) {
 	}
 	// Follow the same suite as "MemoryBytes" for cadvisor metrics.
 	if networkSamplesCount > 0 {
-		sr.avg.CAdvisorNetworkStats.RxBytes = networkRxBytes / networkSamplesCount
-		sr.avg.CAdvisorNetworkStats.RxPackets = networkRxPackets / networkSamplesCount
-		sr.avg.CAdvisorNetworkStats.RxErrors = networkRxErrors / networkSamplesCount
-		sr.avg.CAdvisorNetworkStats.RxDropped = networkRxDropped / networkSamplesCount
-		sr.avg.CAdvisorNetworkStats.TxBytes = networkTxBytes / networkSamplesCount
-		sr.avg.CAdvisorNetworkStats.TxPackets = networkTxPackets / networkSamplesCount
-		sr.avg.CAdvisorNetworkStats.TxErrors = networkTxErrors / networkSamplesCount
-		sr.avg.CAdvisorNetworkStats.TxDropped = networkTxDropped / networkSamplesCount
+		sr.avg.CAdvisorNetworkStats = &cadvisorNetworkStats{
+			RxBytes:   networkRxBytes / networkSamplesCount,
+			RxPackets: networkRxPackets / networkSamplesCount,
+			RxErrors:  networkRxErrors / networkSamplesCount,
+			RxDropped: networkRxDropped / networkSamplesCount,
+			TxBytes:   networkTxBytes / networkSamplesCount,
+			TxPackets: networkTxPackets / networkSamplesCount,
+			TxErrors:  networkTxErrors / networkSamplesCount,
+			TxDropped: networkTxDropped / networkSamplesCount,
+		}
 	}
 }
 

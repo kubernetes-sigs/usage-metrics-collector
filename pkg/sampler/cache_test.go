@@ -38,16 +38,14 @@ func equateSampleResult(a, b sampleResult) bool {
 		a.totalOOMKill == b.totalOOMKill
 }
 
-var sampleResultComparer = cmp.Comparer(equateSampleResult)
-
 func Test_populateCadvisorSummary(t *testing.T) {
 	type args struct {
 		sr              *sampleResult
 		dropFirstRecord bool
 	}
 	now := time.Now()
-	testNetworkStats := func(ts time.Time, increase uint64) cadvisorNetworkStats {
-		return cadvisorNetworkStats{
+	testNetworkStats := func(ts time.Time, increase uint64) *cadvisorNetworkStats {
+		return &cadvisorNetworkStats{
 			Timestamp: ts,
 			RxBytes:   1 + increase,
 			RxPackets: 2 + increase,
@@ -80,25 +78,21 @@ func Test_populateCadvisorSummary(t *testing.T) {
 				values: sampleInstantSlice{},
 			},
 		},
-		"SingleValue_WithoutTimestamp": {
+		"SingleValue_WithoutNetworkStats": {
 			args: args{
 				sr: &sampleResult{
 					values: sampleInstantSlice{
-						{
-							CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
-						},
+						{}, // default instance w/out network metrics.
 					},
 				},
 			},
 			want: &sampleResult{
 				values: sampleInstantSlice{
-					{
-						CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
-					},
+					{},
 				},
 			},
 		},
-		"SingleValue_WithTimestamp": {
+		"SingleValue_WithNetworkStats": {
 			args: args{
 				sr: &sampleResult{
 					values: sampleInstantSlice{
@@ -119,40 +113,30 @@ func Test_populateCadvisorSummary(t *testing.T) {
 				},
 			},
 		},
-		"MultipleValues_AllWithoutTimestamp": {
+		"MultipleValues_AllWithoutNetworkMetrics": {
 			args: args{
 				sr: &sampleResult{
 					values: sampleInstantSlice{
-						{
-							CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
-						},
-						{
-							CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
-						},
+						{},
+						{},
 					},
 				},
 			},
 			want: &sampleResult{
 				values: sampleInstantSlice{
-					{
-						CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
-					},
-					{
-						CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
-					},
+					{},
+					{},
 				},
 			},
 		},
-		"MultipleValues_SomeWithoutTimestamp": {
+		"MultipleValues_SomeWithoutNetworkMetrics": {
 			args: args{
 				sr: &sampleResult{
 					values: sampleInstantSlice{
 						{
 							CAdvisorNetworkStats: testNetworkStats(now, 0),
 						},
-						{
-							CAdvisorNetworkStats: testNetworkStats(time.Time{}, 2),
-						},
+						{},
 					},
 				},
 			},
@@ -161,9 +145,7 @@ func Test_populateCadvisorSummary(t *testing.T) {
 					{
 						CAdvisorNetworkStats: testNetworkStats(now, 0),
 					},
-					{
-						CAdvisorNetworkStats: testNetworkStats(time.Time{}, 2),
-					},
+					{},
 				},
 				avg: sampleInstant{
 					CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
@@ -374,8 +356,8 @@ func Test_fetchCAdvisorSample(t *testing.T) {
 				containers: map[ContainerKey]sampleInstant{
 					{PodUID: "test-container-1"}: {},
 					{PodUID: "test-container-2"}: {
-						CAdvisorNetworkStats: cadvisorNetworkStats{
-							Timestamp: now, // <-- assert the first stats value.
+						CAdvisorNetworkStats: &cadvisorNetworkStats{
+							Timestamp: now,
 						},
 					},
 				},
