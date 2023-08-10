@@ -604,16 +604,6 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			OomKillCount:                  int64(v.avg.MemoryOOMKill),
 			AvgCPUPeriodsSec:              int64(v.avg.CPUPeriodsSec),
 			AvgCPUThrottledPeriodsSec:     int64(v.avg.CPUThrottledPeriodsSec),
-
-			// Network samples.
-			NetworkRxBytes:   make([]int64, 0, len(v.values)),
-			NetworkRxPackets: make([]int64, 0, len(v.values)),
-			NetworkRxErrors:  make([]int64, 0, len(v.values)),
-			NetworkRxDropped: make([]int64, 0, len(v.values)),
-			NetworkTxBytes:   make([]int64, 0, len(v.values)),
-			NetworkTxPackets: make([]int64, 0, len(v.values)),
-			NetworkTxErrors:  make([]int64, 0, len(v.values)),
-			NetworkTxDropped: make([]int64, 0, len(v.values)),
 		}
 		//Network summaries, if there is any.
 		if v.avg.CAdvisorNetworkStats != nil {
@@ -639,18 +629,6 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			c.MemoryBytes = append(c.MemoryBytes, int64(s.MemoryBytes))
 			c.CpuPeriodsSec = append(c.CpuPeriodsSec, int64(s.CPUPeriodsSec))
 			c.CpuThrottledPeriodsSec = append(c.CpuThrottledPeriodsSec, int64(s.CPUThrottledPeriodsSec))
-
-			if s.CAdvisorNetworkStats != nil {
-				c.NetworkRxBytes[i] = int64(s.CAdvisorNetworkStats.RxBytes)
-				c.NetworkRxBytes[i] = int64(s.CAdvisorNetworkStats.RxBytes)
-				c.NetworkRxPackets[i] = int64(s.CAdvisorNetworkStats.RxPackets)
-				c.NetworkRxErrors[i] = int64(s.CAdvisorNetworkStats.RxErrors)
-				c.NetworkRxDropped[i] = int64(s.CAdvisorNetworkStats.RxDropped)
-				c.NetworkTxBytes[i] = int64(s.CAdvisorNetworkStats.TxBytes)
-				c.NetworkTxPackets[i] = int64(s.CAdvisorNetworkStats.TxPackets)
-				c.NetworkTxErrors[i] = int64(s.CAdvisorNetworkStats.TxErrors)
-				c.NetworkTxDropped[i] = int64(s.CAdvisorNetworkStats.TxDropped)
-			}
 		}
 		if s.SortResults {
 			// sort the values so the results are stable
@@ -660,15 +638,6 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			sort.Sort(Float32Slice(c.CpuPercentPeriodsThrottled))
 			sort.Sort(Int64Slice(c.CpuPeriodsSec))
 			sort.Sort(Int64Slice(c.CpuThrottledPeriodsSec))
-
-			sort.Sort(Int64Slice(c.NetworkRxBytes))
-			sort.Sort(Int64Slice(c.NetworkRxPackets))
-			sort.Sort(Int64Slice(c.NetworkRxErrors))
-			sort.Sort(Int64Slice(c.NetworkRxDropped))
-			sort.Sort(Int64Slice(c.NetworkTxBytes))
-			sort.Sort(Int64Slice(c.NetworkTxPackets))
-			sort.Sort(Int64Slice(c.NetworkTxErrors))
-			sort.Sort(Int64Slice(c.NetworkTxDropped))
 		}
 		result.Containers = append(result.Containers, c)
 	}
