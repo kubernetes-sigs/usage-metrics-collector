@@ -614,15 +614,15 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			NetworkTxPackets: make([]int64, 0, len(v.values)),
 			NetworkTxErrors:  make([]int64, 0, len(v.values)),
 			NetworkTxDropped: make([]int64, 0, len(v.values)),
-			// Network summaries.
-			AvgNetworkRxBytes:   int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkRxPackets: int64(v.avg.CAdvisorContainerStats.Network.RxPackets),
-			AvgNetworkRxErrors:  int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkRxDropped: int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkTxBytes:   int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkTxPackets: int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkTxErrors:  int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkTxDropped: int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
+			//Network summaries.
+			AvgNetworkRxBytes:   int64(v.avg.CAdvisorNetworkStats.RxBytes),
+			AvgNetworkRxPackets: int64(v.avg.CAdvisorNetworkStats.RxPackets),
+			AvgNetworkRxErrors:  int64(v.avg.CAdvisorNetworkStats.RxBytes),
+			AvgNetworkRxDropped: int64(v.avg.CAdvisorNetworkStats.RxBytes),
+			AvgNetworkTxBytes:   int64(v.avg.CAdvisorNetworkStats.RxBytes),
+			AvgNetworkTxPackets: int64(v.avg.CAdvisorNetworkStats.RxBytes),
+			AvgNetworkTxErrors:  int64(v.avg.CAdvisorNetworkStats.RxBytes),
+			AvgNetworkTxDropped: int64(v.avg.CAdvisorNetworkStats.RxBytes),
 		}
 		for i := range v.values {
 			if i == 0 && pointer.BoolDeref(s.Reader.DropFirstValue, false) {
@@ -637,14 +637,14 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			c.CpuPeriodsSec = append(c.CpuPeriodsSec, int64(s.CPUPeriodsSec))
 			c.CpuThrottledPeriodsSec = append(c.CpuThrottledPeriodsSec, int64(s.CPUThrottledPeriodsSec))
 
-			c.NetworkRxBytes = append(c.NetworkRxBytes, int64(s.CAdvisorContainerStats.Network.RxBytes))
-			c.NetworkRxPackets = append(c.NetworkRxPackets, int64(s.CAdvisorContainerStats.Network.RxPackets))
-			c.NetworkRxErrors = append(c.NetworkRxErrors, int64(s.CAdvisorContainerStats.Network.RxErrors))
-			c.NetworkRxDropped = append(c.NetworkRxDropped, int64(s.CAdvisorContainerStats.Network.RxDropped))
-			c.NetworkTxBytes = append(c.NetworkTxBytes, int64(s.CAdvisorContainerStats.Network.TxBytes))
-			c.NetworkTxPackets = append(c.NetworkTxPackets, int64(s.CAdvisorContainerStats.Network.TxPackets))
-			c.NetworkTxErrors = append(c.NetworkTxErrors, int64(s.CAdvisorContainerStats.Network.TxErrors))
-			c.NetworkTxDropped = append(c.NetworkTxDropped, int64(s.CAdvisorContainerStats.Network.TxDropped))
+			c.NetworkRxBytes = append(c.NetworkRxBytes, int64(s.CAdvisorNetworkStats.RxBytes))
+			c.NetworkRxPackets = append(c.NetworkRxPackets, int64(s.CAdvisorNetworkStats.RxPackets))
+			c.NetworkRxErrors = append(c.NetworkRxErrors, int64(s.CAdvisorNetworkStats.RxErrors))
+			c.NetworkRxDropped = append(c.NetworkRxDropped, int64(s.CAdvisorNetworkStats.RxDropped))
+			c.NetworkTxBytes = append(c.NetworkTxBytes, int64(s.CAdvisorNetworkStats.TxBytes))
+			c.NetworkTxPackets = append(c.NetworkTxPackets, int64(s.CAdvisorNetworkStats.TxPackets))
+			c.NetworkTxErrors = append(c.NetworkTxErrors, int64(s.CAdvisorNetworkStats.TxErrors))
+			c.NetworkTxDropped = append(c.NetworkTxDropped, int64(s.CAdvisorNetworkStats.TxDropped))
 		}
 		if s.SortResults {
 			// sort the values so the results are stable
