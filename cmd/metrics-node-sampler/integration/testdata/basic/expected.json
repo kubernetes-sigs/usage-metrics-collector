@@ -57,62 +57,14 @@
 			"avgCPUThrottledNanoSec": "70",
 			"avgCPUPeriodsSec": "800",
 			"avgCPUThrottledPeriodsSec": "130",
-			"networkRxBytes": [
-				"0",
-				"0",
-				"0",
-				"0",
-				"0"
-			],
-			"networkRxPackets": [
-				"0",
-				"0",
-				"0",
-				"0",
-				"0"
-			],
-			"networkRxErrors": [
-				"0",
-				"0",
-				"0",
-				"0",
-				"0"
-			],
-			"networkRxDropped": [
-				"0",
-				"0",
-				"0",
-				"0",
-				"0"
-			],
-			"networkTxBytes": [
-				"0",
-				"0",
-				"0",
-				"0",
-				"0"
-			],
-			"networkTxPackets": [
-				"0",
-				"0",
-				"0",
-				"0",
-				"0"
-			],
-			"networkTxErrors": [
-				"0",
-				"0",
-				"0",
-				"0",
-				"0"
-			],
-			"networkTxDropped": [
-				"0",
-				"0",
-				"0",
-				"0",
-				"0"
-			],
+			"networkRxBytes": [],
+			"networkRxPackets": [],
+			"networkRxErrors": [],
+			"networkRxDropped": [],
+			"networkTxBytes": [],
+			"networkTxPackets": [],
+			"networkTxErrors": [],
+			"networkTxDropped": [],
 			"avgNetworkRxBytes": "0",
 			"avgNetworkRxPackets": "0",
 			"avgNetworkRxErrors": "0",
