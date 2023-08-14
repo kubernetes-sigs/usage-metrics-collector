@@ -38,16 +38,15 @@ func equateSampleResult(a, b sampleResult) bool {
 		a.totalOOMKill == b.totalOOMKill
 }
 
-var sampleResultComparer = cmp.Comparer(equateSampleResult)
-
 func Test_populateCadvisorSummary(t *testing.T) {
 	type args struct {
 		sr              *sampleResult
 		dropFirstRecord bool
 	}
 	now := time.Now()
-	testNetworkInterfaceStats := func(increase uint64) cadvisorv1.InterfaceStats {
-		return cadvisorv1.InterfaceStats{
+	testNetworkStats := func(ts time.Time, increase uint64) *cadvisorNetworkStats {
+		return &cadvisorNetworkStats{
+			Timestamp: ts,
 			RxBytes:   1 + increase,
 			RxPackets: 2 + increase,
 			RxDropped: 3 + increase,
@@ -79,32 +78,26 @@ func Test_populateCadvisorSummary(t *testing.T) {
 				values: sampleInstantSlice{},
 			},
 		},
-		"SingleValue_EmptyCadvisorStats": {
+		"SingleValue_WithoutNetworkStats": {
 			args: args{
 				sr: &sampleResult{
 					values: sampleInstantSlice{
-						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{},
-						},
+						{}, // default instance w/out network metrics.
 					},
 				},
 			},
 			want: &sampleResult{
 				values: sampleInstantSlice{
-					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{},
-					},
+					{},
 				},
 			},
 		},
-		"SingleValue_EmptyCadvisorNetworkStats": {
+		"SingleValue_WithNetworkStats": {
 			args: args{
 				sr: &sampleResult{
 					values: sampleInstantSlice{
 						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Network: cadvisorv1.NetworkStats{},
-							},
+							CAdvisorNetworkStats: testNetworkStats(now, 0),
 						},
 					},
 				},
@@ -112,186 +105,50 @@ func Test_populateCadvisorSummary(t *testing.T) {
 			want: &sampleResult{
 				values: sampleInstantSlice{
 					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Network: cadvisorv1.NetworkStats{},
-						},
-					},
-				},
-			},
-		},
-		"SingleValue_EmptyCadvisorNetworkInterfaceStats": {
-			args: args{
-				sr: &sampleResult{
-					values: sampleInstantSlice{
-						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: cadvisorv1.InterfaceStats{},
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &sampleResult{
-				values: sampleInstantSlice{
-					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: cadvisorv1.InterfaceStats{},
-							},
-						},
-					},
-				},
-			},
-		},
-		"SingleValue_WithoutTimestamp": {
-			args: args{
-				sr: &sampleResult{
-					values: sampleInstantSlice{
-						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(0),
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &sampleResult{
-				values: sampleInstantSlice{
-					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(0),
-							},
-						},
-					},
-				},
-			},
-		},
-		"SingleValue_WithTimestamp": {
-			args: args{
-				sr: &sampleResult{
-					values: sampleInstantSlice{
-						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Timestamp: now,
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(0),
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &sampleResult{
-				values: sampleInstantSlice{
-					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Timestamp: now,
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(0),
-							},
-						},
+						CAdvisorNetworkStats: testNetworkStats(now, 0),
 					},
 				},
 				avg: sampleInstant{
-					CAdvisorContainerStats: cadvisorv1.ContainerStats{
-						Network: cadvisorv1.NetworkStats{
-							InterfaceStats: testNetworkInterfaceStats(0),
-						},
-					},
+					CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
 				},
 			},
 		},
-		"MultipleValues_AllWithoutTimestamp": {
+		"MultipleValues_AllWithoutNetworkMetrics": {
+			args: args{
+				sr: &sampleResult{
+					values: sampleInstantSlice{
+						{},
+						{},
+					},
+				},
+			},
+			want: &sampleResult{
+				values: sampleInstantSlice{
+					{},
+					{},
+				},
+			},
+		},
+		"MultipleValues_SomeWithoutNetworkMetrics": {
 			args: args{
 				sr: &sampleResult{
 					values: sampleInstantSlice{
 						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(0),
-								},
-							},
+							CAdvisorNetworkStats: testNetworkStats(now, 0),
 						},
-						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(0),
-								},
-							},
-						},
+						{},
 					},
 				},
 			},
 			want: &sampleResult{
 				values: sampleInstantSlice{
 					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(0),
-							},
-						},
+						CAdvisorNetworkStats: testNetworkStats(now, 0),
 					},
-					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(0),
-							},
-						},
-					},
-				},
-			},
-		},
-		"MultipleValues_SomeWithoutTimestamp": {
-			args: args{
-				sr: &sampleResult{
-					values: sampleInstantSlice{
-						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Timestamp: now,
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(0),
-								},
-							},
-						},
-						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(0),
-								},
-							},
-						},
-					},
-				},
-			},
-			want: &sampleResult{
-				values: sampleInstantSlice{
-					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Timestamp: now,
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(0),
-							},
-						},
-					},
-					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(0),
-							},
-						},
-					},
+					{},
 				},
 				avg: sampleInstant{
-					CAdvisorContainerStats: cadvisorv1.ContainerStats{
-						Network: cadvisorv1.NetworkStats{
-							InterfaceStats: testNetworkInterfaceStats(0),
-						},
-					},
+					CAdvisorNetworkStats: testNetworkStats(time.Time{}, 0),
 				},
 			},
 		},
@@ -300,20 +157,10 @@ func Test_populateCadvisorSummary(t *testing.T) {
 				sr: &sampleResult{
 					values: sampleInstantSlice{
 						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Timestamp: now,
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(0),
-								},
-							},
+							CAdvisorNetworkStats: testNetworkStats(now, 0),
 						},
 						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Timestamp: now,
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(2),
-								},
-							},
+							CAdvisorNetworkStats: testNetworkStats(now, 2),
 						},
 					},
 				},
@@ -321,28 +168,14 @@ func Test_populateCadvisorSummary(t *testing.T) {
 			want: &sampleResult{
 				values: sampleInstantSlice{
 					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Timestamp: now,
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(0),
-							},
-						},
+						CAdvisorNetworkStats: testNetworkStats(now, 0),
 					},
 					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Timestamp: now,
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(2),
-							},
-						},
+						CAdvisorNetworkStats: testNetworkStats(now, 2),
 					},
 				},
 				avg: sampleInstant{
-					CAdvisorContainerStats: cadvisorv1.ContainerStats{
-						Network: cadvisorv1.NetworkStats{
-							InterfaceStats: testNetworkInterfaceStats(1),
-						},
-					},
+					CAdvisorNetworkStats: testNetworkStats(time.Time{}, 1),
 				},
 			},
 		},
@@ -351,20 +184,10 @@ func Test_populateCadvisorSummary(t *testing.T) {
 				sr: &sampleResult{
 					values: sampleInstantSlice{
 						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Timestamp: now,
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(0),
-								},
-							},
+							CAdvisorNetworkStats: testNetworkStats(now, 0),
 						},
 						{
-							CAdvisorContainerStats: cadvisorv1.ContainerStats{
-								Timestamp: now,
-								Network: cadvisorv1.NetworkStats{
-									InterfaceStats: testNetworkInterfaceStats(2),
-								},
-							},
+							CAdvisorNetworkStats: testNetworkStats(now, 2),
 						},
 					},
 				},
@@ -372,28 +195,14 @@ func Test_populateCadvisorSummary(t *testing.T) {
 			want: &sampleResult{
 				values: sampleInstantSlice{
 					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Timestamp: now,
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(0),
-							},
-						},
+						CAdvisorNetworkStats: testNetworkStats(now, 0),
 					},
 					{
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Timestamp: now,
-							Network: cadvisorv1.NetworkStats{
-								InterfaceStats: testNetworkInterfaceStats(2),
-							},
-						},
+						CAdvisorNetworkStats: testNetworkStats(now, 2),
 					},
 				},
 				avg: sampleInstant{
-					CAdvisorContainerStats: cadvisorv1.ContainerStats{
-						Network: cadvisorv1.NetworkStats{
-							InterfaceStats: testNetworkInterfaceStats(1),
-						},
-					},
+					CAdvisorNetworkStats: testNetworkStats(time.Time{}, 1),
 				},
 			},
 		},
@@ -547,8 +356,8 @@ func Test_fetchCAdvisorSample(t *testing.T) {
 				containers: map[ContainerKey]sampleInstant{
 					{PodUID: "test-container-1"}: {},
 					{PodUID: "test-container-2"}: {
-						CAdvisorContainerStats: cadvisorv1.ContainerStats{
-							Timestamp: now, // <-- assert the first stats value.
+						CAdvisorNetworkStats: &cadvisorNetworkStats{
+							Timestamp: now,
 						},
 					},
 				},

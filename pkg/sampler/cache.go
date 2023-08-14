@@ -221,7 +221,17 @@ func fetchCAdvisorSample(client *client.Client, samples *sampleInstants) error {
 			continue // Skip all containers without stats.
 		}
 		// Use the most recent container stats values.
-		sample.CAdvisorContainerStats = *container.Stats[0]
+		sample.CAdvisorNetworkStats = &cadvisorNetworkStats{
+			Timestamp: container.Stats[0].Timestamp,
+			RxBytes:   container.Stats[0].Network.RxBytes,
+			RxPackets: container.Stats[0].Network.RxPackets,
+			RxDropped: container.Stats[0].Network.RxDropped,
+			RxErrors:  container.Stats[0].Network.RxErrors,
+			TxBytes:   container.Stats[0].Network.TxBytes,
+			TxPackets: container.Stats[0].Network.TxPackets,
+			TxDropped: container.Stats[0].Network.TxDropped,
+			TxErrors:  container.Stats[0].Network.TxErrors,
+		}
 		samples.containers[key] = sample
 	}
 	return nil
@@ -448,28 +458,30 @@ func populateCadvisorSummary(sr *sampleResult, dropFirstRecord bool) {
 
 		// Sum network metrics for all sample values, using stats.Timestamp value
 		// to detect missing stats values, since all CAdvisorContainerStats have Timestamp value > 0.
-		if v.CAdvisorContainerStats.Timestamp.Unix() > 0 {
+		if v.CAdvisorNetworkStats != nil {
 			networkSamplesCount++
-			networkRxBytes += v.CAdvisorContainerStats.Network.RxBytes
-			networkRxPackets += v.CAdvisorContainerStats.Network.RxPackets
-			networkRxErrors += v.CAdvisorContainerStats.Network.RxErrors
-			networkRxDropped += v.CAdvisorContainerStats.Network.RxDropped
-			networkTxBytes += v.CAdvisorContainerStats.Network.TxBytes
-			networkTxPackets += v.CAdvisorContainerStats.Network.TxPackets
-			networkTxErrors += v.CAdvisorContainerStats.Network.TxErrors
-			networkTxDropped += v.CAdvisorContainerStats.Network.TxDropped
+			networkRxBytes += v.CAdvisorNetworkStats.RxBytes
+			networkRxPackets += v.CAdvisorNetworkStats.RxPackets
+			networkRxErrors += v.CAdvisorNetworkStats.RxErrors
+			networkRxDropped += v.CAdvisorNetworkStats.RxDropped
+			networkTxBytes += v.CAdvisorNetworkStats.TxBytes
+			networkTxPackets += v.CAdvisorNetworkStats.TxPackets
+			networkTxErrors += v.CAdvisorNetworkStats.TxErrors
+			networkTxDropped += v.CAdvisorNetworkStats.TxDropped
 		}
 	}
 	// Follow the same suite as "MemoryBytes" for cadvisor metrics.
 	if networkSamplesCount > 0 {
-		sr.avg.CAdvisorContainerStats.Network.RxBytes = networkRxBytes / networkSamplesCount
-		sr.avg.CAdvisorContainerStats.Network.RxPackets = networkRxPackets / networkSamplesCount
-		sr.avg.CAdvisorContainerStats.Network.RxErrors = networkRxErrors / networkSamplesCount
-		sr.avg.CAdvisorContainerStats.Network.RxDropped = networkRxDropped / networkSamplesCount
-		sr.avg.CAdvisorContainerStats.Network.TxBytes = networkTxBytes / networkSamplesCount
-		sr.avg.CAdvisorContainerStats.Network.TxPackets = networkTxPackets / networkSamplesCount
-		sr.avg.CAdvisorContainerStats.Network.TxErrors = networkTxErrors / networkSamplesCount
-		sr.avg.CAdvisorContainerStats.Network.TxDropped = networkTxDropped / networkSamplesCount
+		sr.avg.CAdvisorNetworkStats = &cadvisorNetworkStats{
+			RxBytes:   networkRxBytes / networkSamplesCount,
+			RxPackets: networkRxPackets / networkSamplesCount,
+			RxErrors:  networkRxErrors / networkSamplesCount,
+			RxDropped: networkRxDropped / networkSamplesCount,
+			TxBytes:   networkTxBytes / networkSamplesCount,
+			TxPackets: networkTxPackets / networkSamplesCount,
+			TxErrors:  networkTxErrors / networkSamplesCount,
+			TxDropped: networkTxDropped / networkSamplesCount,
+		}
 	}
 }
 

@@ -604,26 +604,19 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			OomKillCount:                  int64(v.avg.MemoryOOMKill),
 			AvgCPUPeriodsSec:              int64(v.avg.CPUPeriodsSec),
 			AvgCPUThrottledPeriodsSec:     int64(v.avg.CPUThrottledPeriodsSec),
-
-			// Network samples.
-			NetworkRxBytes:   make([]int64, 0, len(v.values)),
-			NetworkRxPackets: make([]int64, 0, len(v.values)),
-			NetworkRxErrors:  make([]int64, 0, len(v.values)),
-			NetworkRxDropped: make([]int64, 0, len(v.values)),
-			NetworkTxBytes:   make([]int64, 0, len(v.values)),
-			NetworkTxPackets: make([]int64, 0, len(v.values)),
-			NetworkTxErrors:  make([]int64, 0, len(v.values)),
-			NetworkTxDropped: make([]int64, 0, len(v.values)),
-			// Network summaries.
-			AvgNetworkRxBytes:   int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkRxPackets: int64(v.avg.CAdvisorContainerStats.Network.RxPackets),
-			AvgNetworkRxErrors:  int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkRxDropped: int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkTxBytes:   int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkTxPackets: int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkTxErrors:  int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
-			AvgNetworkTxDropped: int64(v.avg.CAdvisorContainerStats.Network.RxBytes),
 		}
+		//Network summaries, if there is any.
+		if v.avg.CAdvisorNetworkStats != nil {
+			c.AvgNetworkRxBytes = int64(v.avg.CAdvisorNetworkStats.RxBytes)
+			c.AvgNetworkRxPackets = int64(v.avg.CAdvisorNetworkStats.RxPackets)
+			c.AvgNetworkRxErrors = int64(v.avg.CAdvisorNetworkStats.RxErrors)
+			c.AvgNetworkRxDropped = int64(v.avg.CAdvisorNetworkStats.RxDropped)
+			c.AvgNetworkTxBytes = int64(v.avg.CAdvisorNetworkStats.TxBytes)
+			c.AvgNetworkTxPackets = int64(v.avg.CAdvisorNetworkStats.TxPackets)
+			c.AvgNetworkTxErrors = int64(v.avg.CAdvisorNetworkStats.TxErrors)
+			c.AvgNetworkTxDropped = int64(v.avg.CAdvisorNetworkStats.TxDropped)
+		}
+
 		for i := range v.values {
 			if i == 0 && pointer.BoolDeref(s.Reader.DropFirstValue, false) {
 				// skip the first value to be consistent with how mean is calculated
@@ -636,15 +629,6 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			c.MemoryBytes = append(c.MemoryBytes, int64(s.MemoryBytes))
 			c.CpuPeriodsSec = append(c.CpuPeriodsSec, int64(s.CPUPeriodsSec))
 			c.CpuThrottledPeriodsSec = append(c.CpuThrottledPeriodsSec, int64(s.CPUThrottledPeriodsSec))
-
-			c.NetworkRxBytes = append(c.NetworkRxBytes, int64(s.CAdvisorContainerStats.Network.RxBytes))
-			c.NetworkRxPackets = append(c.NetworkRxPackets, int64(s.CAdvisorContainerStats.Network.RxPackets))
-			c.NetworkRxErrors = append(c.NetworkRxErrors, int64(s.CAdvisorContainerStats.Network.RxErrors))
-			c.NetworkRxDropped = append(c.NetworkRxDropped, int64(s.CAdvisorContainerStats.Network.RxDropped))
-			c.NetworkTxBytes = append(c.NetworkTxBytes, int64(s.CAdvisorContainerStats.Network.TxBytes))
-			c.NetworkTxPackets = append(c.NetworkTxPackets, int64(s.CAdvisorContainerStats.Network.TxPackets))
-			c.NetworkTxErrors = append(c.NetworkTxErrors, int64(s.CAdvisorContainerStats.Network.TxErrors))
-			c.NetworkTxDropped = append(c.NetworkTxDropped, int64(s.CAdvisorContainerStats.Network.TxDropped))
 		}
 		if s.SortResults {
 			// sort the values so the results are stable
@@ -654,15 +638,6 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 			sort.Sort(Float32Slice(c.CpuPercentPeriodsThrottled))
 			sort.Sort(Int64Slice(c.CpuPeriodsSec))
 			sort.Sort(Int64Slice(c.CpuThrottledPeriodsSec))
-
-			sort.Sort(Int64Slice(c.NetworkRxBytes))
-			sort.Sort(Int64Slice(c.NetworkRxPackets))
-			sort.Sort(Int64Slice(c.NetworkRxErrors))
-			sort.Sort(Int64Slice(c.NetworkRxDropped))
-			sort.Sort(Int64Slice(c.NetworkTxBytes))
-			sort.Sort(Int64Slice(c.NetworkTxPackets))
-			sort.Sort(Int64Slice(c.NetworkTxErrors))
-			sort.Sort(Int64Slice(c.NetworkTxDropped))
 		}
 		result.Containers = append(result.Containers, c)
 	}

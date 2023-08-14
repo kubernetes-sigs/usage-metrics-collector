@@ -17,8 +17,6 @@ package sampler
 import (
 	"time"
 
-	cadvisorv1 "github.com/google/cadvisor/info/v1"
-
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
 )
 
@@ -38,6 +36,26 @@ type ContainerKey struct {
 
 	// PodName is the name of the pod
 	PodName string
+}
+
+type cadvisorNetworkStats struct {
+	Timestamp time.Time
+	// Cumulative count of bytes received.
+	RxBytes uint64 `json:"rx_bytes"`
+	// Cumulative count of packets received.
+	RxPackets uint64 `json:"rx_packets"`
+	// Cumulative count of receive errors encountered.
+	RxErrors uint64 `json:"rx_errors"`
+	// Cumulative count of packets dropped while receiving.
+	RxDropped uint64 `json:"rx_dropped"`
+	// Cumulative count of bytes transmitted.
+	TxBytes uint64 `json:"tx_bytes"`
+	// Cumulative count of packets transmitted.
+	TxPackets uint64 `json:"tx_packets"`
+	// Cumulative count of transmit errors encountered.
+	TxErrors uint64 `json:"tx_errors"`
+	// Cumulative count of packets dropped while transmitting.
+	TxDropped uint64 `json:"tx_dropped"`
 }
 
 type sampleInstant struct {
@@ -75,8 +93,8 @@ type sampleInstant struct {
 	// CAdvisor stats.
 	// Although, currently, we only collect and report network metrics,
 	// we [re]use ContainerStats as sample value holder since in the future
-	// we may chose to collect addition values (other than Network)
-	CAdvisorContainerStats cadvisorv1.ContainerStats
+	// we may choose to collect addition values (other than Network)
+	CAdvisorNetworkStats *cadvisorNetworkStats
 }
 
 // ContainerMetricType identifies a type of metrics that corresponds to a specific cgroups file
