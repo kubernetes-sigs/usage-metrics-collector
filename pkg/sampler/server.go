@@ -609,12 +609,12 @@ func (s *Server) ListMetrics(context.Context, *api.ListMetricsRequest) (*api.Lis
 		if v.avg.CAdvisorNetworkStats != nil {
 			c.AvgNetworkRxBytes = int64(v.avg.CAdvisorNetworkStats.RxBytes)
 			c.AvgNetworkRxPackets = int64(v.avg.CAdvisorNetworkStats.RxPackets)
-			c.AvgNetworkRxErrors = int64(v.avg.CAdvisorNetworkStats.RxBytes)
-			c.AvgNetworkRxDropped = int64(v.avg.CAdvisorNetworkStats.RxBytes)
-			c.AvgNetworkTxBytes = int64(v.avg.CAdvisorNetworkStats.RxBytes)
-			c.AvgNetworkTxPackets = int64(v.avg.CAdvisorNetworkStats.RxBytes)
-			c.AvgNetworkTxErrors = int64(v.avg.CAdvisorNetworkStats.RxBytes)
-			c.AvgNetworkTxDropped = int64(v.avg.CAdvisorNetworkStats.RxBytes)
+			c.AvgNetworkRxErrors = int64(v.avg.CAdvisorNetworkStats.RxErrors)
+			c.AvgNetworkRxDropped = int64(v.avg.CAdvisorNetworkStats.RxDropped)
+			c.AvgNetworkTxBytes = int64(v.avg.CAdvisorNetworkStats.TxBytes)
+			c.AvgNetworkTxPackets = int64(v.avg.CAdvisorNetworkStats.TxPackets)
+			c.AvgNetworkTxErrors = int64(v.avg.CAdvisorNetworkStats.TxErrors)
+			c.AvgNetworkTxDropped = int64(v.avg.CAdvisorNetworkStats.TxDropped)
 		}
 
 		for i := range v.values {
