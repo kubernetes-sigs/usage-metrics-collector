@@ -239,10 +239,32 @@ const (
 
 	// ResourceTime is the resource name for time periods.
 	ResourceTime = ResourceName("time")
+
+	// These are the resources associated to network usage, we need to define both rx and tx
+	// because they are used as key on maps to differentiate metrics.
+
+	// ResourceNetworkRxBytes is the resource name for network bytes received.
+	ResourceNetworkRxBytes = ResourceName("rx_bytes")
+	// ResourceNetworkRxPackets is the resource name for network packets received.
+	ResourceNetworkRxPackets = ResourceName("rx_packets")
+	// ResourceNetworkRxErrors is the resource name for network errors at reception.
+	ResourceNetworkRxErrors = ResourceName("rx_errors")
+	// ResourceNetworkRxDropped is the resource name for network packets dropped at reception.
+	ResourceNetworkRxDropped = ResourceName("rx_dropped")
+	// ResourceNetworkTxBytes is the resource name for network bytes transferred.
+	ResourceNetworkTxBytes = ResourceName("tx_bytes")
+	// ResourceNetworkTxPackets is the resource name for network packets transferred.
+	ResourceNetworkTxPackets = ResourceName("tx_packets")
+	// ResourceNetworkTxErrors is the resource name for network errors during transmission.
+	ResourceNetworkTxErrors = ResourceName("tx_errors")
+	// ResourceNetworkTxDropped is the resource name for network packets dropped during transmission.
+	ResourceNetworkTxDropped = ResourceName("tx_dropped")
 )
 
 // ResourceNames defines a set of the supported ResourceName values.
-var ResourceNames = sets.New(ResourceCPU, ResourceMemory, ResourceStorage, ResourceItems, ResourceTime)
+var ResourceNames = sets.New(ResourceCPU, ResourceMemory, ResourceStorage, ResourceItems, ResourceTime,
+	ResourceNetworkRxBytes, ResourceNetworkRxPackets, ResourceNetworkRxErrors, ResourceNetworkRxDropped,
+	ResourceNetworkTxBytes, ResourceNetworkTxPackets, ResourceNetworkTxErrors, ResourceNetworkTxDropped)
 
 // ResourceAlias is an alias for a resource, it normally includes units (e.g. cpu_cores, memory_bytes)
 type ResourceAlias string
@@ -264,6 +286,23 @@ const (
 
 	// ResourceAliasTime is the resource alias for time.
 	ResourceAliasTime ResourceAlias = "time_seconds"
+
+	// ResourceAliasNetworkRxBytes is the resource alias for network bytes received.
+	ResourceAliasNetworkRxBytes = ResourceAlias("rx_bytes")
+	// ResourceAliasNetworkRxPackets is the resource alias for network packets received.
+	ResourceAliasNetworkRxPackets = ResourceAlias("rx_packets")
+	// ResourceAliasNetworkRxErrors is the resource alias for network errors at reception.
+	ResourceAliasNetworkRxErrors = ResourceAlias("rx_errors")
+	// ResourceAliasNetworkRxDropped is the resource alias for network packets dropped at reception.
+	ResourceAliasNetworkRxDropped = ResourceAlias("rx_dropped")
+	// ResourceAliasNetworkTxBytes is the resource alias for network bytes transferred.
+	ResourceAliasNetworkTxBytes = ResourceAlias("tx_bytes")
+	// ResourceAliasNetworkTxPackets is the resource alias for network packets transferred.
+	ResourceAliasNetworkTxPackets = ResourceAlias("tx_packets")
+	// ResourceAliasNetworkTxErrors is the resource alias for network errors during transmission.
+	ResourceAliasNetworkTxErrors = ResourceAlias("tx_errors")
+	// ResourceAliasNetworkTxDropped is the resource alias for network packets dropped during transmission.
+	ResourceAliasNetworkTxDropped = ResourceAlias("tx_dropped")
 )
 
 // Built in prometheus metric labels
