@@ -96,4 +96,44 @@ utilization:
     - 18M
     - 22M
     - 26M
+    rx_bytes:
+    - 1k
+    - 2k
+    - 3k
+    - 4k
+    rx_dropped:
+    - "10"
+    - "20"
+    - "30"
+    - "40"
+    rx_errors:
+    - "1"
+    - "1"
+    - "1"
+    - "1"
+    rx_packets:
+    - "10"
+    - "20"
+    - "30"
+    - "40"
+    tx_bytes:
+    - "100"
+    - "200"
+    - "300"
+    - "400"
+    tx_dropped:
+    - "2"
+    - "1"
+    - "3"
+    - "2"
+    tx_errors:
+    - "0"
+    - "0"
+    - "0"
+    - "0"
+    tx_packets:
+    - "2"
+    - "3"
+    - "3"
+    - "4"
   source: utilization

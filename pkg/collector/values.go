@@ -171,6 +171,26 @@ func (r ValueReader) GetValuesForContainer(
 		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList[collectorcontrollerv1alpha1.ResourceMemory] = requestsMinusUtilization
 	}
 
+	addNetworkValues := func(vs []int64, res corev1.ResourceName) {
+		if len(vs) == 0 {
+			return
+		}
+		qs := make([]resource.Quantity, 0, len(vs))
+		for _, v := range vs {
+			qs = append(qs, *resource.NewQuantity(v, resource.DecimalSI))
+		}
+		values[collectorcontrollerv1alpha1.ContainerUtilizationSource].MultiResourceList[res] = qs
+	}
+
+	addNetworkValues(usage.NetworkRxBytes, collectorcontrollerv1alpha1.ResourceNetworkRxBytes)
+	addNetworkValues(usage.NetworkRxPackets, collectorcontrollerv1alpha1.ResourceNetworkRxPackets)
+	addNetworkValues(usage.NetworkRxErrors, collectorcontrollerv1alpha1.ResourceNetworkRxErrors)
+	addNetworkValues(usage.NetworkRxDropped, collectorcontrollerv1alpha1.ResourceNetworkRxDropped)
+	addNetworkValues(usage.NetworkTxBytes, collectorcontrollerv1alpha1.ResourceNetworkTxBytes)
+	addNetworkValues(usage.NetworkTxPackets, collectorcontrollerv1alpha1.ResourceNetworkTxPackets)
+	addNetworkValues(usage.NetworkTxErrors, collectorcontrollerv1alpha1.ResourceNetworkTxErrors)
+	addNetworkValues(usage.NetworkTxDropped, collectorcontrollerv1alpha1.ResourceNetworkTxDropped)
+
 	if len(usage.CpuPeriodsSec) == 0 || len(usage.CpuThrottledPeriodsSec) == 0 {
 		return values
 	}
