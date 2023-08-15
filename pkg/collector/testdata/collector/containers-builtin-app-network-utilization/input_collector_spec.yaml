@@ -26,11 +26,11 @@ aggregations: # aggregate metrics and export them
         exported_container: true
         exported_namespace: true
         exported_pod: true
-        workload_name: true
+        exported_node: true
     noExport: true
     operation: "avg"
   - mask:
-      name: "namespace" # sum all containers / pods into workload metrics
+      name: "node" # sum all containers / pods into workload metrics
       builtIn:
-        exported_namespace: true
+        exported_node: true
     operation: "sum"
