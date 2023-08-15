@@ -171,9 +171,20 @@ func (r ValueReader) GetValuesForContainer(
 		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList[collectorcontrollerv1alpha1.ResourceMemory] = requestsMinusUtilization
 	}
 
-	addNetworkValues := func(vs []int64, res corev1.ResourceName) {
+	networkValues := map[corev1.ResourceName][]int64{
+		collectorcontrollerv1alpha1.ResourceNetworkRxBytes:   usage.NetworkRxBytes,
+		collectorcontrollerv1alpha1.ResourceNetworkRxPackets: usage.NetworkRxPackets,
+		collectorcontrollerv1alpha1.ResourceNetworkRxErrors:  usage.NetworkRxErrors,
+		collectorcontrollerv1alpha1.ResourceNetworkRxDropped: usage.NetworkRxDropped,
+		collectorcontrollerv1alpha1.ResourceNetworkTxBytes:   usage.NetworkTxBytes,
+		collectorcontrollerv1alpha1.ResourceNetworkTxPackets: usage.NetworkTxPackets,
+		collectorcontrollerv1alpha1.ResourceNetworkTxErrors:  usage.NetworkTxErrors,
+		collectorcontrollerv1alpha1.ResourceNetworkTxDropped: usage.NetworkTxDropped,
+	}
+
+	for res, vs := range networkValues {
 		if len(vs) == 0 {
-			return
+			continue
 		}
 		qs := make([]resource.Quantity, 0, len(vs))
 		for _, v := range vs {
@@ -181,15 +192,6 @@ func (r ValueReader) GetValuesForContainer(
 		}
 		values[collectorcontrollerv1alpha1.ContainerUtilizationSource].MultiResourceList[res] = qs
 	}
-
-	addNetworkValues(usage.NetworkRxBytes, collectorcontrollerv1alpha1.ResourceNetworkRxBytes)
-	addNetworkValues(usage.NetworkRxPackets, collectorcontrollerv1alpha1.ResourceNetworkRxPackets)
-	addNetworkValues(usage.NetworkRxErrors, collectorcontrollerv1alpha1.ResourceNetworkRxErrors)
-	addNetworkValues(usage.NetworkRxDropped, collectorcontrollerv1alpha1.ResourceNetworkRxDropped)
-	addNetworkValues(usage.NetworkTxBytes, collectorcontrollerv1alpha1.ResourceNetworkTxBytes)
-	addNetworkValues(usage.NetworkTxPackets, collectorcontrollerv1alpha1.ResourceNetworkTxPackets)
-	addNetworkValues(usage.NetworkTxErrors, collectorcontrollerv1alpha1.ResourceNetworkTxErrors)
-	addNetworkValues(usage.NetworkTxDropped, collectorcontrollerv1alpha1.ResourceNetworkTxDropped)
 
 	if len(usage.CpuPeriodsSec) == 0 || len(usage.CpuThrottledPeriodsSec) == 0 {
 		return values
