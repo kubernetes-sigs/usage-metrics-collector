@@ -29,6 +29,22 @@ responses:
       AvgCPUCoresNanoSec: 2500000000
       MemoryBytes: [12000000, 18000000, 22000000, 26000000]
       AvgMemoryBytes: 1950000000
+      NetworkRxBytes: [1000, 2000, 3000, 4000]
+      AvgNetworkRxBytes: 2500
+      NetworkTxBytes: [100, 200, 300, 400]
+      AvgNetworkTxBytes: 250
+      NetworkRxPackets: [10, 20, 30, 40]
+      AvgNetworkRxPackets: 25
+      NetworkTxPackets: [2, 3, 3, 4]
+      AvgNetworkTxPackets: 3
+      NetworkRxErrors: [1, 1, 1, 1]
+      AvgNetworkRxErrors: 1
+      NetworkTxErrors: [0, 0, 0, 0]
+      AvgNetworkTxErrors: 0
+      NetworkRxDropped: [10, 20, 30, 40]
+      AvgNetworkRxDropped: 25
+      NetworkTxDropped: [2, 1, 3, 2]
+      AvgNetworkTxDropped: 2
       OOMCount: 5
       OOMKillCount: 2
       CPUPeriodsSec: [100, 150, 200, 100]

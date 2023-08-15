@@ -13,6 +13,14 @@ avg_utilization:
   resourceList:
     cpu: 2500m
     memory: 1950M
+    rx_bytes: "2500"
+    rx_dropped: "25"
+    rx_errors: "1"
+    rx_packets: "25"
+    tx_bytes: "250"
+    tx_dropped: "2"
+    tx_errors: "0"
+    tx_packets: "3"
   source: avg_utilization
 container:
   level: container
