@@ -84,8 +84,16 @@ func (r ValueReader) GetValuesForContainer(
 
 	values[collectorcontrollerv1alpha1.AvgContainerUtilizationSource] = value{
 		ResourceList: corev1.ResourceList{
-			collectorcontrollerv1alpha1.ResourceCPU:    *resource.NewScaledQuantity(usage.AvgCPUCoresNanoSec, resource.Nano),
-			collectorcontrollerv1alpha1.ResourceMemory: *resource.NewQuantity(usage.AvgMemoryBytes, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceCPU:              *resource.NewScaledQuantity(usage.AvgCPUCoresNanoSec, resource.Nano),
+			collectorcontrollerv1alpha1.ResourceMemory:           *resource.NewQuantity(usage.AvgMemoryBytes, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceNetworkRxBytes:   *resource.NewQuantity(usage.AvgNetworkRxBytes, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceNetworkRxPackets: *resource.NewQuantity(usage.AvgNetworkRxPackets, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceNetworkRxErrors:  *resource.NewQuantity(usage.AvgNetworkRxErrors, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceNetworkRxDropped: *resource.NewQuantity(usage.AvgNetworkRxDropped, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceNetworkTxBytes:   *resource.NewQuantity(usage.AvgNetworkTxBytes, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceNetworkTxPackets: *resource.NewQuantity(usage.AvgNetworkTxPackets, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceNetworkTxErrors:  *resource.NewQuantity(usage.AvgNetworkTxErrors, resource.DecimalSI),
+			collectorcontrollerv1alpha1.ResourceNetworkTxDropped: *resource.NewQuantity(usage.AvgNetworkTxDropped, resource.DecimalSI),
 		},
 		Level:  collectorcontrollerv1alpha1.ContainerLevel,
 		Source: collectorcontrollerv1alpha1.AvgContainerUtilizationSource,
@@ -161,6 +169,28 @@ func (r ValueReader) GetValuesForContainer(
 			requestsMinusUtilization[ii] = requestMinusUtilization
 		}
 		values[collectorcontrollerv1alpha1.ContainerRequestsAllocatedMinusUtilizationSource].MultiResourceList[collectorcontrollerv1alpha1.ResourceMemory] = requestsMinusUtilization
+	}
+
+	networkValues := map[corev1.ResourceName][]int64{
+		collectorcontrollerv1alpha1.ResourceNetworkRxBytes:   usage.NetworkRxBytes,
+		collectorcontrollerv1alpha1.ResourceNetworkRxPackets: usage.NetworkRxPackets,
+		collectorcontrollerv1alpha1.ResourceNetworkRxErrors:  usage.NetworkRxErrors,
+		collectorcontrollerv1alpha1.ResourceNetworkRxDropped: usage.NetworkRxDropped,
+		collectorcontrollerv1alpha1.ResourceNetworkTxBytes:   usage.NetworkTxBytes,
+		collectorcontrollerv1alpha1.ResourceNetworkTxPackets: usage.NetworkTxPackets,
+		collectorcontrollerv1alpha1.ResourceNetworkTxErrors:  usage.NetworkTxErrors,
+		collectorcontrollerv1alpha1.ResourceNetworkTxDropped: usage.NetworkTxDropped,
+	}
+
+	for res, vs := range networkValues {
+		if len(vs) == 0 {
+			continue
+		}
+		qs := make([]resource.Quantity, 0, len(vs))
+		for _, v := range vs {
+			qs = append(qs, *resource.NewQuantity(v, resource.DecimalSI))
+		}
+		values[collectorcontrollerv1alpha1.ContainerUtilizationSource].MultiResourceList[res] = qs
 	}
 
 	if len(usage.CpuPeriodsSec) == 0 || len(usage.CpuThrottledPeriodsSec) == 0 {

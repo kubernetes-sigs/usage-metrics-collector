@@ -1,0 +1,39 @@
+# HELP kube_usage_node_sum_utilization_rx_bytes kube_usage_node_sum_utilization_rx_bytes
+# TYPE kube_usage_node_sum_utilization_rx_bytes gauge
+kube_usage_node_sum_utilization_rx_bytes{exported_node="test-node-1"} 150000
+kube_usage_node_sum_utilization_rx_bytes{exported_node="test-node-2"} 100000
+# HELP kube_usage_node_sum_utilization_rx_dropped kube_usage_node_sum_utilization_rx_dropped
+# TYPE kube_usage_node_sum_utilization_rx_dropped gauge
+kube_usage_node_sum_utilization_rx_dropped{exported_node="test-node-1"} 56.25
+kube_usage_node_sum_utilization_rx_dropped{exported_node="test-node-2"} 37.5
+# HELP kube_usage_node_sum_utilization_rx_errors kube_usage_node_sum_utilization_rx_errors
+# TYPE kube_usage_node_sum_utilization_rx_errors gauge
+kube_usage_node_sum_utilization_rx_errors{exported_node="test-node-1"} 0.25
+kube_usage_node_sum_utilization_rx_errors{exported_node="test-node-2"} 0.25
+# HELP kube_usage_node_sum_utilization_rx_packets kube_usage_node_sum_utilization_rx_packets
+# TYPE kube_usage_node_sum_utilization_rx_packets gauge
+kube_usage_node_sum_utilization_rx_packets{exported_node="test-node-1"} 1500
+kube_usage_node_sum_utilization_rx_packets{exported_node="test-node-2"} 1000
+# HELP kube_usage_node_sum_utilization_tx_bytes kube_usage_node_sum_utilization_tx_bytes
+# TYPE kube_usage_node_sum_utilization_tx_bytes gauge
+kube_usage_node_sum_utilization_tx_bytes{exported_node="test-node-1"} 75000
+kube_usage_node_sum_utilization_tx_bytes{exported_node="test-node-2"} 50000
+# HELP kube_usage_node_sum_utilization_tx_dropped kube_usage_node_sum_utilization_tx_dropped
+# TYPE kube_usage_node_sum_utilization_tx_dropped gauge
+kube_usage_node_sum_utilization_tx_dropped{exported_node="test-node-1"} 3.75
+kube_usage_node_sum_utilization_tx_dropped{exported_node="test-node-2"} 2.5
+# HELP kube_usage_node_sum_utilization_tx_errors kube_usage_node_sum_utilization_tx_errors
+# TYPE kube_usage_node_sum_utilization_tx_errors gauge
+kube_usage_node_sum_utilization_tx_errors{exported_node="test-node-1"} 0
+kube_usage_node_sum_utilization_tx_errors{exported_node="test-node-2"} 0
+# HELP kube_usage_node_sum_utilization_tx_packets kube_usage_node_sum_utilization_tx_packets
+# TYPE kube_usage_node_sum_utilization_tx_packets gauge
+kube_usage_node_sum_utilization_tx_packets{exported_node="test-node-1"} 750
+kube_usage_node_sum_utilization_tx_packets{exported_node="test-node-2"} 500
+# HELP metrics_prometheus_collector_container_usage_result The number of containers missing usage information
+# TYPE metrics_prometheus_collector_container_usage_result gauge
+metrics_prometheus_collector_container_usage_result{exported_node="test-node-1",found="true",reason="",sampler_phase="Running",sampler_pod="test-pod-1-deployment-2"} 2
+metrics_prometheus_collector_container_usage_result{exported_node="test-node-2",found="true",reason="",sampler_phase="Running",sampler_pod="test-pod-2-deployment-2"} 1
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 4

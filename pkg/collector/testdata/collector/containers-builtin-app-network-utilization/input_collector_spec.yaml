@@ -1,0 +1,36 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "rx_bytes": "rx_bytes"
+  "rx_packets": "rx_packets"
+  "rx_errors": "rx_errors"
+  "rx_dropped": "rx_dropped"
+  "tx_bytes": "tx_bytes"
+  "tx_packets": "tx_packets"
+  "tx_errors": "tx_errors"
+  "tx_dropped": "tx_dropped"
+utilizationServer:
+  samplerPodLabels: {"app": "app-1"}
+  samplerNamespaceName: "test-namespace-1"
+aggregations: # aggregate metrics and export them
+- sources: # use these sources (see the API documentation for sources)
+    type: "container" # use container source
+    container:
+    - "utilization"
+  levels:
+  - mask:
+      name: "workload" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        exported_pod: true
+        exported_node: true
+    noExport: true
+    operation: "avg"
+  - mask:
+      name: "node" # sum all containers / pods into workload metrics
+      builtIn:
+        exported_node: true
+    operation: "sum"
