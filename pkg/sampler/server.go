@@ -280,9 +280,12 @@ func (s *Server) listCollectorIPsFromDNS() []net.IP {
 
 // ipToAddress handles issues with ipv6 strings and adds the service port
 func (s *Server) ipToAddress(ip net.IP) string {
-	a := ip.String()
-	if strings.Contains(a, ":") {
-		// handle ipv6
+	return s.ipToAddressString(ip.String())
+}
+
+func (s *Server) ipToAddressString(a string) string {
+	if strings.Contains(a, ":") && !strings.Contains(a, "[") {
+		// format ipv6 address
 		a = fmt.Sprintf("[%s]:%v", a, s.PushHeadlessServicePort)
 	} else {
 		a = fmt.Sprintf("%s:%v", a, s.PushHeadlessServicePort)
@@ -309,7 +312,7 @@ func (s *Server) addConnectionsFromCollectors(req *api.RegisterCollectorsRequest
 		if len(i.IpAddress) == 0 {
 			continue
 		}
-		addrs = append(addrs, i.IpAddress)
+		addrs = append(addrs, s.ipToAddressString(i.IpAddress))
 	}
 	s.addConnectionsIfMissing(addrs)
 }
