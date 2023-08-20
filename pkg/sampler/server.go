@@ -375,8 +375,10 @@ func (s *Server) removeConnections(ips ...string) {
 	s.collectorIPsLock.Lock()
 	defer s.collectorIPsLock.Unlock()
 	for _, i := range ips {
-		s.collectorConnections[i].stop() // cancel the connection
-		delete(s.collectorConnections, i)
+		if c, ok := s.collectorConnections[i]; ok {
+			c.stop() // cancel the connection
+			delete(s.collectorConnections, i)
+		}
 	}
 }
 
