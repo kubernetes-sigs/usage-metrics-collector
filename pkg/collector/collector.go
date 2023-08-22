@@ -308,7 +308,12 @@ func (c *Collector) collect(ch chan<- prometheus.Metric, sCh chan *collectorapi.
 		log.Error(err, "failed to collect container metrics")
 	}
 
-	for _, sc := range c.sideCarConfigs {
+	sccfg, err := c.getSideCarConfigs()
+	if err != nil {
+		log.Error(err, "failed to collect sidecar metrics")
+	}
+
+	for _, sc := range sccfg {
 		for _, m := range sc.SideCarMetrics {
 			if m.Help == "" {
 				m.Help = c.Prefix + "_" + m.Name
