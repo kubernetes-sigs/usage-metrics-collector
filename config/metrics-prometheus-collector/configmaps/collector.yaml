@@ -5,8 +5,6 @@ prefix: kube_usage
 preComputeMetrics:
   enabled: true
   frequency: "2m"
-# exitOnConfigChange exits the collector if the collector config changes
-exitOnConfigChange: true
 # cacheOptions configures the informer cache
 cacheOptions:
   unsafeDisableDeepCopy: false
@@ -17,26 +15,50 @@ cacheOptions:
 # to the collector
 #
 utilizationServer:
-  # when logging missing utilization metrics for containers, consider nodes unhealthy
-  # if they have any of these conditions.  conditions are ordered by precedence
-  # since multiple conditions may match
+  # unhealthyNodeConditions is used to determine whether we should expect samples from
+  # a node.  Unhealthy nodes do not block readiness.
   unhealthyNodeConditions:
   - type: "Ready"
     status: "Unknown"
   - type: "Ready"
     status: "False"
-  protoBindPort: 9090  # accept pushed metrics on this grpc port
-  jsonProtoBindPort: 8090 # perform health checks on this json port
-  # check for expired responses every 10 minutes, and remove
-  # them from the map
-  expireReponsesFrequencyDuration: 10m
+  # protoBindPort is the port used by the node-sampler to push metrics using proto format
+  protoBindPort: 9090
+  # jsonProtoBindPort enables querying the grpc service with json
+  jsonProtoBindPort: 8090
+  # check for expired responses every 5 minutes, and remove them from the map
+  expireReponsesFrequencyDuration: 5m
   # consider responses expired and stop exporting them after 5 minutes
+  # this is the length of the samples window
   responseTTLDuration: 5m
-  # find the pods that should be sending samples
-  # use these to export health metrics about why we may be missing utilization
-  # data for containers (e.g. the sampler pod is Terminating)
+  # self register all collectors with this set of node-sampler pods
   samplerPodLabels: {"app": "metrics-node-sampler"}
   samplerNamespaceName: "usage-metrics-collector"
+  collectorPodLabels: {"app": "metrics-prometheus-collector"}
+  # wait until we have results from 90% of healthy nodes before serving results or
+  # marking ourselves as ready
+  minResultPctBeforeReady: 90
+  # after reaching 90% wait 2 additional registration cycles to try to catch any
+  # remaining nodes.
+  waitSamplerRegistrationsBeforeServe: 0
+  # after reaching 90% wait 5 additional registrations after serving metrics
+  # before markings ourselves as ready.
+  # this gives prometheus several chances to scrape us
+  waitSamplerRegistrationsBeforeReady: 0
+  # delete node sampler pods if collector can't register with them after they are this old
+  # this allows samplers to recover from any intermittent issues that require pod deletion
+  # to remediate.
+  deleteUnregisteredPodsAfterAgeMinutes: 30
+  # number of inital cycles to wait before deleting node sampler pods that collector
+  # can't register with.  Prevents us from deleting pods that may be old, but we just
+  # connected to on startup.
+  deleteUnregisteredPodsAfterCycles: 10
+# config host-level metrics
+cgroupMetrics:
+  sources:
+    "/": {name: "cgroup_utilization", avgName: "avg_cgroup_utilization"} # map a cgroup level to the corresponding metrics
+  rootSource: {name: "utilization", avgName: "avg_utilization"} # aggregate node metrics
+#
 #
 # resources defines the type of compute resources to collect metrics for
 #
@@ -81,6 +103,35 @@ extensions:
 # Metrics
 #
 aggregations:
+- sources:
+    type: "cgroup"
+    cgroup:
+    - "cgroup_utilization"
+  levels:
+  # kube_usage_nodecluster_hist_cgroup_utilization_cpu_cores{}
+  # kube_usage_nodecluster_hist_cgroup_utilization_memory_bytes{}
+  - mask:
+      name: "nodecluster"
+      builtIn:
+        cgroup: true
+      extensions:
+        node_no_schedule: true
+    operation: "hist"
+    histogramBuckets:
+        cpu_cores: [ 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8 ]
+        memory_bytes:
+        - 1048576 # 1MiB
+        - 5242880 # 5MiB
+        - 10485760 # 10MiB
+        - 20971520 # 20MiB
+        - 52428800 # 50MiB
+        - 104857600 # 100MiB
+        - 209715200 # 200MiB
+        - 524288000 # 500MiB
+        - 1073741824 # 1GiB
+        - 2147483648 # 2GiB
+        - 5368709120 # 5GiB
+        - 10737418240 # 10 GiB
 #
 # Node Capacity Metrics
 #
@@ -125,169 +176,30 @@ aggregations:
         node_no_schedule: true
     operation: "sum"
 - sources:
-    type: "node"
-    node:
-    - "node_capacity"
-    - "node_allocatable"
-    - "node_requests"
-    - "node_limits"
+    type: "cgroup"
+    cgroup:
+    - "avg_cgroup_utilization"
+    alias:
+      "avg_cgroup_utilization": "cgroup_utilization"
   levels:
-  # kube_usage_nodecluster_hist_node_allocatable_cpu_cores{}
-  # kube_usage_nodecluster_hist_node_allocatable_memory_bytes{}
-  # kube_usage_nodecluster_hist_node_requests_cpu_cores{}
-  # kube_usage_nodecluster_hist_node_requests_memory_bytes{}
-  # kube_usage_nodecluster_hist_node_limits_cpu_cores{}
-  # kube_usage_nodecluster_hist_node_limits_memory_bytes{}
-  # kube_usage_nodecluster_hist_node_capacity_cpu_cores{}
-  # kube_usage_nodecluster_hist_node_capacity_memory_bytes{}
+  # kube_usage_node_sum_utilization_cpu_cores{}
+  # kube_usage_node_sum_utilization_memory_bytes{}
+  - mask:
+      name: "node"
+      builtIn:
+        exported_node: true
+      extensions:
+        node_no_schedule: true
+    operation: "sum"
+  # kube_usage_nodecluster_sum_utilization_cpu_cores{}
+  # kube_usage_nodecluster_sum_utilization_memory_bytes{}
   - mask:
       name: "nodecluster"
       extensions:
         node_no_schedule: true
-    operation: "hist"
-    histogramBuckets:
-        cpu_cores: [0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 16, 32, 64, 128, 256]
-        memory_bytes: [4000000000, 8000000000, 16000000000, 32000000000, 64000000000, 128000000000, 256000000000, 512000000000]
-#
-# Container Utilization Avg Metrics
-#
-# Container utilization avg metrics aggregate container metrics using the average
-# value of samples of the node scrape window (5m).  The per-container values
-# are aggregated into the total workload utilization.
-#
-- sources:
-    type: "container"
-    container: [ "utilization" ]
-  levels:
-  # not exported -- aggregate the 1s samples to an average per-container
-  - mask:
-      name: "container"
-      builtIn:
-        exported_container: true
-        exported_namespace: true
-        exported_pod: true
-        workload_name: true
-        workload_kind: true
-        workload_api_group: true
-        workload_api_version: true
-        app: true
-        priority_class: true
-        exported_node: true
-    operation: "avg" # use the "avg" operation since we are trying to get the sum in the workload
-    noExport: true # don't export this to prometheus, it is too granular
-  # kube_usage_workload_sum_utilization_cpu_cores{}
-  # kube_usage_workload_sum_utilization_memory_bytes{}
-  - mask:
-      name: "workload"
-      builtIn:
-        exported_namespace: true
-        workload_name: true
-        workload_kind: true
-        workload_api_group: true
-        workload_api_version: true
-        app: true
-        priority_class: true
-    operation: "sum"
-    retentionName: workload
-  # kube_usage_namespace_sum_utilization_cpu_cores{}
-  # kube_usage_namespace_sum_utilization_memory_bytes{}
-  - mask:
-      name: "namespace"
-      builtIn:
-        exported_namespace: true
-        priority_class: true
-    operation: "sum"
-  # kube_usage_cluster_sum_utilization_cpu_cores{}
-  # kube_usage_cluster_sum_utilization_memory_bytes{}
-  - mask:
-      name: "cluster"
-      builtIn:
-        priority_class: true
     operation: "sum"
 #
-# Workload Utilization P95 Metrics
-#
-# Workload utilization p95 metrics aggregate workload container utilization samples
-# using the p95 of the samples over the node container scrape window (5m).
-#
-- sources:
-    type: "container"
-    container: [ "utilization" ]
-  levels:
-  # kube_usage_workload_p95_utilization_cpu_cores{}
-  # kube_usage_workload_p95_utilization_memory_bytes{}
-  - mask:
-      name: "workload"
-      builtIn:
-        exported_container: true # keep the individual container names within each pod, but not the pod names
-        exported_namespace: true
-        workload_name: true
-        workload_kind: true
-        workload_api_group: true
-        workload_api_version: true
-        app: true
-        priority_class: true
-    operation: "p95"
-    retentionName: container
-#
-# Workload Utilization Max Metrics
-#
-# Workload utilization max metrics aggregate workload container utilization samples
-# using the max of the samples over the node container scrape window (5m).
-#
-- sources:
-    type: "container"
-    container: [ "utilization" ]
-  levels:
-  # kube_usage_workload_max_utilization_cpu_cores{}
-  # kube_usage_workload_max_utilization_memory_bytes{}
-  - mask:
-      name: "workload"
-      builtIn:
-        exported_container: true  # keep the individual container names within each pod, but not the pod names
-        exported_namespace: true
-        workload_name: true
-        workload_kind: true
-        workload_api_group: true
-        workload_api_version: true
-        app: true
-        priority_class: true
-    operation: "max"
-    retentionName: container
-#
-# Workload Utilization Median Metrics
-#
-# Workload utilization median metrics aggregate workload container utilization samples
-# using the median of the samples over the node container scrape window (5m).
-#
-- sources:
-    type: "container"
-    container: [ "utilization", "requests_allocated", "limits_allocated" ]
-  levels:
-  # kube_usage_workload_median_utilization_cpu_cores{}
-  # kube_usage_workload_median_utilization_memory_bytes{}
-  # kube_usage_workload_median_requests_allocated_cpu_cores{}
-  # kube_usage_workload_median_requests_allocated_memory_bytes{}
-  # kube_usage_workload_median_limits_allocated_cpu_cores{}
-  # kube_usage_workload_median_limits_allocated_memory_bytes{}
-  - mask:
-      name: "workload"
-      builtIn:
-        exported_container: true  # keep the individual container names within each pod, but not the pod names
-        exported_namespace: true
-        workload_name: true
-        workload_kind: true
-        workload_api_group: true
-        workload_api_version: true
-        app: true
-        priority_class: true
-    operation: "median"
-    retentionName: container
-#
-# Workload Utilization Avg Metrics
-#
-# Workload utilization avg metrics aggregate workload container utilization samples
-# using the avg of the samples over the node container scrape window (5m).
+# Workload Utilization Metrics
 #
 - sources:
     type: "container"
@@ -306,7 +218,29 @@ aggregations:
         workload_api_version: true
         app: true
         priority_class: true
-    operation: "avg"
+    operations: [ "avg", "median", "p95", "max" ]
+    retentionName: container
+#
+# Workload Requests and Limits Metrics
+#
+- sources:
+    type: "container"
+    container: [ "requests_allocated", "limits_allocated" ]
+  levels:
+  # kube_usage_workload_avg_requests_allocated_cpu_cores{}
+  # kube_usage_workload_avg_limits_allocated_memory_bytes{}
+  - mask:
+      name: "workload"
+      builtIn:
+        exported_container: true  # keep the individual container names within each pod, but not the pod names
+        exported_namespace: true
+        workload_name: true
+        workload_kind: true
+        workload_api_group: true
+        workload_api_version: true
+        app: true
+        priority_class: true
+    operations: [ "avg" ]
     retentionName: container
 #
 # Workload Capacity Metrics
@@ -316,8 +250,12 @@ aggregations:
 #
 - sources:
     type: "container"
-    container: [ "requests_allocated", "limits_allocated" ]
+    container: [ "requests_allocated", "limits_allocated", "avg_utilization" ]
+    alias:
+      "avg_utilization": "utilization"
   levels:
+  # kube_usage_workload_sum_utilization_cpu_cores{}
+  # kube_usage_workload_sum_utilization_memory_bytes{}
   # kube_usage_workload_sum_requests_allocated_cpu_cores{}
   # kube_usage_workload_sum_requests_allocated_memory_bytes{}
   # kube_usage_workload_sum_limits_allocated_cpu_cores{}
@@ -334,6 +272,8 @@ aggregations:
         priority_class: true
     operation: "sum"
     retentionName: workload
+  # kube_usage_namespace_sum_utilization_cpu_cores{}
+  # kube_usage_namespace_sum_utilization_memory_bytes{}
   # kube_usage_namespace_sum_requests_allocated_cpu_cores{}
   # kube_usage_namespace_sum_requests_allocated_memory_bytes{}
   # kube_usage_namespace_sum_limits_allocated_cpu_cores{}
@@ -344,6 +284,8 @@ aggregations:
         exported_namespace: true
         priority_class: true
     operation: "sum"
+  # kube_usage_cluster_sum_utilization_cpu_cores{}
+  # kube_usage_cluster_sum_utilization_memory_bytes{}
   # kube_usage_cluster_sum_requests_allocated_cpu_cores{}
   # kube_usage_cluster_sum_requests_allocated_memory_bytes{}
   # kube_usage_cluster_sum_limits_allocated_cpu_cores{}

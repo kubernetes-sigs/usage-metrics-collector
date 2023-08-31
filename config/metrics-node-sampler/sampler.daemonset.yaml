@@ -16,12 +16,13 @@ spec:
         env:
         - { name: NODE_NAME, valueFrom: { fieldRef: { fieldPath: spec.nodeName } } }
         - { name: POD_NAME,  valueFrom: { fieldRef: { fieldPath: metadata.name } } }
-        ports:
-        - { name: proto, containerPort: 8080 }
+        ports: [ { name: proto, containerPort: 8080 } ]
         volumeMounts:
         - { name: cgroup,     mountPath: /sys/fs/cgroup, readOnly: true }
         - { name: config,     mountPath: /config, readOnly: true }
         - { name: log-config, mountPath: /log-config, readOnly: true }
+        - mountPath: /run/
+          name: containerd-socket
         resources:
           requests: { cpu: 100m, memory: 256Mi }
           limits:   { cpu: 1, memory: 256Mi }
@@ -31,6 +32,9 @@ spec:
           initialDelaySeconds: 120
           periodSeconds: 120
       volumes:
+      - hostPath:
+          path: /var/run/
+        name: containerd-socket
       - name: cgroup
         hostPath: { path: /sys/fs/cgroup }
       - name: config
@@ -44,4 +48,3 @@ spec:
       maxUnavailable: 15%
     type: RollingUpdate
   minReadySeconds: 15
-

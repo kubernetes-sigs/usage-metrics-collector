@@ -9,14 +9,14 @@ images:
 - name: prom/prometheus
   newTag: latest
 - name: metrics-prometheus-collector
-  newName: SET_THIS
-  newTag: v0.6.0
+  newName: usage-metrics-collector
+  newTag: v0.0.18
 - name: umc-archiver
-  newName: SET_THIS
-  newTag: v0.6.0
+  newName: usage-metrics-collector
+  newTag: v0.0.1
 - name: metrics-node-sampler
-  newName: SET_THIS
-  newTag: v0.6.0
+  newName: usage-metrics-collector
+  newTag: v0.0.18
 labels:
 - pairs:
     project: usage-metrics-collector
@@ -32,8 +32,8 @@ resources:
 configMapGenerator:
 - name:  metrics-log-config
   literals:
-  - node-sampler=0
-  - prometheus-collector=0
+  - node-sampler=1
+  - prometheus-collector=1
   options:
     disableNameSuffixHash: true
 - name: metrics-cluster-config
