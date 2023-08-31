@@ -1,7 +1,5 @@
-pushHeadlessService: "metrics-prometheus-collector:9090" # push metrics to this service
-pushAddress: "deprecated"
+pushHeadlessService: "metrics-prometheus-collector" # push metrics to this service
 pushFrequencyDuration: "1m" # push metrics to the collector every minute
-exitOnConfigChange: true
 buffer:
     pollsPerMinute: 60 # sample every second
     size: 300 # 5 minutes of samples
@@ -23,29 +21,6 @@ reader:
     - 'kubelet-kubepods-guaranteed.slice'
     - 'kubelet-kubepods-besteffort.slice'
     - 'kubelet-kubepods-burstable.slice'
-    containerPrefix: [ 'cri-containerd-' ]
-    containerReplacements: {} # none -- override default
-    containerSuffix: [ '.scope' ]
-    podPrefix:
-    - 'kubelet-kubepods-pod'
-    - 'kubelet-kubepods-guaranteed-pod'
-    - 'kubelet-kubepods-besteffort-pod'
-    - 'kubelet-kubepods-burstable-pod'
-    podReplacements:
-      "_": "-"
-    podSuffix: [ '.slice' ]
-    #
-    ## GKE cluster values (1.25)
-    #
-    # parents: # ignore pods metrics that don't have parent directories with these names
-    # - 'kubepods'
-    # - 'guaranteed'
-    # - 'besteffort'
-    # - 'burstable'
-    # containerPrefix: []
-    # containerReplacements: {}
-    # containerSuffix: []
-    # podPrefix: [ 'pod' ]
-    # podReplacements: {}
-    # podSuffix: []
-
+exitOnConfigChange: true
+useContainerMonitor: true
+containerdNamespace: "k8s.io"

@@ -18,6 +18,62 @@ Why not just use promql and recording rules?
   - Scrape utilization at 1s intervals as raw metrics
   - Perform aggregations on the 1s interval metrics (e.g. get the p95 1s utilization sample for all replicas of a workload)
 
+### Example
+
+[collector.yaml](config/metrics-prometheus-collector/configmaps/collector.yaml)
+
+## Architecture
+
+### considerations
+
+- Metrics must be highly configurable
+  - The metrics labels derived from objects
+  - The aggregations (sum, average, median, max, p95, histograms, etc) must be configurable
+- Metrics should be able to be pushed to additional sources such as cloud storage buckets, BigQuery, etc
+- Metric computation must scale to large clusters with lots of churn.
+  - Run aggregations in parallel
+  - Re-use previous results as much as possible
+- Scrapes should always immediately get a result, even when complex aggregations in large clusters take minutes to compute.
+- Utilization metrics should not be published until the data is present from a sufficient number of nodes.
+  This is to prevent showing "low" utilization numbers before all nodes have sent results.
+- There should be no graphs in data.  There must always be at least 1 ready and healthy replica which can be scraped by prometheus.
+- Sampler pods which become unhealthy due to issues on a node should be continuously recreated until they are functional again.
+- All cluster objects and utilization samples are cached in the collector so memory must be optimized.
+- It is difficult to horizontally scale the collector.  Offloading computations to the samplers is preferred.
+
+### metrics-node-sampler
+
+- Runs as a DaemonSet on each Node
+- Periodically reads utilization data for cpu and memory and stores in ring buffer
+  - Period and number of samples is configurable
+- Reads host metrics directly from cgroups psuedo filesystem (e.g. cpu usage for all of kubepods cgroup)
+- Reads container metrics from containerd (e.g. cpu usage for an individual container)
+- Periodically pushes metrics to collectors
+  - After time period
+  - After new pod starts running
+  - Before shutting down
+- Finds collectors to push to via DNS
+- Collectors can register manually with each sampler
+- Performs some precomputations such as averages.
+
+### metrics-prometheus-collector
+
+- Runs as a Deployment with multiple replicas for HA
+- Highly configurable metrics
+  - Metric labels may be derived from annotations / labels on other objects (e.g. pod metrics should have metric labels pulled from node conditions)
+  - Metrics may be pre-aggregated prior to being scraped by prometheus (e.g. reduce cardinality, produce quantiles and histograms)
+- Periodically get the metrics and cache them to be scraped (i.e. minimize scrape time by eagerly computing results)
+- Registers itself and all collector replicas with each sampler
+- Recieves metrics from node-samplers as a utilization source
+- Waits until has sufficient samples before providing results
+- Waits until results have been scraped before marking self as Ready
+- Can write additional metrics to local files
+
+### collector side-cars
+
+- May expose additional metrics read from external sources
+- May write local files to persistent storage for futher analysis
+
 ## Exposed Metrics
 
 A sample of the exposed metrics is available in [METRICS.md](METRICS.md).
@@ -34,7 +90,10 @@ this own until this is resolved.
 
 #### Kind cluster
 
-**Note**: only cgroups v1 are currently supported.
+**Important**: requires using cgroups v1.
+
+- Must set for Docker on Mac using [these docs](https://docs.docker.com/desktop/release-notes/#for-mac-28)
+- Must set for GKE for 1.26+ clusters
 
 1. Create a kind cluster
   - `kind create cluster`
@@ -46,21 +105,6 @@ this own until this is resolved.
 5. Install the config
   - `kustomize build config | kubectl apply -f -`
 6. Update your context to use the usage-metrics-collector namespace by default
-  - `kubectl config set-context --current --namespace=usage-metrics-collector`
-
-#### GKE cluster (cgroups v1: default on 1.25 or lower)
-
-**Note**: Only cgroups v1 is supported for utilization right now.  GKE clusters 1.26+ use cgroups v2 by default.
-
-1. Build the image
-  - `docker build . -t my-org/usage-metrics-collector:v0.0.0`
-2. Push the image to a container repo
-  - `docker push my-org/usage-metrics-collector:v0.0.0`
-3. Make sure the `GKE cluster values` config portion is uncommented in [config/metrics-prometheus-collector/configmaps/sampler.yaml](config/metrics-node-sampler/configmaps/sampler.yaml)
-  - Other `cluster values` should be commented
-4. Install the config
-  - `kustomize build config | kubectl apply -f -`
-5. Update your context to use the usage-metrics-collector namespace by default
   - `kubectl config set-context --current --namespace=usage-metrics-collector`
 
 ### Kicking the tires
@@ -92,16 +136,6 @@ this own until this is resolved.
 1. Edit [config/metrics-prometheus-collector/configmaps/collector.yaml](config/metrics-prometheus-collector/configmaps/collector.yaml)
 2. Run `make run-local`
 3. View the updated metrics in grafana
-
-TODO: Write more on this
-
-### Using containerd instead of cgroup walking
-
-TODO: Write this
-
-### Configuring cgroup walking
-
-TODO: Write this
 
 ## Code of conduct
 

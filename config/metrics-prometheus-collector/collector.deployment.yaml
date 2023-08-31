@@ -4,8 +4,6 @@ metadata:
   name: metrics-prometheus-collector
 spec:
   replicas: 1
-  strategy:
-    type: Recreate
   template:
     spec:
       containers:
@@ -15,7 +13,6 @@ spec:
         args:
         - --collector-config-filepath=/config/collector.yaml
         - --log-level-filepath=/log-config/log.level
-        - --leader-election=false
         envFrom: [ {configMapRef: { name: metrics-cluster-config } } ]
         env:
         - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
@@ -33,14 +30,13 @@ spec:
         livenessProbe:
           failureThreshold: 3
           httpGet: { path: /v1/healthz, port: 8090 }
-          initialDelaySeconds: 1
-          periodSeconds: 1
-        # IMPORTANT: Keeps non-leader collectors from receiving node sampler traffic
+          initialDelaySeconds: 300 # 5 minutes
+          periodSeconds: 120 # every 2 minutes
         readinessProbe:
-          failureThreshold: 3
-          httpGet: { path: /v1/is-leader, port: 8090 }
-          initialDelaySeconds: 1
-          periodSeconds: 1
+          failureThreshold: 100 # 10 minutes
+          httpGet: { path: /v1/is-ready, port: 8090 }
+          initialDelaySeconds: 60 # wait for nodes to register
+          periodSeconds: 6
       # - name: umc-archiver
       #   image: umc-archiver
       #   command: [ umc-archiver ]
@@ -68,10 +64,11 @@ spec:
       - name: logs # controls the logging level -- doesn't require push to take affect
         emptyDir: {}
       serviceAccountName: metrics-prometheus-collector
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - topologyKey: kubernetes.io/hostname
-            labelSelector:
-              matchExpressions: [ { key: app, operator: In, values: [ metrics-prometheus-collector ] } ]
+      # # Commented out for kind clusters which run only 1 node by default
+      # affinity:
+      #   podAntiAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #     - topologyKey: kubernetes.io/hostname
+      #       labelSelector:
+      #         matchExpressions: [ { key: app, operator: In, values: [ metrics-prometheus-collector ] } ]
       terminationGracePeriodSeconds: 1

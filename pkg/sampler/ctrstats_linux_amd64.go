@@ -25,6 +25,8 @@ import (
 )
 
 func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, error) {
+	log.V(9).Info("fetching cpu and memory for containers")
+
 	containers, err := ctrstats.GetContainers(s.ContainerdClient)
 	if err != nil {
 		log.Error(err, "failed to list containers")
@@ -39,6 +41,8 @@ func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, e
 	cpuResult := cpuMetrics{}
 	memResult := memoryMetrics{}
 	knownPods := sets.NewString()
+
+	log.V(9).Info("found containers", "count", len(containers))
 
 	for _, c := range containers {
 		// TODO: is this a reasonable key for the metric read time?
