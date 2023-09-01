@@ -101,10 +101,9 @@ this own until this is resolved.
   - `docker build . -t usage-metrics-collector:v0.0.0`
 3. Load the image into kind
   - `kind load docker-image usage-metrics-collector:v0.0.0`
-4. Make sure the `Kind cluster values` config portion is uncommented in [config/metrics-prometheus-collector/configmaps/sampler.yaml](config/metrics-node-sampler/configmaps/sampler.yaml)
-5. Install the config
+4. Install the config
   - `kustomize build config | kubectl apply -f -`
-6. Update your context to use the usage-metrics-collector namespace by default
+5. Update your context to use the usage-metrics-collector namespace by default
   - `kubectl config set-context --current --namespace=usage-metrics-collector`
 
 ### Kicking the tires
