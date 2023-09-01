@@ -10,13 +10,13 @@ images:
   newTag: latest
 - name: metrics-prometheus-collector
   newName: usage-metrics-collector
-  newTag: v0.0.18
+  newTag: v0.0.0
 - name: umc-archiver
   newName: usage-metrics-collector
-  newTag: v0.0.1
+  newTag: v0.0.0
 - name: metrics-node-sampler
   newName: usage-metrics-collector
-  newTag: v0.0.18
+  newTag: v0.0.0
 labels:
 - pairs:
     project: usage-metrics-collector
