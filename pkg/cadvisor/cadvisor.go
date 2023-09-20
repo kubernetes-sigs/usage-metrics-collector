@@ -20,3 +20,10 @@ const (
 	ContainerLabelPodName       = "io.kubernetes.pod.name"
 	ContainerLabelPodNamespace  = "io.kubernetes.pod.namespace"
 )
+
+const (
+	MetricLabelContainerName = "name"
+	MetricLabelContainerID   = "id"
+	MetricLabelPodName       = "pod"
+	MetricLabelPodNamespace  = "namespace"
+)

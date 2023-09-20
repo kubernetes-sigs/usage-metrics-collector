@@ -19,17 +19,18 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/containerd/containerd"
-	"github.com/google/cadvisor/client"
-	v1 "github.com/google/cadvisor/info/v1"
+	"github.com/prometheus/common/model"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/utils/pointer"
 
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/cadvisor"
+	caclient "sigs.k8s.io/usage-metrics-collector/pkg/cadvisor/client"
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 )
 
@@ -58,7 +59,7 @@ type sampleCache struct {
 
 	// UseCadvisorMonitor to collect cadvisor metrics
 	UseCadvisorMonitor bool
-	CadvisorClient     *client.Client
+	CadvisorClient     caclient.MetricsClient
 }
 
 // Start starts the cache reading from /sys/fs/cgroup
@@ -171,69 +172,102 @@ func (s *sampleCache) getAllSamples() (allSampleInstants, int) {
 	return all, count
 }
 
-func ContainerKeyFromContainerInfo(info v1.ContainerInfo) ContainerKey {
-	labels := info.Spec.Labels
-	containerName := labels[cadvisor.ContainerLabelContainerName]
-	podNamespace := labels[cadvisor.ContainerLabelPodNamespace]
-	podName := labels[cadvisor.ContainerLabelPodName]
-	podUID := labels[cadvisor.ContainerLabelPodUID]
+// containerKeyFromSampleMetric creates a container key from the metric label values.
+// Examples:
+// metric{container="",id="/kubepods/burstable/podUID/containerID",image="pause-amd64:3.1",interface="eth0",name="container-id",namespace="test-namespace",pod="test-pod-9mrct"} 0 1694839148683
+func containerKeyFromSampleMetric(metric model.Metric) ContainerKey {
+	id := string(metric[cadvisor.MetricLabelContainerID])
+	name := metric[cadvisor.MetricLabelContainerName]
+	namespace := metric[cadvisor.MetricLabelPodNamespace]
+	pod := metric[cadvisor.MetricLabelPodName]
+
+	// Parse podUID from the container id label whenever possible since the id label value could be a "/".
+	// "/kubepods/burstable/pod2e79ac67-5d78-428c-9783-56c9b3659921/37b7b649ffb431a56031b78ca7962af772be595d852784943c8d5864db60bd80"
+	podUID := ""
+	if tokens := strings.Split(id, "/"); len(tokens) > 3 {
+		podUID = strings.TrimPrefix(tokens[3], "pod")
+	}
+
 	return ContainerKey{
-		ContainerID:   containerName,
-		NamespaceName: podNamespace,
-		PodName:       podName,
+		ContainerID:   string(name),
+		NamespaceName: string(namespace),
+		PodName:       string(pod),
 		PodUID:        podUID,
-		ContainerName: containerName,
 	}
 }
 
-func fetchCAdvisorSample(client *client.Client, samples *sampleInstants) error {
-	if client == nil || samples == nil {
-		// Return nil on uninitialized client or sample instant and let the caller deal with
-		// nil assertions.
-		return nil
-	}
-	containers, err := client.SubcontainersInfo("kubelet", &v1.ContainerInfoRequest{})
-	if err != nil {
-		return fmt.Errorf("failed to retrieve kubelet containers: %w", err)
-	}
-	log := log.WithName("fetch-cadvisor")
-	for _, container := range containers {
-		// Assert pod containers.
-		key := ContainerKeyFromContainerInfo(container)
-		log := log.WithValues("container", key)
+func sampleInstantsFromMetricVector(vector model.Vector, containers map[ContainerKey]sampleInstant) {
+	totalCount := 0
+	newCount := 0
+	skippedNoPodUIDCount := 0
+	skippedZeroValueCount := 0
+	for _, sample := range vector {
+		totalCount++
+		key := containerKeyFromSampleMetric(sample.Metric)
 
 		if key.PodUID == "" {
 			log.V(5).Info("skipping container without pod uid")
+			skippedNoPodUIDCount++
 			continue // Skip all non-pod containers.
 		}
 
-		// Assert containers for current samples.
-		sample, found := samples.containers[key]
-		if !found {
-			// Skip containers that are not found in the provided samples.
-			log.V(5).Info("skipping container with not-found key")
-			continue
+		value := uint64(sample.Value)
+		if value == 0 {
+			skippedZeroValueCount++
+			continue // Skip 0 value metrics.
 		}
 
-		// Assert container with stats.
-		if len(container.Stats) == 0 {
-			log.V(5).Info("skipping container without stats")
-			continue // Skip all containers without stats.
+		container := containers[key]
+		if container.CAdvisorNetworkStats == nil {
+			container.CAdvisorNetworkStats = &cadvisorNetworkStats{}
+			newCount++
 		}
-		// Use the most recent container stats values.
-		sample.CAdvisorNetworkStats = &cadvisorNetworkStats{
-			Timestamp: container.Stats[0].Timestamp,
-			RxBytes:   container.Stats[0].Network.RxBytes,
-			RxPackets: container.Stats[0].Network.RxPackets,
-			RxDropped: container.Stats[0].Network.RxDropped,
-			RxErrors:  container.Stats[0].Network.RxErrors,
-			TxBytes:   container.Stats[0].Network.TxBytes,
-			TxPackets: container.Stats[0].Network.TxPackets,
-			TxDropped: container.Stats[0].Network.TxDropped,
-			TxErrors:  container.Stats[0].Network.TxErrors,
+
+		if container.Time.Before(sample.Timestamp.Time()) {
+			// Track the latest metric time to resolve collision (or otherwise).
+			container.Time = sample.Timestamp.Time()
 		}
-		samples.containers[key] = sample
+
+		switch caclient.MetricName(sample) {
+		case "container_network_receive_bytes_total":
+			container.CAdvisorNetworkStats.RxBytes += uint64(sample.Value)
+		case "container_network_receive_packets_total":
+			container.CAdvisorNetworkStats.RxPackets += uint64(sample.Value)
+		case "container_network_receive_packets_dropped_total":
+			container.CAdvisorNetworkStats.RxDropped += uint64(sample.Value)
+		case "container_network_receive_errors_total":
+			container.CAdvisorNetworkStats.RxErrors += uint64(sample.Value)
+		case "container_network_transmit_bytes_total":
+			container.CAdvisorNetworkStats.TxBytes += uint64(sample.Value)
+		case "container_network_transmit_packets_total":
+			container.CAdvisorNetworkStats.TxPackets += uint64(sample.Value)
+		case "container_network_transmit_packets_dropped_total":
+			container.CAdvisorNetworkStats.TxDropped += uint64(sample.Value)
+		case "container_network_transmit_errors_total":
+			container.CAdvisorNetworkStats.TxErrors += uint64(sample.Value)
+		}
+
+		containers[key] = container
 	}
+	log.V(1).Info("processed", "total", totalCount, "skippedNoPodUID", skippedNoPodUIDCount,
+		"skippedZeroValue", skippedZeroValueCount, "new", newCount,
+		"update", totalCount-skippedZeroValueCount-skippedZeroValueCount-newCount)
+}
+
+func fetchCAdvisorMetrics(client caclient.MetricsClient, results *sampleInstants) error {
+	log := log.WithName("fetch-cadvisor")
+	if client == nil {
+		// Return nil on uninitialized client or metric instant and let the caller deal with
+		// nil assertions.
+		return nil
+	}
+
+	metricsVector, err := client.Metrics(log)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve metrics: %w", err)
+	}
+
+	sampleInstantsFromMetricVector(metricsVector, results.containers)
 	return nil
 }
 
@@ -270,7 +304,7 @@ func (s *sampleCache) fetchSample() error {
 
 	// Fetch Cadvisor metrics.
 	if s.UseCadvisorMonitor {
-		if err := fetchCAdvisorSample(s.CadvisorClient, &results); err != nil {
+		if err := fetchCAdvisorMetrics(s.CadvisorClient, &results); err != nil {
 			log.Error(err, "failed to fetch cadvisor metrics")
 			return err
 		}

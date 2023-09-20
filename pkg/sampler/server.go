@@ -16,6 +16,7 @@ package sampler
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -27,9 +28,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/cadvisor/client"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/pkg/errors"
+	"github.com/prometheus/common/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -39,6 +40,7 @@ import (
 	"k8s.io/utils/pointer"
 
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
+	caclient "sigs.k8s.io/usage-metrics-collector/pkg/cadvisor/client"
 	"sigs.k8s.io/usage-metrics-collector/pkg/ctrstats"
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler/api"
 )
@@ -75,6 +77,8 @@ type Server struct {
 	collectorIPsLock     sync.Mutex
 
 	CTX context.Context
+
+	HostName string
 }
 
 // collectorConnection stores state for sending metrics to a collector
@@ -172,13 +176,17 @@ func (s *Server) startCache(ctx context.Context, errs chan<- error) error {
 	}
 
 	if s.UseCadvisorMonitor {
-		log.Info("initializing cadvisor monitor")
+		log.Info("initializing cadvisor metrics client")
 		s.cache.UseCadvisorMonitor = s.UseCadvisorMonitor
-		s.cache.CadvisorClient, err = client.NewClient(s.CadvisorEndpoint)
-		if err != nil {
-			log.Error(err, "unable to create cadvisor client")
-			return err
+		client := &http.Client{}
+		if s.CadvisorToken != "" {
+			client.Transport = config.NewAuthorizationCredentialsFileRoundTripper("Bearer", s.CadvisorToken, &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			})
 		}
+		url := fmt.Sprintf("%s://%s:%s/%s", s.CadvisorProtocol, s.HostName, s.CadvisorPort, s.CadvisorPath)
+		log.Info("cadvisor", "url", url)
+		s.cache.CadvisorClient = caclient.NewHttpMetricsClient(client, url, false)
 	}
 
 	go func() {
