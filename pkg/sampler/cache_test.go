@@ -22,7 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/prometheus/common/model"
 
-	"sigs.k8s.io/usage-metrics-collector/pkg/cadvisor/client/testdata"
+	"sigs.k8s.io/usage-metrics-collector/pkg/sampler/testdata"
 )
 
 func Test_populateCadvisorSummary(t *testing.T) {
