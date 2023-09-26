@@ -1,0 +1,4 @@
+container_network_receive_bytes_total{container="", id="/", image="", interface="cni0", name="", namespace="", pod=""} => 140827091146 @[1695160365.071]
+container_network_receive_bytes_total{container="", id="/", image="", interface="dummy0", name="", namespace="", pod=""} => 0 @[1695160365.071]
+container_network_receive_bytes_total{container="", id="/", image="", interface="enp24s0", name="", namespace="", pod=""} => 51936300 @[1695160365.071]
+container_network_receive_bytes_total{container="", id="/kubepods/burstable/podUIDValue/containerIDValue", image="pause-amd64:3.1", interface="eth0", name="containerID", namespace="test-namespace", pod="test-pod-zvgxh"} => 12898191 @[1695160356.349]

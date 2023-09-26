@@ -41,6 +41,9 @@ var headers = map[string]string{
 
 // open GET connection and return reader to process the response.
 func (c *HttpMetricsClient) open() (io.ReadCloser, error) {
+	if c.Client == nil {
+		return nil, fmt.Errorf("uninitialized http client")
+	}
 	req, err := http.NewRequest("GET", c.URL, nil)
 	if err != nil {
 		return nil, err
