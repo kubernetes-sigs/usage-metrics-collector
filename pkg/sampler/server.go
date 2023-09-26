@@ -186,7 +186,7 @@ func (s *Server) startCache(ctx context.Context, errs chan<- error) error {
 		}
 		url := fmt.Sprintf("%s://%s:%s/%s", s.CadvisorProtocol, s.HostName, s.CadvisorPort, s.CadvisorPath)
 		log.Info("cadvisor", "url", url)
-		s.cache.CadvisorClient = caclient.NewHttpMetricsClient(client, url, false)
+		s.cache.CadvisorClient = caclient.NewHttpMetricsClient(client, url)
 	}
 
 	go func() {

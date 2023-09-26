@@ -26,7 +26,7 @@ type HttpMetricsClient struct {
 	URL string
 }
 
-func NewHttpMetricsClient(client *http.Client, url string, gzip bool) *HttpMetricsClient {
+func NewHttpMetricsClient(client *http.Client, url string) *HttpMetricsClient {
 	return &HttpMetricsClient{
 		Client: client,
 		URL:    url,
