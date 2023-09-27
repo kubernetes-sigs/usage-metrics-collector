@@ -1,0 +1,6 @@
+# HELP container_network_receive_bytes_total Cumulative count of bytes received
+# TYPE container_network_receive_bytes_total counter
+container_network_receive_bytes_total{container="",id="/",image="",interface="cni0",name="",namespace="",pod=""} 1.40827091146e+11 1695160365071
+container_network_receive_bytes_total{container="",id="/",image="",interface="dummy0",name="",namespace="",pod=""} 0 1695160365071
+container_network_receive_bytes_total{container="",id="/",image="",interface="enp24s0",name="",namespace="",pod=""} 5.19363e+07 1695160365071
+container_network_receive_bytes_total{container="",id="/kubepods/burstable/podUIDValue/containerIDValue",image="pause-amd64:3.1",interface="eth0",name="containerID",namespace="test-namespace",pod="test-pod-zvgxh"} 1.2898191e+07 1695160356349

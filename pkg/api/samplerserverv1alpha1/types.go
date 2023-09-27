@@ -46,8 +46,11 @@ type MetricsNodeSampler struct {
 
 	// UseCadvisorMonitor bool
 	UseCadvisorMonitor bool `json:"useCadvisorMonitor" yaml:"useContainerMonitor"`
-	// CadvisorEndpoint to retrieve cadvisor metrics.
-	CadvisorEndpoint string `json:"cadvisorEndpoint" yaml:"cadvisorEndpoint"`
+	// Cadvisor configurations.
+	CadvisorProtocol string `json:"cadvisorProtocol" yaml:"cadvisorProtocol"`
+	CadvisorPort     string `json:"cadvisorPort" yaml:"cadvisorPort"`
+	CadvisorPath     string `json:"cadvisorPath" yaml:"cadvisorPath"`
+	CadvisorToken    string `json:"cadvisorToken" yaml:"cadvisorToken"`
 
 	// UseContainerMonitor enables container monitor metrics from containerd
 	UseContainerMonitor bool `json:"useContainerMonitor" yaml:"useContainerMonitor"`

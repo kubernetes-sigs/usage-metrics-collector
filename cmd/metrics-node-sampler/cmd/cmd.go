@@ -17,16 +17,16 @@ package cmd
 import (
 	"context"
 	"flag"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
-
-	_ "net/http/pprof"
 
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler"
@@ -42,7 +42,8 @@ var (
 
 type Server struct {
 	sampler.Server
-	configFilepath string
+	configFilepath   string
+	hostNameFilepath string
 }
 
 func (s *Server) RunE(cmd *cobra.Command, args []string) error {
@@ -68,6 +69,16 @@ func (s *Server) RunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+
+	// read host-name from file if one is provided.
+	if s.hostNameFilepath != "" {
+		value, err := os.ReadFile(s.hostNameFilepath)
+		if err != nil {
+			log.Error(err, "unable to read hostname file: %s", s.hostNameFilepath)
+			return err
+		}
+		s.Server.HostName = strings.TrimSuffix(string(value), "\n")
+	}
 
 	go func() {
 		// force process to exit so we don't get stuck in a terminating state
@@ -109,7 +120,7 @@ func init() {
 	_ = RootCmd.MarkFlagRequired("sampler-config-filepath")
 	RootCmd.Flags().StringVar(&logPath, "log-level-filepath", "", "path to log level file.  The file must contain a single integer corresponding to the log level (e.g. 2")
 	RootCmd.Flags().IntVar(&terminationSeconds, "termination-seconds", 10, "time to wait for shutdown before os.Exit is called")
-
+	RootCmd.Flags().StringVar(&S.hostNameFilepath, "host-name-filepath", "", "DNS resolvable kubelet host name if different from the NODE_NAME")
 	RootCmd.Flags().AddGoFlagSet(flag.CommandLine)
 
 	initContainerMonitor(RootCmd)

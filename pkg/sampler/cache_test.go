@@ -15,28 +15,15 @@
 package sampler
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/google/cadvisor/client"
-	cadvisorv1 "github.com/google/cadvisor/info/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/stretchr/testify/assert"
+	"github.com/prometheus/common/model"
 
-	"sigs.k8s.io/usage-metrics-collector/pkg/cadvisor"
+	"sigs.k8s.io/usage-metrics-collector/pkg/sampler/testdata"
 )
-
-func equateSampleResult(a, b sampleResult) bool {
-	return cmp.Equal(a.values, b.values) &&
-		cmp.Equal(a.avg, b.avg) &&
-		a.totalOOM == b.totalOOM &&
-		a.totalOOMKill == b.totalOOMKill
-}
 
 func Test_populateCadvisorSummary(t *testing.T) {
 	type args struct {
@@ -226,139 +213,315 @@ func Test_populateCadvisorSummary(t *testing.T) {
 	}
 }
 
-func cadvisorTestClient(path string, expectedPostObj *cadvisorv1.ContainerInfoRequest, replyObj interface{}, t *testing.T) (*client.Client, *httptest.Server, error) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == path {
-			if expectedPostObj != nil {
-				expectedPostObjEmpty := new(cadvisorv1.ContainerInfoRequest)
-				decoder := json.NewDecoder(r.Body)
-				if err := decoder.Decode(expectedPostObjEmpty); err != nil {
-					t.Errorf("Received invalid object: %v", err)
-				}
-				if expectedPostObj.NumStats != expectedPostObjEmpty.NumStats ||
-					expectedPostObj.Start.Unix() != expectedPostObjEmpty.Start.Unix() ||
-					expectedPostObj.End.Unix() != expectedPostObjEmpty.End.Unix() {
-					t.Errorf("Received unexpected object: %+v, expected: %+v", expectedPostObjEmpty, expectedPostObj)
-				}
-			}
-			encoder := json.NewEncoder(w)
-			err := encoder.Encode(replyObj)
-			assert.NoError(t, err)
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, "Page not found: %s", path)
-		}
-	}))
-	client, err := client.NewClient(ts.URL)
-	if err != nil {
-		ts.Close()
-		return nil, nil, err
-	}
-	return client, ts, err
-}
-
-func equateSampleInstants(a, b sampleInstants) bool {
-	return cmp.Equal(a.containers, b.containers) &&
-		cmp.Equal(a.node, b.node)
-}
-
-var sampleInstantsComparer = cmp.Comparer(equateSampleInstants)
-
-func Test_fetchCAdvisorSample(t *testing.T) {
-	type testClientBuilder func() (*client.Client, *httptest.Server)
+func Test_containerKeyFromSampleMetric(t *testing.T) {
 	type args struct {
-		samples *sampleInstants
+		metric model.Metric
 	}
-	now := time.Now()
 	tests := map[string]struct {
-		builder     testClientBuilder
-		args        args
-		wantErr     bool
-		wantSamples *sampleInstants
+		args args
+		want ContainerKey
 	}{
-		"NilClient": {
-			builder: func() (*client.Client, *httptest.Server) {
-				return nil, nil
-			},
-		},
-		"NilSampleInstant": {
-			builder: func() (*client.Client, *httptest.Server) {
-				client, server, _ := cadvisorTestClient("", nil, nil, t)
-				return client, server
-			},
-		},
-		"FailureToRetrieveContainersInfo": {
-			builder: func() (*client.Client, *httptest.Server) {
-				client, server, _ := cadvisorTestClient("", nil, nil, t)
-				return client, server
-			},
+		"Empty": {
 			args: args{
-				samples: &sampleInstants{},
+				metric: testdata.TestMetric("container_network_receive_bytes_total", "", "", "", "cni0", "", "", ""),
 			},
-			wantErr:     true,
-			wantSamples: &sampleInstants{},
 		},
-		"NoContainersInfo": {
-			builder: func() (*client.Client, *httptest.Server) {
-				client, server, _ := cadvisorTestClient("/api/v1.3/subcontainers/kubelet", &cadvisorv1.ContainerInfoRequest{}, nil, t)
-				return client, server
-			},
+		"/": {
 			args: args{
-				samples: &sampleInstants{},
+				metric: testdata.TestMetric("container_network_receive_bytes_total", "", "/", "", "cni0", "", "", ""),
 			},
-			wantSamples: &sampleInstants{},
 		},
-		"ContainersInfo": {
-			builder: func() (*client.Client, *httptest.Server) {
-				client, server, _ := cadvisorTestClient("/api/v1.3/subcontainers/kubelet", &cadvisorv1.ContainerInfoRequest{}, []cadvisorv1.ContainerInfo{
-					{}, // <-- skipped, doesn't have pod identifier (pod.UID)
-					{
-						Spec: cadvisorv1.ContainerSpec{
-							Labels: map[string]string{
-								cadvisor.ContainerLabelPodUID: "not-found",
-							},
-						},
-					}, // <-- skipped, not found in provided samples.
-					{
-						Spec: cadvisorv1.ContainerSpec{
-							Labels: map[string]string{
-								cadvisor.ContainerLabelPodUID: "test-container-1",
-							},
-						},
-					}, // <-- skipped, doesn't have container stats.
-					{
-						Spec: cadvisorv1.ContainerSpec{
-							Labels: map[string]string{
-								cadvisor.ContainerLabelPodUID: "test-container-2",
-							},
-						},
-						Stats: []*cadvisorv1.ContainerStats{
-							{
-								Timestamp: now, // <-- only first stats value is kept.
-							},
-							{
-								Timestamp: now.Add(-time.Minute),
-							},
-						},
-					}, // <-- kept, has containers stats.
-				}, t)
-				return client, server
-			},
+		"Value": {
 			args: args{
-				samples: &sampleInstants{
-					containers: map[ContainerKey]sampleInstant{
-						{PodUID: "test-container-1"}: {},
-						{PodUID: "test-container-2"}: {},
+				metric: testdata.TestMetric("container_network_receive_bytes_total", "", "/kubepods/burstable/test-uid/container-id", "pause-amd64:3.1", "eth0", "test-name", "test-namespace", "test-pod-zvgxh"),
+			},
+			want: ContainerKey{
+				ContainerID:   "test-name",
+				PodUID:        "test-uid",
+				NamespaceName: "test-namespace",
+				PodName:       "test-pod-zvgxh",
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := containerKeyFromSampleMetric(tt.args.metric)
+			if diff := cmp.Diff(got, tt.want); diff != "" {
+				t.Errorf("containerKeyFromSampleMetric() got(-),want(+): %s", diff)
+			}
+		})
+	}
+}
+
+func Test_sampleInstantsFromMetricVector(t *testing.T) {
+	type args struct {
+		vector     model.Vector
+		containers map[ContainerKey]sampleInstant
+	}
+	// test "constants"
+	testMetric := func(name model.LabelValue) model.Metric {
+		return testdata.TestMetric(name, "", "/kubepods/burstable/test-uid/container-id", "pause-amd64:3.1", "eth0", "test-name", "test-namespace", "test-pod-zvgxh")
+	}
+	testContainerKey := ContainerKey{
+		ContainerID:   "test-name",
+		PodUID:        "test-uid",
+		NamespaceName: "test-namespace",
+		PodName:       "test-pod-zvgxh",
+	}
+	tests := map[string]struct {
+		args args
+		want map[ContainerKey]sampleInstant
+	}{
+		"EmptyVector_EmptyResults": {},
+		"EmptyVector": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{
+					ContainerKey{ContainerID: "foo"}: {},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				ContainerKey{ContainerID: "foo"}: {},
+			},
+		},
+		"SkipPodWithoutUID": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{
+					ContainerKey{ContainerID: "foo"}: {},
+				},
+				vector: testdata.SingleNonPodMetricVector,
+			},
+			want: map[ContainerKey]sampleInstant{
+				ContainerKey{ContainerID: "foo"}: {},
+			},
+		},
+		"SkipAddWithZeroMetricValue": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{
+					ContainerKey{ContainerID: "foo"}: {},
+				},
+				vector: testdata.SinglePodMetricVectorWithZeroValue,
+			},
+			want: map[ContainerKey]sampleInstant{
+				ContainerKey{ContainerID: "foo"}: {},
+			},
+		},
+		"UpdateMetric_WithLaterTimestamp": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{
+					testContainerKey: {
+						Time: time.UnixMilli(1695160365070), // <-- earlier timestamp will be replaced.
+						CAdvisorNetworkStats: &cadvisorNetworkStats{
+							RxBytes: 1,
+						},
+					},
+				},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_receive_bytes_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
 					},
 				},
 			},
-			wantSamples: &sampleInstants{
+			want: map[ContainerKey]sampleInstant{
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						RxBytes: 2,
+					},
+				},
+			},
+		},
+		"UpdateMetric_WithEarlierTimestamp": {
+			args: args{
 				containers: map[ContainerKey]sampleInstant{
-					{PodUID: "test-container-1"}: {},
-					{PodUID: "test-container-2"}: {
+					testContainerKey: {
+						Time: time.UnixMilli(1695160365072), // <-- later timestamp will be retained.
 						CAdvisorNetworkStats: &cadvisorNetworkStats{
-							Timestamp: now,
+							RxBytes: 1,
 						},
+					},
+				},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_receive_bytes_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365072),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						RxBytes: 2,
+					},
+				},
+			},
+		},
+		"Add_RxBytes": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{
+					ContainerKey{ContainerID: "foo"}: {},
+				},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_receive_bytes_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				ContainerKey{ContainerID: "foo"}: {},
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						RxBytes: 1,
+					},
+				},
+			},
+		},
+		"Add_RxPackets": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_receive_packets_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						RxPackets: 1,
+					},
+				},
+			},
+		},
+		"Add_RxDropped": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_receive_packets_dropped_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						RxDropped: 1,
+					},
+				},
+			},
+		},
+		"Add_RxErrors": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_receive_errors_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						RxErrors: 1,
+					},
+				},
+			},
+		},
+
+		"Add_TxBytes": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{
+					ContainerKey{ContainerID: "foo"}: {},
+				},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_transmit_bytes_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				ContainerKey{ContainerID: "foo"}: {},
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						TxBytes: 1,
+					},
+				},
+			},
+		},
+		"Add_TxPackets": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_transmit_packets_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						TxPackets: 1,
+					},
+				},
+			},
+		},
+		"Add_TxDropped": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_transmit_packets_dropped_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						TxDropped: 1,
+					},
+				},
+			},
+		},
+		"Add_TxErrors": {
+			args: args{
+				containers: map[ContainerKey]sampleInstant{},
+				vector: model.Vector{
+					{
+						Metric:    testMetric("container_network_transmit_errors_total"),
+						Value:     1,
+						Timestamp: 1695160365071,
+					},
+				},
+			},
+			want: map[ContainerKey]sampleInstant{
+				testContainerKey: {
+					Time: time.UnixMilli(1695160365071),
+					CAdvisorNetworkStats: &cadvisorNetworkStats{
+						TxErrors: 1,
 					},
 				},
 			},
@@ -366,18 +529,9 @@ func Test_fetchCAdvisorSample(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			client, server := tt.builder()
-			defer func() {
-				if server != nil {
-					server.Close()
-				}
-			}()
-
-			if err := fetchCAdvisorSample(client, tt.args.samples); (err != nil) != tt.wantErr {
-				t.Errorf("fetchCAdvisorSample() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if diff := cmp.Diff(tt.args.samples, tt.wantSamples, sampleInstantsComparer); diff != "" {
-				t.Errorf("fetchCAdvisorSample() got(-),want(+): %s", diff)
+			sampleInstantsFromMetricVector(tt.args.vector, tt.args.containers)
+			if diff := cmp.Diff(tt.args.containers, tt.want); diff != "" {
+				t.Errorf("sampleInstantsFromMetricVector, got(-),want(+): %s", diff)
 			}
 		})
 	}
