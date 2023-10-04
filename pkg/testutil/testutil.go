@@ -22,6 +22,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -336,60 +337,122 @@ func (tc TestCase) UnmarshalInputsStrict(into map[string]interface{}) {
 	}
 }
 
-// GetObjects parses the input objects from the test case
+// UpdateObjects will update objects from files prefixed with "input_client_objects_updates"
+// After each set of updates fn is called.  Updates are performed in alphanumberic order by filename.
+func (tc TestCase) UpdateObjects(s *runtime.Scheme, fn func()) error {
+	js := sjson.NewSerializer(sjson.DefaultMetaFactory, s, s, false)
+
+	// sort the updates
+	var files []string
+	for k := range tc.Inputs {
+		if !strings.HasPrefix(k, "input_client_objects_updates") {
+			continue
+		}
+		files = append(files, k)
+	}
+	sort.Strings(files)
+
+	// for each set of updates, update the objects then call fn
+	for _, filename := range files {
+		// parse the objects from the file data
+		data := tc.Inputs[filename]
+		o, ol, err := tc.GetObjectsFromFile(js, s, filename, data)
+		if err != nil {
+			return err
+		}
+
+		// update objects
+		for _, obj := range o {
+			err := tc.Client.Update(context.Background(), obj)
+			if err != nil {
+				return err
+			}
+		}
+		for _, objL := range ol {
+			// update objets read from lists
+			o, err := meta.ExtractList(objL)
+			if err != nil {
+				return err
+			}
+			for _, obj := range o {
+				err := tc.Client.Update(context.Background(), obj.(client.Object))
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		fn() // call the function for the test to do work
+	}
+	return nil
+}
+
 func (tc TestCase) GetObjects(s *runtime.Scheme) ([]client.Object, []client.ObjectList, error) {
 	var objs []client.Object
-	var objLists []client.ObjectList
+	var objList []client.ObjectList
 
+	js := sjson.NewSerializer(sjson.DefaultMetaFactory, s, s, false)
 	if len(tc.ClientInputsSuffix) == 0 {
 		tc.ClientInputsSuffix = "_client_objects.yaml"
 	}
-
-	ser := sjson.NewSerializer(sjson.DefaultMetaFactory, s, s, false)
-	// dec := serializer.NewCodecFactory(s).UniversalDecoder()
 	for k, v := range tc.Inputs {
 		if !strings.HasSuffix(k, tc.ClientInputsSuffix) {
 			continue
 		}
-		items := strings.Split(v, "\n---\n")
-		for _, i := range items {
-			// skip empty items
-			i = strings.TrimSpace(i)
-			if len(i) == 0 {
-				continue
-			}
-			b := []byte(i)
+		o, ol, err := tc.GetObjectsFromFile(js, s, k, v)
+		if err != nil {
+			return nil, nil, err
+		}
+		objs = append(objs, o...)
+		objList = append(objList, ol...)
+	}
 
-			// convert to json
-			if strings.HasSuffix(k, ".yaml") {
-				o := map[string]interface{}{}
-				err := yaml.Unmarshal([]byte(i), &o)
-				if err != nil {
-					return nil, nil, err
-				}
-				b, err = json.Marshal(o)
-				if err != nil {
-					return nil, nil, err
-				}
-			}
+	return objs, objList, nil
+}
 
-			// decode the object to a struct
-			out, _, err := ser.Decode(b, nil, nil)
+// GetObjects parses the input objects from the test case
+func (tc TestCase) GetObjectsFromFile(js *sjson.Serializer, s *runtime.Scheme, filename, data string) ([]client.Object, []client.ObjectList, error) {
+	var objs []client.Object
+	var objLists []client.ObjectList
+
+	items := strings.Split(data, "\n---\n")
+	for _, i := range items {
+		// skip empty items
+		i = strings.TrimSpace(i)
+		if len(i) == 0 {
+			continue
+		}
+		b := []byte(i)
+
+		// convert to json
+		if strings.HasSuffix(filename, ".yaml") {
+			o := map[string]interface{}{}
+			err := yaml.Unmarshal([]byte(i), &o)
 			if err != nil {
 				return nil, nil, err
 			}
-
-			// list object -- e.g. PodList
-			if objL, ok := out.(client.ObjectList); ok {
-				objLists = append(objLists, objL)
-				continue
+			b, err = json.Marshal(o)
+			if err != nil {
+				return nil, nil, err
 			}
+		}
 
-			// individual object -- e.g. Pod
-			if obj, ok := out.(client.Object); ok {
-				objs = append(objs, obj)
-				continue
-			}
+		// decode the object to a struct
+		out, _, err := js.Decode(b, nil, nil)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// list object -- e.g. PodList
+		if objL, ok := out.(client.ObjectList); ok {
+			objLists = append(objLists, objL)
+			continue
+		}
+
+		// individual object -- e.g. Pod
+		if obj, ok := out.(client.Object); ok {
+			objs = append(objs, obj)
+			continue
 		}
 	}
 	if len(objs) == 0 && len(objLists) == 0 {
