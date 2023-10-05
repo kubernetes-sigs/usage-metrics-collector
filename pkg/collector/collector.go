@@ -811,6 +811,18 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 					"throttling", usage.CpuPercentPeriodsThrottled)
 				resultMetric.WithLabelValues(pod.Spec.NodeName, samplerPodName, samplerPodPhase, "", "true").Add(1)
 				results["found"]++
+				if c.UtilizationServer.RestrictMaxUtilizationToContainerLimits {
+					for i := range usage.CpuCoresNanoSec {
+						// usage can be slightly above limits due to the sampling interval not being exactly 1 second.
+						// correct the value to equal the limits so that graphs render correctly
+						if usage.CpuCoresNanoSec[i] > container.Resources.Limits.Cpu().MilliValue()*1000*1000 {
+							usage.CpuCoresNanoSec[i] = container.Resources.Limits.Cpu().MilliValue() * 1000 * 1000
+						}
+						if usage.AvgCPUCoresNanoSec > container.Resources.Limits.Cpu().MilliValue()*1000*1000 {
+							usage.AvgCPUCoresNanoSec = container.Resources.Limits.Cpu().MilliValue() * 1000 * 1000
+						}
+					}
+				}
 			} else if running > maxWaitTimeForUtilization {
 				reason, ok := c.containerMissingReason(pod, container, id, o)
 				results[reason]++

@@ -1,0 +1,20 @@
+# Aggregate requets_allocated and limits_allocated metrics
+# by summing at the workload, app, namespace and cluster
+# levels.
+prefix: "kube_usage" # apply this name prefix to metrics
+resources: # export metrics for these resources
+  "cpu": "cpu_cores"
+utilizationServer:
+  restrictMaxUtilizationToContainerLimits: true
+aggregations: # aggregate metrics and export them
+- name: utilization
+  sources: { type: "container", container: [ "utilization" ] }
+  levels:
+  - name: pod-utilization
+    mask:
+      name: "pod"
+      builtIn:
+        exported_container: true
+        exported_namespace: true
+        exported_pod: true
+    operations: [ "median", "avg", "p95", "max" ]

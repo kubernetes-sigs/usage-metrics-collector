@@ -1,0 +1,26 @@
+# HELP kube_usage_pod_avg_utilization_cpu_cores kube_usage_pod_avg_utilization_cpu_cores
+# TYPE kube_usage_pod_avg_utilization_cpu_cores gauge
+kube_usage_pod_avg_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 4.75
+kube_usage_pod_avg_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 4.25
+kube_usage_pod_avg_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 3.25
+# HELP kube_usage_pod_max_utilization_cpu_cores kube_usage_pod_max_utilization_cpu_cores
+# TYPE kube_usage_pod_max_utilization_cpu_cores gauge
+kube_usage_pod_max_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 8
+kube_usage_pod_max_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 6
+kube_usage_pod_max_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 4
+# HELP kube_usage_pod_median_utilization_cpu_cores kube_usage_pod_median_utilization_cpu_cores
+# TYPE kube_usage_pod_median_utilization_cpu_cores gauge
+kube_usage_pod_median_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 4
+kube_usage_pod_median_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 4
+kube_usage_pod_median_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 4
+# HELP kube_usage_pod_p95_utilization_cpu_cores kube_usage_pod_p95_utilization_cpu_cores
+# TYPE kube_usage_pod_p95_utilization_cpu_cores gauge
+kube_usage_pod_p95_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 6
+kube_usage_pod_p95_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 6
+kube_usage_pod_p95_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 4
+# HELP metrics_prometheus_collector_container_usage_result The number of containers missing usage information
+# TYPE metrics_prometheus_collector_container_usage_result gauge
+metrics_prometheus_collector_container_usage_result{exported_node="",found="true",reason="",sampler_phase="",sampler_pod=""} 3
+# HELP metrics_prometheus_collector_pods_collected The number of pods collected during the last collect
+# TYPE metrics_prometheus_collector_pods_collected gauge
+metrics_prometheus_collector_pods_collected 3
