@@ -198,6 +198,12 @@ type UtilizationServer struct {
 	// DeleteUnregisteredPodsAfterCycles will delete node-sampler pods if the collector cannot register with them
 	// after this many initial cycles.
 	DeleteUnregisteredPodsAfterCycles int `json:"deleteUnregisteredPodsAfterCycles" yaml:"deleteUnregisteredPodsAfterCycles"`
+
+	// RestrictMaxUtilizationToContainerLimits will replace any resource utilization sample values greater than the container's limits with
+	// the container limit value.  This can be necessary as utilization values are not atomically sampled with the time -- leading to occassional
+	// spurious values above the limits.  This is mostly an issue when using the max sample across many pods, where a single sample in 10K
+	// being over the limits will cause the data to look incorrect.
+	RestrictMaxUtilizationToContainerLimits bool `json:"restrictMaxUtilizationToContainerLimits" yaml:"restrictMaxUtilizationToContainerLimits"`
 }
 
 // Condition matches a node condition to determine whether a node is unhealthy.

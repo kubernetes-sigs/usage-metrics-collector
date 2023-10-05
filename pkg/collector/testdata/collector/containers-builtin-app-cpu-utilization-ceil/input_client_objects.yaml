@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+  namespace: test-namespace
+  uid: test-pod-1
+  labels:
+    app: app
+spec:
+  containers:
+    - name: app
+      image: images.example/app:v4
+      resources:
+        requests: { "cpu": 6 }
+        limits:  { "cpu": 8 } # max sample should be 8
+status:
+  phase: Running
+  containerStatuses:
+  - containerID: containerd://app
+    name: app
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-2
+  namespace: test-namespace
+  uid: test-pod-2
+spec:
+  containers:
+    - name: app
+      image: images.example/app:v4
+      resources:
+        requests: { "cpu": 4 }
+        limits:  { "cpu": 6 } # max sample should be 6
+status:
+  phase: Running
+  containerStatuses:
+  - containerID: containerd://app
+    name: app
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-3
+  namespace: test-namespace
+  uid: test-pod-3
+spec:
+  containers:
+    - name: app
+      image: images.example/app:v4
+      resources:
+        requests: { "cpu": 2 }
+        limits:  { "cpu": 4 } # max sample should be 4
+status:
+  phase: Running
+  containerStatuses:
+  - containerID: containerd://app
+    name: app
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace
