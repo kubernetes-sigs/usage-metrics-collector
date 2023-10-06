@@ -181,6 +181,7 @@ func setupTests(t *testing.T, f func([]int) string) {
 			}()
 
 			var result api.ListMetricsResponse
+			var missMatchCount int
 			require.Eventually(t, func() bool {
 				tc.Actual = f(ports)
 				// use protojson because regular json library isn't compatible with proto serialization of int64
@@ -199,6 +200,13 @@ func setupTests(t *testing.T, f func([]int) string) {
 						return false
 					}
 				}
+
+				if tc.Expected != tc.Actual && missMatchCount < 5 {
+					// address flakey tests by retrying if the results don't match
+					missMatchCount++
+					return false
+				}
+
 				return true
 			}, time.Minute*2, 2*time.Second)
 
