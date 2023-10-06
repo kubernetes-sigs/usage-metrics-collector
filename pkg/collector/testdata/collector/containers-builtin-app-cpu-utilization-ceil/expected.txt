@@ -1,23 +1,83 @@
+# HELP kube_usage_pod_avg_nr_periods_per_second kube_usage_pod_avg_nr_periods_per_second
+# TYPE kube_usage_pod_avg_nr_periods_per_second gauge
+kube_usage_pod_avg_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 6.5
+kube_usage_pod_avg_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 6.5
+kube_usage_pod_avg_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 6.5
+# HELP kube_usage_pod_avg_nr_throttled_per_second kube_usage_pod_avg_nr_throttled_per_second
+# TYPE kube_usage_pod_avg_nr_throttled_per_second gauge
+kube_usage_pod_avg_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 4.5
+kube_usage_pod_avg_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 4.5
+kube_usage_pod_avg_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 4.5
 # HELP kube_usage_pod_avg_utilization_cpu_cores kube_usage_pod_avg_utilization_cpu_cores
 # TYPE kube_usage_pod_avg_utilization_cpu_cores gauge
 kube_usage_pod_avg_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 4.75
 kube_usage_pod_avg_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 4.25
 kube_usage_pod_avg_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 3.25
+# HELP kube_usage_pod_avg_utilization_memory_bytes kube_usage_pod_avg_utilization_memory_bytes
+# TYPE kube_usage_pod_avg_utilization_memory_bytes gauge
+kube_usage_pod_avg_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 2e+07
+kube_usage_pod_avg_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 1.95e+07
+kube_usage_pod_avg_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 1.7e+07
+# HELP kube_usage_pod_max_nr_periods_per_second kube_usage_pod_max_nr_periods_per_second
+# TYPE kube_usage_pod_max_nr_periods_per_second gauge
+kube_usage_pod_max_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 10
+kube_usage_pod_max_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 10
+kube_usage_pod_max_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 10
+# HELP kube_usage_pod_max_nr_throttled_per_second kube_usage_pod_max_nr_throttled_per_second
+# TYPE kube_usage_pod_max_nr_throttled_per_second gauge
+kube_usage_pod_max_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 10
+kube_usage_pod_max_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 10
+kube_usage_pod_max_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 10
 # HELP kube_usage_pod_max_utilization_cpu_cores kube_usage_pod_max_utilization_cpu_cores
 # TYPE kube_usage_pod_max_utilization_cpu_cores gauge
 kube_usage_pod_max_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 8
 kube_usage_pod_max_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 6
 kube_usage_pod_max_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 4
+# HELP kube_usage_pod_max_utilization_memory_bytes kube_usage_pod_max_utilization_memory_bytes
+# TYPE kube_usage_pod_max_utilization_memory_bytes gauge
+kube_usage_pod_max_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 2.4e+07
+kube_usage_pod_max_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 2.2e+07
+kube_usage_pod_max_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 1.8e+07
+# HELP kube_usage_pod_median_nr_periods_per_second kube_usage_pod_median_nr_periods_per_second
+# TYPE kube_usage_pod_median_nr_periods_per_second gauge
+kube_usage_pod_median_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 4
+kube_usage_pod_median_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 4
+kube_usage_pod_median_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 4
+# HELP kube_usage_pod_median_nr_throttled_per_second kube_usage_pod_median_nr_throttled_per_second
+# TYPE kube_usage_pod_median_nr_throttled_per_second gauge
+kube_usage_pod_median_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 2
+kube_usage_pod_median_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 2
+kube_usage_pod_median_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 2
 # HELP kube_usage_pod_median_utilization_cpu_cores kube_usage_pod_median_utilization_cpu_cores
 # TYPE kube_usage_pod_median_utilization_cpu_cores gauge
 kube_usage_pod_median_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 4
 kube_usage_pod_median_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 4
 kube_usage_pod_median_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 4
+# HELP kube_usage_pod_median_utilization_memory_bytes kube_usage_pod_median_utilization_memory_bytes
+# TYPE kube_usage_pod_median_utilization_memory_bytes gauge
+kube_usage_pod_median_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 2e+07
+kube_usage_pod_median_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 2e+07
+kube_usage_pod_median_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 1.8e+07
+# HELP kube_usage_pod_p95_nr_periods_per_second kube_usage_pod_p95_nr_periods_per_second
+# TYPE kube_usage_pod_p95_nr_periods_per_second gauge
+kube_usage_pod_p95_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 10
+kube_usage_pod_p95_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 10
+kube_usage_pod_p95_nr_periods_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 10
+# HELP kube_usage_pod_p95_nr_throttled_per_second kube_usage_pod_p95_nr_throttled_per_second
+# TYPE kube_usage_pod_p95_nr_throttled_per_second gauge
+kube_usage_pod_p95_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 5
+kube_usage_pod_p95_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 5
+kube_usage_pod_p95_nr_throttled_per_second{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 5
 # HELP kube_usage_pod_p95_utilization_cpu_cores kube_usage_pod_p95_utilization_cpu_cores
 # TYPE kube_usage_pod_p95_utilization_cpu_cores gauge
 kube_usage_pod_p95_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 6
 kube_usage_pod_p95_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 6
 kube_usage_pod_p95_utilization_cpu_cores{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 4
+# HELP kube_usage_pod_p95_utilization_memory_bytes kube_usage_pod_p95_utilization_memory_bytes
+# TYPE kube_usage_pod_p95_utilization_memory_bytes gauge
+kube_usage_pod_p95_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-1"} 2.2e+07
+kube_usage_pod_p95_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-2"} 2.2e+07
+kube_usage_pod_p95_utilization_memory_bytes{exported_container="app",exported_namespace="test-namespace",exported_pod="pod-3"} 1.8e+07
 # HELP metrics_prometheus_collector_container_usage_result The number of containers missing usage information
 # TYPE metrics_prometheus_collector_container_usage_result gauge
 metrics_prometheus_collector_container_usage_result{exported_node="",found="true",reason="",sampler_phase="",sampler_pod=""} 3

@@ -3,12 +3,15 @@
 # levels.
 prefix: "kube_usage" # apply this name prefix to metrics
 resources: # export metrics for these resources
+  "periods": "per_second"
   "cpu": "cpu_cores"
+  "memory": "memory_bytes"
 utilizationServer:
   restrictMaxUtilizationToContainerLimits: true
+  restrictMaxPeriods: 10
 aggregations: # aggregate metrics and export them
 - name: utilization
-  sources: { type: "container", container: [ "utilization" ] }
+  sources: { type: "container", container: [ "utilization", "nr_periods", "nr_throttled" ] }
   levels:
   - name: pod-utilization
     mask:

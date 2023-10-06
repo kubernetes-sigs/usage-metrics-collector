@@ -818,9 +818,36 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 						if usage.CpuCoresNanoSec[i] > container.Resources.Limits.Cpu().MilliValue()*1000*1000 {
 							usage.CpuCoresNanoSec[i] = container.Resources.Limits.Cpu().MilliValue() * 1000 * 1000
 						}
-						if usage.AvgCPUCoresNanoSec > container.Resources.Limits.Cpu().MilliValue()*1000*1000 {
-							usage.AvgCPUCoresNanoSec = container.Resources.Limits.Cpu().MilliValue() * 1000 * 1000
+					}
+					for i := range usage.CpuThrottledNanoSec {
+						if usage.CpuThrottledNanoSec[i] > container.Resources.Limits.Cpu().MilliValue()*1000*1000 {
+							usage.CpuThrottledNanoSec[i] = container.Resources.Limits.Cpu().MilliValue() * 1000 * 1000
 						}
+					}
+					for i := range usage.MemoryBytes {
+						if usage.MemoryBytes[i] > container.Resources.Limits.Memory().Value() {
+							usage.MemoryBytes[i] = container.Resources.Limits.Memory().Value()
+						}
+					}
+					if usage.AvgCPUCoresNanoSec > container.Resources.Limits.Cpu().MilliValue()*1000*1000 {
+						usage.AvgCPUCoresNanoSec = container.Resources.Limits.Cpu().MilliValue() * 1000 * 1000
+					}
+				}
+				if c.UtilizationServer.RestrictMaxPeriods > 0 {
+					for i := range usage.CpuPeriodsSec {
+						if usage.CpuPeriodsSec[i] > int64(c.UtilizationServer.RestrictMaxPeriods) {
+							usage.CpuPeriodsSec[i] = int64(c.UtilizationServer.RestrictMaxPeriods)
+						}
+					}
+					for i := range usage.CpuThrottledPeriodsSec {
+						if usage.CpuThrottledPeriodsSec[i] > int64(c.UtilizationServer.RestrictMaxPeriods) {
+							usage.CpuThrottledPeriodsSec[i] = int64(c.UtilizationServer.RestrictMaxPeriods)
+						}
+					}
+				}
+				for i := range usage.CpuPercentPeriodsThrottled {
+					if usage.CpuPercentPeriodsThrottled[i] > 100 {
+						usage.CpuPercentPeriodsThrottled[i] = 100
 					}
 				}
 			} else if running > maxWaitTimeForUtilization {

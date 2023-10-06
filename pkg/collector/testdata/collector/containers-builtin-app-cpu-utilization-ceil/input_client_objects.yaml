@@ -11,8 +11,8 @@ spec:
     - name: app
       image: images.example/app:v4
       resources:
-        requests: { "cpu": 6 }
-        limits:  { "cpu": 8 } # max sample should be 8
+        requests: { "cpu": 6, "memory": 22_000_000 }
+        limits:  { "cpu": 8, "memory": 24_000_000 } # max sample should be 8
 status:
   phase: Running
   containerStatuses:
@@ -30,8 +30,8 @@ spec:
     - name: app
       image: images.example/app:v4
       resources:
-        requests: { "cpu": 4 }
-        limits:  { "cpu": 6 } # max sample should be 6
+        requests: { "cpu": 4, "memory": 20_000_000 }
+        limits:  { "cpu": 6, "memory": 22_000_000 } # max sample should be 6
 status:
   phase: Running
   containerStatuses:
@@ -49,8 +49,8 @@ spec:
     - name: app
       image: images.example/app:v4
       resources:
-        requests: { "cpu": 2 }
-        limits:  { "cpu": 4 } # max sample should be 4
+        requests: { "cpu": 2, "memory": 14_000_000 }
+        limits:  { "cpu": 4, "memory": 18_000_000 } # max sample should be 4
 status:
   phase: Running
   containerStatuses:

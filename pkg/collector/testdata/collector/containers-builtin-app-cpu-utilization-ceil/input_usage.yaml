@@ -5,13 +5,22 @@ responses:
       containerID: app
       cpuCoresNanoSec: [1_000_000_000, 4_000_000_000, 6_000_000_000, 8_000_000_000]
       memoryBytes: [14_000_000, 20_000_000, 22_000_000, 24_000_000]
+      cpuPeriodsSec: [2, 4, 10, 12]
+      cpuThrottledPeriodsSec: [1, 2, 5, 11]
+      cpuPercentPeriodsThrottled: [10, 50, 100, 120]
     - podUID: test-pod-2
       containerID: app
       cpuCoresNanoSec: [1_000_000_000, 4_000_000_000, 6_000_000_000, 8_000_000_000]
       memoryBytes: [14_000_000, 20_000_000, 22_000_000, 24_000_000]
+      cpuPeriodsSec: [2, 4, 10, 12]
+      cpuThrottledPeriodsSec: [1, 2, 5, 11]
+      cpuPercentPeriodsThrottled: [10, 50, 100, 120]
   test-node-2:
     containers:
     - podUID: test-pod-3
       containerID: app
       cpuCoresNanoSec: [1_000_000_000, 4_000_000_000, 6_000_000_000, 8_000_000_000]
       memoryBytes: [14_000_000, 20_000_000, 22_000_000, 24_000_000]
+      cpuPeriodsSec: [2, 4, 10, 12]
+      cpuThrottledPeriodsSec: [1, 2, 5, 11]
+      cpuPercentPeriodsThrottled: [10, 50, 100, 120]
