@@ -204,6 +204,8 @@ type UtilizationServer struct {
 	// spurious values above the limits.  This is mostly an issue when using the max sample across many pods, where a single sample in 10K
 	// being over the limits will cause the data to look incorrect.
 	RestrictMaxUtilizationToContainerLimits bool `json:"restrictMaxUtilizationToContainerLimits" yaml:"restrictMaxUtilizationToContainerLimits"`
+
+	RestrictMaxPeriods int `json:"restrictMaxPeriods" yaml:"restrictMaxPeriods"`
 }
 
 // Condition matches a node condition to determine whether a node is unhealthy.
