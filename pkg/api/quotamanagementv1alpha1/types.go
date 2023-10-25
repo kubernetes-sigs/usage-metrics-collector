@@ -35,8 +35,11 @@ const (
 // +kubebuilder:rbac:groups=quotamanagement.usagemetricscollector.sigs.k8s.io,resources=resourcequotadescriptor,verbs=get;list;update;patch
 // +kubebuilder:printcolumn:name="Name",type="string",JSONPath=".metadata.name",description="RQD name"
 // +kubebuilder:printcolumn:name="PolicyState",type="string",JSONPath=".status.policyState",description="The current state of the resource quota with respect to the usage policy."
-// +kubebuilder:printcolumn:name="RightsizingEnabled",type="bool",JSONPath=".status.quotaRightsizingEnabled",description="True if rightsizing is enabled for the quota"
-// +kubebuilder:printcolumn:name="ScheduledRightsizeDate",type="date",JSONPath=".status.scheduledRightsizeDate",description="Date that a rightsize event will occur"
+// +kubebuilder:printcolumn:name="RightsizingEnabled",type="boolean",JSONPath=".status.quotaRightsizingEnabled",description="Indicates whether rightsizing is enabled for the quota"
+// +kubebuilder:printcolumn:name="ScheduledRightsizeDate",type="string",format="date-time",JSONPath=".status.scheduledRightsizeDate",description="Date that a rightsize event will occur"
+// +kubebuilder:printcolumn:name="LastRightsizeTime",type="string",format="date-time",JSONPath=".status.lastRightsizeTime",description="Timestamp of last rightsize"
+// +kubebuilder:printcolumn:name="LastRevertTime",type="string",format="date-time",JSONPath=".status.lastRevertTime",description="Timestamp of last revert"
+// +kubebuilder:printcolumn:name="DashboardLink",type="string",JSONPath=".status.dashboardLink",description="Link to capacity dashboard"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ResourceQuotaDescriptor is used to describe what quota given out to a namespace
@@ -50,12 +53,17 @@ type ResourceQuotaDescriptor struct {
 	Status ResourceQuotaDescriptorStatus `json:"status,omitempty"`
 }
 
-// ResourceQuotaDescriptorSpec describes how a portion of ResourceQuota is used.
+// ResourceQuotaDescriptorStatus describes the current state of the
+// ResourceQuotaDescriptor.
 type ResourceQuotaDescriptorStatus struct {
-	// TODO: re-enable this once all old version with the non-slice field have been
-	// over written to delete the conditions.
+	// Conditions is a list of conditions relating to the ResourceQuotaDescriptor.
 	// +optional
-	// Conditions []ResourceQuotaDescriptorCondition `json:"conditions,omitempty"`
+	// +patchMergeKey=type
+	// +patchStrategy=merge
+	// +listType=map
+	// +listMapKey=type
+	// +kubebuilder:validation:MaxItems=10
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type"`
 
 	// ObservationWindowStart is the start time of the observation window used to populate
 	// the status values.
@@ -70,7 +78,9 @@ type ResourceQuotaDescriptorStatus struct {
 	// +optional
 	ObservationWindowLength *metav1.Duration `json:"observationWindowLength,omitempty"`
 
-	// QuotaRightsizingEnabled is enabled for the resource quota.
+	// QuotaRightsizingEnabled indicates whether the indicated ResourceQuota
+	// will be subject to right-sizing when it is OutOfPolicy as indicated by
+	// the status.policyState field.
 	// +optional
 	QuotaRightsizingEnabled *bool `json:"quotaRightsizingEnabled,omitempty"`
 
@@ -93,10 +103,11 @@ type ResourceQuotaDescriptorStatus struct {
 	// +optional
 	ActualQuota corev1.ResourceList `json:"actualQuota,omitempty"`
 
-	// ProposedQuota the quota values proposed for rightsizing.  If rightsizing is enabled
-	// the quota values will be changed to the proposed values after a grace period.
-	// ProposedQuota is driven off the observed quota used and the target policy
-	// defined in the spec.
+	// ProposedQuota is the quota values proposed for rightsizing.  If
+	// rightsizing is enabled the quota values will be changed to the proposed
+	// values, after the status.gracePeriodLength has elapsed, on the
+	// status.scheduledRightsizeDate. ProposedQuota is driven off the observed
+	// quota used and the target policy defined in the spec.
 	// +optional
 	ProposedQuota corev1.ResourceList `json:"proposedQuota,omitempty"`
 
@@ -118,41 +129,59 @@ type ResourceQuotaDescriptorStatus struct {
 	// +optional
 	AvgUsedQuota corev1.ResourceList `json:"avgUsedQuota,omitempty"`
 
-	// LastRightsizeTime is the last time quota's values were set to the proposed quota value.
-	// Not set if no rightsize has been performed.
+	// DashboardLink is an HTTPS link to a dashboard where users can see
+	// detailed information about their quota use.
+	// +kubebuilder:validation:MaxLength=512
+	// +optional
+	DashboardLink string `json:"dashboardLink,omitempty"`
+
+	// LastRightsizeTime is the last time the quota's values were set to the
+	// proposed quota value. Not set if no rightsize has been performed.
 	// +optional
 	LastRightsizeTime *metav1.Time `json:"lastRightsizeTime,omitempty"`
-}
 
-type ResourceQuotaDescriptorCondition struct {
-	Type   ResourceQuotaDescriptorConditionType `json:"type,omitempty"`
-	Status metav1.ConditionStatus               `json:"status,omitempty"`
+	// RevertToPreRightsizeQuota indicates that the quota should be reverted to
+	// the values in the status.preRightSizeQuota field. This field will be
+	// cleared after the old values are restored.
 	// +optional
-	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
-	Reason             string      `json:"reason,omitempty"`
-	Message            string      `json:"message,omitempty"`
-}
+	RevertToPreRightsizeQuota bool `json:"revertToPreRightsizeQuota,omitempty"`
 
-// +kubebuilder:validation:Enum=OutOfPolicy;RightsizeScheduled;Rightsized
-type ResourceQuotaDescriptorConditionType string
+	// LastRevertTime is the last time the quota's values were reverted to the
+	// pre-rightsize values. Not set if no revert has been performed.
+	// +optional
+	LastRevertTime *metav1.Time `json:"lastRevertTime,omitempty"`
+
+	// PeriodicRightsize if set to true will periodically attempt to righsize quota that has
+	// is out of policy and whose scheduledRightsizeDate is in the past.  Does not require
+	// explicitly scheduling a rightsize event.
+	PeriodicRightsize bool `json:"periodicRightsize,omitempty"`
+
+	// ObservationWindowDays is used to determine how many days of usage data to look at when identifying
+	// the high water mark.  e.g. a value of "30" will look at the last 30 days of usage data to find the
+	// highest usage point.  Organizations can use this to set more aggressive rightsizing.
+	// +kubebuilder:validation:Enum=30;60;90
+	// +kubebuilder:default=90
+	ObservationWindowDays int `json:"observationWindowDays,omitempty"`
+}
 
 const (
 	// ResourceQuotaDescriptorOutOfPolicy is set to true if the namespace ResourceQuota usage does not
 	// adhere to the policy stated in the ResourceQuotaDescriptor.
-	ResourceQuotaDescriptorOutOfPolicy ResourceQuotaDescriptorConditionType = "OutOfPolicy"
+	ResourceQuotaDescriptorOutOfPolicy string = "OutOfPolicy"
 
 	// ResourceQuotaDescriptorRightsizeScheduled is set to true if the Quota is OutOfPolicy and the
 	// a rightsize is scheduled.
-	ResourceQuotaDescriptorRightsizeScheduled ResourceQuotaDescriptorConditionType = "RightsizeScheduled"
+	ResourceQuotaDescriptorRightsizeScheduled string = "RightsizeScheduled"
 
 	// ResourceQuotaDescriptorRequiresRightsize is set to true if the Quota had its values changed
 	// as part of a rightsize event.
-	ResourceQuotaDescriptorRightsized ResourceQuotaDescriptorConditionType = "Rightsized"
+	ResourceQuotaDescriptorRightsized string = "Rightsized"
 )
 
 // ResourceQuotaDescriptorSpec describes how a portion of ResourceQuota is used.
 type ResourceQuotaDescriptorSpec struct {
-	// ResourceQuotaRef is object reference to ResourceQuota
+	// ResourceQuotaRef is an object reference associating this
+	// ResourceQuotaDescriptor with a ResourceQuota.
 	// +required
 	ResourceQuotaRef corev1.LocalObjectReference `json:"resourceQuotaRef,omitempty"`
 
@@ -195,8 +224,9 @@ type TargetAllocationsPolicy struct {
 // Exactly one item is expected to be specified.
 type AllocationStrategy struct {
 	// AllocationStrategyType is the union discriminator for which strategy is used.
+	// +kubebuilder:default=Unspecified
 	// +required
-	AllocationStrategyType AllocationStrategyType `json:"allocationStrategyType,omitempty"`
+	AllocationStrategyType AllocationStrategyType `json:"allocationStrategyType"`
 
 	// Delayed indicates that this capacity is intended to be consumed at a later date.
 	// +optional
@@ -217,6 +247,21 @@ type AllocationStrategy struct {
 	// eg. allocated for a significant portion of the day+
 	// +optional
 	Constant *AllocationConstantStrategy `json:"constant,omitempty"`
+
+	// Reserved indicates that quota has been set aside for the user,
+	// so it can't be reassigned. Subsequently, this quota will be scaled down
+	// and assigned to namespaces used by the user.
+	// +optional
+	Reserved *AllocationReservedStrategy `json:"reserved,omitempty"`
+
+	// Decommissioned indicates that the quota is no longer in use or
+	// needed by the user and should be clawed back and deleted.
+	// +optional
+	Decommissioned *AllocationDecommissionedStrategy `json:"decommissioned,omitempty"`
+
+	// Unspecified indicates that the namespace owner did not set their RQD.
+	// +optional
+	Unspecified *AllocationUnspecifiedStrategy `json:"unspecified,omitempty"`
 }
 
 // AllocationStrategyType is the union discriminator for which strategy is used.
@@ -229,6 +274,7 @@ const (
 )
 
 // AllocationStrategyType is the union discriminator for which strategy is used.
+// +kubebuilder:validation:Enum=Delayed;DisasterRecovery;Periodic;Constant;Reserved;Unspecified;Decommissioned
 type AllocationStrategyType string
 
 const (
@@ -236,13 +282,17 @@ const (
 	DisasterRecovery AllocationStrategyType = "DisasterRecovery"
 	Periodic         AllocationStrategyType = "Periodic"
 	Constant         AllocationStrategyType = "Constant"
+	Reserved         AllocationStrategyType = "Reserved"
+	Unspecified      AllocationStrategyType = "Unspecified"
+	Decommissioned   AllocationStrategyType = "Decommissioned"
 )
 
 type AllocationPeriodicStrategy struct {
 	// Interval defines how frequently the quota is expected to meet its policy.
 	// e.g. for a namespace that runs a job every 90 days, and is unallocated otherwise the duration would be 90 days.
+	// +kubebuilder:validation:Pattern:=(\d+)(s|m|h|d|w)
 	// +required
-	Interval metav1.Duration `json:"interval"`
+	Interval string `json:"interval"`
 }
 
 type AllocationDelayedStrategy struct {
@@ -267,6 +317,32 @@ type AllocationDisasterRecoveryStrategy struct {
 
 type AllocationConstantStrategy struct {
 	ConstantAllocated bool `json:"constantAllocated"`
+}
+
+// AllocationReservedStrategy indicates that quota has been set aside for the user,
+// so it can't be reassigned. Subsequently, this quota will be scaled down
+// and assigned to namespaces used by the user.
+type AllocationReservedStrategy struct {
+	// ReservedDate is the timestamp of when the quota was reserved
+	// +required
+	ReservedDate metav1.Time `json:"reservedDate"`
+	// Reason is the justification for this reservation
+	// e.g. For Product X Migration
+	// +kubebuilder:validation:MaxLength=256
+	// +required
+	Reason string `json:"reason"`
+}
+
+// AllocationDecommissionedStrategy indicates that the quota is no longer in use or
+// needed by the user and should be clawed back and deleted.
+type AllocationDecommissionedStrategy struct {
+	// DecommissionDate is the timestamp of when the quota was decommissioned
+	// +required
+	DecommissionDate metav1.Time `json:"decommissionDate"`
+}
+
+// AllocationDecommissionedStrategy indicates that the namespace owner has not set their RQD
+type AllocationUnspecifiedStrategy struct {
 }
 
 // +kubebuilder:object:root=true
