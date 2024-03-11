@@ -207,28 +207,31 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 func (c *Collector) getSideCarConfigs() ([]*collectorcontrollerv1alpha1.SideCarConfig, error) {
 	var results []*collectorcontrollerv1alpha1.SideCarConfig
 	for _, p := range c.SideCarConfigDirectoryPaths {
-		entries, err := os.ReadDir(p)
-		if err != nil {
-			log.Error(err, "unable to read side car metrics directory", "directory", p)
-			return nil, err
-		}
-		for _, e := range entries {
-			if !strings.HasSuffix(e.Name(), collectorcontrollerv1alpha1.SideCarConfigFileSuffix) {
-				continue
-			}
-			b, err := os.ReadFile(filepath.Join(p, e.Name()))
+		// check if directory exists before reading contents
+		if _, err := os.Stat(p); err == nil {
+			entries, err := os.ReadDir(p)
 			if err != nil {
-				log.Error(err, "unable to read side car metrics file", "filename", e.Name())
+				log.Error(err, "unable to read side car metrics directory", "directory", p)
 				return nil, err
 			}
-			d := json.NewDecoder(bytes.NewBuffer(b))
-			sc := collectorcontrollerv1alpha1.SideCarConfig{}
-			err = d.Decode(&sc)
-			if err != nil {
-				log.Error(err, "unable to parse side car metrics file", "filename", e.Name())
-				return nil, err
+			for _, e := range entries {
+				if !strings.HasSuffix(e.Name(), collectorcontrollerv1alpha1.SideCarConfigFileSuffix) {
+					continue
+				}
+				b, err := os.ReadFile(filepath.Join(p, e.Name()))
+				if err != nil {
+					log.Error(err, "unable to read side car metrics file", "filename", e.Name())
+					return nil, err
+				}
+				d := json.NewDecoder(bytes.NewBuffer(b))
+				sc := collectorcontrollerv1alpha1.SideCarConfig{}
+				err = d.Decode(&sc)
+				if err != nil {
+					log.Error(err, "unable to parse side car metrics file", "filename", e.Name())
+					return nil, err
+				}
+				results = append(results, &sc)
 			}
-			results = append(results, &sc)
 		}
 	}
 	return results, nil
