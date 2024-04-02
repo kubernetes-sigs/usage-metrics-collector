@@ -34,6 +34,7 @@ aggregations:
       builtIn:
         exported_namespace: true
         container_image: true
+        container_image_id: true
       extensions:
         namespace_label: true
         namespace_annotation: true

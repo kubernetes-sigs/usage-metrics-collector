@@ -34,6 +34,11 @@ spec:
           cpu: "1"
 status:
   phase: Running
+  containerStatuses:
+  - name: log-aggregator
+    imageID: images.my-company.example/log-aggregator@sha256:digest
+  - name: app
+    imageID: images.example/app@sha256:digest
 ---
 apiVersion: v1
 kind: Pod
@@ -71,6 +76,11 @@ spec:
           cpu: "1"
 status:
   phase: Running
+  containerStatuses:
+  - name: log-aggregator
+    imageID: images.my-company.example/log-aggregator@sha256:digest
+  - name: app
+    imageID: images.example/app@sha256:digest
 ---
 apiVersion: apps/v1
 kind: ReplicaSet
@@ -119,6 +129,11 @@ spec:
           cpu: "1"
 status:
   phase: Running
+  containerStatuses:
+  - name: log-aggregator
+    imageID: images.my-company.example/log-aggregator@sha256:digest
+  - name: app
+    imageID: images.example/app@sha256:digest
 ---
 apiVersion: v1
 kind: Pod
@@ -156,6 +171,11 @@ spec:
           cpu: "1"
 status:
   phase: Running
+  containerStatuses:
+  - name: log-aggregator
+    imageID: images.my-company.example/log-aggregator@sha256:digest
+  - name: app
+    imageID: images.example/app@sha256:digest
 ---
 apiVersion: apps/v1
 kind: ReplicaSet
