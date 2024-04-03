@@ -723,8 +723,8 @@ func getContainerNameToContainerStatus(statuses []corev1.ContainerStatus) map[st
 		return nil
 	}
 	m := make(map[string]*corev1.ContainerStatus)
-	for _, status := range statuses {
-		m[status.Name] = &status
+	for i := range statuses {
+		m[statuses[i].Name] = &statuses[i]
 	}
 	return m
 }
