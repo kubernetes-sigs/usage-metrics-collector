@@ -718,13 +718,13 @@ func getContainerNameToID(pod *corev1.Pod) (map[string]string, string) {
 	return containerNameToID, podUID
 }
 
-func getContainerNameToImageID(statuses []corev1.ContainerStatus) map[string]string {
+func getContainerNameToContainerStatus(statuses []corev1.ContainerStatus) map[string]*corev1.ContainerStatus {
 	if len(statuses) == 0 {
 		return nil
 	}
-	m := make(map[string]string)
+	m := make(map[string]*corev1.ContainerStatus)
 	for _, status := range statuses {
-		m[status.Name] = status.ImageID
+		m[status.Name] = &status
 	}
 	return m
 }
@@ -793,8 +793,8 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 		// use the Pod containerStatuses field to map the container name to a containerID.
 		containerNameToID, podUID := getContainerNameToID(pod)
 
-		// get container image id
-		containerNameToImageIDs := getContainerNameToImageID(pod.Status.ContainerStatuses)
+		// get container status by name
+		containerNameToStatuses := getContainerNameToContainerStatus(pod.Status.ContainerStatuses)
 
 		var samplerPodName, samplerPodPhase string
 		if samplerPod, ok := o.SamplersByNode[pod.Spec.NodeName]; ok {
@@ -809,8 +809,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 			container := &pod.Spec.Containers[i]
 			containerLabels := podLabels
 			c.Labeler.SetLabelsForContainer(&containerLabels, container)
-
-			containerLabels.BuiltIn.ContainerImageID = containerNameToImageIDs[container.Name]
+			c.Labeler.SetLabelsForContainerStatus(&containerLabels, containerNameToStatuses[container.Name])
 
 			// first try to get the metrics based on the container name and namespace
 			id := sampler.ContainerKey{ContainerName: container.Name, PodName: pod.Name, NamespaceName: pod.Namespace}

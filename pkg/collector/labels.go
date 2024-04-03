@@ -37,6 +37,13 @@ func (l Labeler) SetLabelsForContainer(
 	// no extension labels for containers
 }
 
+// SetLabelsForContainerStatus parses metric labels from a container status
+func (l Labeler) SetLabelsForContainerStatus(
+	labels *LabelsValues, container *corev1.ContainerStatus) {
+	l.BuiltIn.SetLabelsForContainerStatus(&labels.BuiltIn, container)
+	// no extension labels for containers
+}
+
 func (l Labeler) SetLabelsForPod(
 	labels *LabelsValues, pod *corev1.Pod, w workload,
 	node *corev1.Node, namespace *corev1.Namespace) {

@@ -383,6 +383,13 @@ func (l builtInLabler) SetLabelsForContainer(labels *builtInLabelsValues, c *cor
 	labels.ContainerImage = c.Image
 }
 
+func (l builtInLabler) SetLabelsForContainerStatus(labels *builtInLabelsValues, c *corev1.ContainerStatus) {
+	if c == nil {
+		return
+	}
+	labels.ContainerImageID = c.ImageID
+}
+
 func (l builtInLabler) SetLabelsForPod(
 	labels *builtInLabelsValues, p *corev1.Pod, w workload,
 	node *corev1.Node, namespace *corev1.Namespace) {
