@@ -1130,6 +1130,8 @@ type BuiltInLabelsMask struct {
 	PVType bool `json:"pv_type,omitempty" yaml:"pv_type,omitempty"`
 
 	ContainerImage bool `json:"container_image,omitempty" yaml:"container_image,omitempty"`
+
+	ContainerImageID bool `json:"container_image_id,omitempty" yaml:"container_image_id,omitempty"`
 }
 
 // ExtensionsLabelMask is a mask for user defined metric labels.

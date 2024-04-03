@@ -810,7 +810,7 @@ func (c *Collector) collectContainers(o *CapacityObjects, ch chan<- prometheus.M
 			containerLabels := podLabels
 			c.Labeler.SetLabelsForContainer(&containerLabels, container)
 
-			containerLabels.ContainerImageID = containerNameToImageIDs[container.Name]
+			containerLabels.BuiltIn.ContainerImageID = containerNameToImageIDs[container.Name]
 
 			// first try to get the metrics based on the container name and namespace
 			id := sampler.ContainerKey{ContainerName: container.Name, PodName: pod.Name, NamespaceName: pod.Namespace}
