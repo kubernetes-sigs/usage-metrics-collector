@@ -30,6 +30,8 @@ type builtInLabelsValues struct {
 	ContainerName string `json:"exported_container,omitempty" yaml:"exported_container,omitempty"`
 	// ContainerImage is the container image in the container
 	ContainerImage string `json:"container_image,omitempty" yaml:"container_image,omitempty"`
+	// ContainerImageID is the container image with digest in the container
+	ContainerImageID string `json:"container_image_id,omitempty" yaml:"container_image_id,omitempty"`
 	// PodName is the name of a pod.
 	PodName string `json:"exported_pod,omitempty" yaml:"exported_pod,omitempty"`
 	// NamespaceName is the name of a namespace.
@@ -99,6 +101,9 @@ func getBuiltInLabelNames(mask collectorcontrollerv1alpha1.BuiltInLabelsMask) []
 	}
 	if mask.ContainerImage {
 		labels = append(labels, collectorcontrollerv1alpha1.ContainerImageLabel)
+	}
+	if mask.ContainerImageID {
+		labels = append(labels, collectorcontrollerv1alpha1.ContainerImageIDLabel)
 	}
 	if mask.PodName {
 		labels = append(labels, collectorcontrollerv1alpha1.ExportedPodLabel)
@@ -178,6 +183,9 @@ func builtInMask(mask collectorcontrollerv1alpha1.BuiltInLabelsMask, m builtInLa
 	if !mask.ContainerImage {
 		s.ContainerImage = ""
 	}
+	if !mask.ContainerImageID {
+		s.ContainerImageID = ""
+	}
 	if !mask.PodName {
 		s.PodName = ""
 	}
@@ -254,6 +262,9 @@ func getBuiltInLabelValues(mask collectorcontrollerv1alpha1.BuiltInLabelsMask, m
 	}
 	if mask.ContainerImage {
 		labels = append(labels, m.ContainerImage)
+	}
+	if mask.ContainerImageID {
+		labels = append(labels, m.ContainerImageID)
 	}
 	if mask.PodName {
 		labels = append(labels, m.PodName)
@@ -335,6 +346,7 @@ func getOverrideBuiltInLabelValues(m builtInLabelsValues, overrides map[string]s
 	s := m
 	s.ContainerName = f(collectorcontrollerv1alpha1.ExportedContainerLabel, m.ContainerName)
 	s.ContainerImage = f(collectorcontrollerv1alpha1.ContainerImageLabel, m.ContainerImage)
+	s.ContainerImageID = f(collectorcontrollerv1alpha1.ContainerImageIDLabel, m.ContainerImageID)
 	s.PodName = f(collectorcontrollerv1alpha1.ExportedPodLabel, m.PodName)
 	s.NamespaceName = f(collectorcontrollerv1alpha1.ExportedNamespaceLabel, m.NamespaceName)
 	s.NodeName = f(collectorcontrollerv1alpha1.ExportedNodeLabel, m.NodeName)
@@ -369,6 +381,13 @@ func (l builtInLabler) SetLabelsForContainer(labels *builtInLabelsValues, c *cor
 	}
 	labels.ContainerName = c.Name
 	labels.ContainerImage = c.Image
+}
+
+func (l builtInLabler) SetLabelsForContainerStatus(labels *builtInLabelsValues, c *corev1.ContainerStatus) {
+	if c == nil {
+		return
+	}
+	labels.ContainerImageID = c.ImageID
 }
 
 func (l builtInLabler) SetLabelsForPod(

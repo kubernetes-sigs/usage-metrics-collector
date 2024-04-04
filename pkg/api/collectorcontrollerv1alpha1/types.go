@@ -322,6 +322,9 @@ const (
 	// ContainerImageLabel is the label for the container image
 	ContainerImageLabel = "container_image"
 
+	// ContainerImageIDLabel is the label for the container image with digest
+	ContainerImageIDLabel = "container_image_id"
+
 	// ExportedNamespaceLabel is the label name of the namespace for a pod
 	// Defined by the pod namespace
 	ExportedNamespaceLabel = "exported_namespace"
@@ -1127,6 +1130,8 @@ type BuiltInLabelsMask struct {
 	PVType bool `json:"pv_type,omitempty" yaml:"pv_type,omitempty"`
 
 	ContainerImage bool `json:"container_image,omitempty" yaml:"container_image,omitempty"`
+
+	ContainerImageID bool `json:"container_image_id,omitempty" yaml:"container_image_id,omitempty"`
 }
 
 // ExtensionsLabelMask is a mask for user defined metric labels.
