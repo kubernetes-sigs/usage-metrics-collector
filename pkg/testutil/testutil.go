@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -30,6 +31,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
 	"github.com/stretchr/testify/require"
+	admissionv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -169,6 +171,80 @@ type TestCaseParser struct {
 	CompareEvents bool
 }
 
+// SetupEnvTest will setup and run and envtest environment (apiserver and etcd)
+// for integration tests.Returns a function to stop the envtest.
+// Credentials and coordinates will be injected into each webhook.
+func (p TestCaseParser) SetupEnvTest(t *testing.T, tc *TestCase) func() {
+	ctx, cancel := context.WithCancel(context.Background())
+	if tc.EnvironmentFn == nil {
+		return cancel
+	}
+
+	// helpful error message for if envtest dependencies aren't installed
+	require.NotEmptyf(t, os.Getenv("KUBEBUILDER_ASSETS"),
+		"must set KUBEBUILDER_ASSETS using export 'KUBEBUILDER_ASSETS="+
+			"`go run sigs.k8s.io/controller-runtime/tools/setup-envtest use -p path`'")
+
+	// create a new test environment
+	et := tc.EnvironmentFn(tc)
+	tc.Environment = et
+
+	if len(et.WebhookInstallOptions.MutatingWebhooks) > 0 ||
+		len(et.WebhookInstallOptions.ValidatingWebhooks) > 0 {
+		// setup the creds and coords for the server
+		opt := &et.WebhookInstallOptions
+		opt.PrepWithoutInstalling()
+
+		// inject the creds and cords into the mutating webhook configs
+		for i := range et.WebhookInstallOptions.MutatingWebhooks {
+			wh := et.WebhookInstallOptions.MutatingWebhooks[i]
+			for i := range wh.Webhooks {
+				url := *wh.Webhooks[i].ClientConfig.URL
+				if !strings.HasPrefix(url, "https://") {
+					url = fmt.Sprintf("https://%s:%d/%s",
+						opt.LocalServingHost, opt.LocalServingPort, url)
+				}
+				wh.Webhooks[i].ClientConfig = admissionv1.WebhookClientConfig{
+					URL:      &url,
+					CABundle: opt.LocalServingCAData,
+				}
+			}
+		}
+		// inject the creds and cords into the validating webhook configs
+		for i := range et.WebhookInstallOptions.ValidatingWebhooks {
+			wh := et.WebhookInstallOptions.ValidatingWebhooks[i]
+			for i := range wh.Webhooks {
+				url := *wh.Webhooks[i].ClientConfig.URL
+				if !strings.HasPrefix(url, "https://") {
+					url = fmt.Sprintf("https://%s:%d/%s",
+						opt.LocalServingHost, opt.LocalServingPort, url)
+				}
+				wh.Webhooks[i].ClientConfig = admissionv1.WebhookClientConfig{
+					URL:      &url,
+					CABundle: opt.LocalServingCAData,
+				}
+			}
+		}
+	}
+
+	// start the envtest -- apiserver and etcd
+	_, err := et.Start()
+	require.NoError(t, err)
+
+	go func() {
+		// stop the server when the test is complete
+		<-ctx.Done()
+		require.NoError(t, et.Stop())
+	}()
+
+	// setup the client
+	client, err := client.New(et.Config, client.Options{})
+	require.NoError(t, err)
+	tc.Client = client
+
+	return cancel
+}
+
 // TestDir invokes fn for each TestCase for in a "testdata" directory
 // and verifies that the actual observed value matches the expected value
 func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
@@ -184,25 +260,6 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.Name+p.NameSuffix, func(t *testing.T) {
-			var et *envtest.Environment
-			if tc.EnvironmentFn != nil {
-				// helpful error message for if envtest dependencies aren't installed
-				require.NotEmptyf(t, os.Getenv("KUBEBUILDER_ASSETS"),
-					"must set KUBEBUILDER_ASSETS using export 'KUBEBUILDER_ASSETS="+
-						"`go run sigs.k8s.io/controller-runtime/tools/setup-envtest use -p path`'")
-
-				// create and start a new test environment
-				et = tc.EnvironmentFn(&tc)
-				tc.Environment = et
-				_, err := et.Start()
-				require.NoError(t, err)
-				defer func() { require.NoError(t, et.Stop()) }()
-
-				client, err := client.New(et.Config, client.Options{})
-				require.NoError(t, err)
-				tc.Client = client
-			}
-
 			env := tc.Inputs["input_env.env"]
 			for _, s := range strings.Split(env, "\n") {
 				if !strings.Contains(s, "=") {
@@ -213,6 +270,8 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 			}
 
 			tc.T = t
+			cancel := p.SetupEnvTest(t, &tc)
+			defer cancel()
 			if tc.Error != "" {
 				err := fn(&tc)
 				require.Error(t, err, "expected an error to be returned")
@@ -254,25 +313,6 @@ func (p TestCaseParser) UpdateExpectedDir(t *testing.T, cases []TestCase, fn fun
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.Name+p.NameSuffix, func(t *testing.T) {
-			var et *envtest.Environment
-			if tc.EnvironmentFn != nil {
-				// helpful error message for if envtest dependencies aren't installed
-				require.NotEmptyf(t, os.Getenv("KUBEBUILDER_ASSETS"),
-					"must set KUBEBUILDER_ASSETS using export 'KUBEBUILDER_ASSETS="+
-						"`go run sigs.k8s.io/controller-runtime/tools/setup-envtest use -p path`'")
-
-				// create and start a new test environment
-				et = tc.EnvironmentFn(&tc)
-				tc.Environment = et // cache the environment
-				_, err := et.Start()
-				require.NoError(t, err)
-				defer func() { require.NoError(t, et.Stop()) }()
-
-				client, err := client.New(et.Config, client.Options{})
-				require.NoError(t, err)
-				tc.Client = client
-			}
-
 			env := tc.Inputs["input_env.env"]
 			for _, s := range strings.Split(env, "\n") {
 				if !strings.Contains(s, "=") {
@@ -283,6 +323,9 @@ func (p TestCaseParser) UpdateExpectedDir(t *testing.T, cases []TestCase, fn fun
 			}
 
 			tc.T = t
+			cancel := p.SetupEnvTest(t, &tc)
+			defer cancel()
+
 			err := fn(&tc)
 			if err != nil {
 				require.NoError(t,
