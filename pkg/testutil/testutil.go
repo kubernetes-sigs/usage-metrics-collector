@@ -31,12 +31,14 @@ import (
 	"github.com/prometheus/common/expfmt"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 	"sigs.k8s.io/yaml"
 )
@@ -47,6 +49,16 @@ type TestCase struct {
 
 	// Name of the test cases
 	Name string
+
+	// Environment is a envtest.Environment for integration tests
+	EnvironmentFn func(*TestCase) *envtest.Environment
+
+	// Environment is populated by EnvironmentFn
+	Environment *envtest.Environment
+
+	// MaskExpectedMetadata will drop all metadata fields except
+	// name, namespace, labels, and annotations when doing comparison.
+	MaskExpectedMetadata bool
 
 	// Inputs are the input files
 	Inputs map[string]string
@@ -111,6 +123,13 @@ type TestCase struct {
 // file called "expected".
 // Errors are stored
 type TestCaseParser struct {
+	// EnvironmentFn if specified will create an integration test environment for the test
+	EnvironmentFn func(*TestCase) *envtest.Environment
+
+	// MaskExpectedMetadata will drop all metadata fields except
+	// name, namespace, labels, and annotations when doing comparison.
+	MaskExpectedMetadata bool
+
 	// NameSuffix is appended to the test name
 	NameSuffix string
 
@@ -165,6 +184,25 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.Name+p.NameSuffix, func(t *testing.T) {
+			var et *envtest.Environment
+			if tc.EnvironmentFn != nil {
+				// helpful error message for if envtest dependencies aren't installed
+				require.NotEmptyf(t, os.Getenv("KUBEBUILDER_ASSETS"),
+					"must set KUBEBUILDER_ASSETS using export 'KUBEBUILDER_ASSETS="+
+						"`go run sigs.k8s.io/controller-runtime/tools/setup-envtest use -p path`'")
+
+				// create and start a new test environment
+				et = tc.EnvironmentFn(&tc)
+				tc.Environment = et
+				_, err := et.Start()
+				require.NoError(t, err)
+				defer func() { require.NoError(t, et.Stop()) }()
+
+				client, err := client.New(et.Config, client.Options{})
+				require.NoError(t, err)
+				tc.Client = client
+			}
+
 			env := tc.Inputs["input_env.env"]
 			for _, s := range strings.Split(env, "\n") {
 				if !strings.Contains(s, "=") {
@@ -216,6 +254,25 @@ func (p TestCaseParser) UpdateExpectedDir(t *testing.T, cases []TestCase, fn fun
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.Name+p.NameSuffix, func(t *testing.T) {
+			var et *envtest.Environment
+			if tc.EnvironmentFn != nil {
+				// helpful error message for if envtest dependencies aren't installed
+				require.NotEmptyf(t, os.Getenv("KUBEBUILDER_ASSETS"),
+					"must set KUBEBUILDER_ASSETS using export 'KUBEBUILDER_ASSETS="+
+						"`go run sigs.k8s.io/controller-runtime/tools/setup-envtest use -p path`'")
+
+				// create and start a new test environment
+				et = tc.EnvironmentFn(&tc)
+				tc.Environment = et // cache the environment
+				_, err := et.Start()
+				require.NoError(t, err)
+				defer func() { require.NoError(t, et.Stop()) }()
+
+				client, err := client.New(et.Config, client.Options{})
+				require.NoError(t, err)
+				tc.Client = client
+			}
+
 			env := tc.Inputs["input_env.env"]
 			for _, s := range strings.Split(env, "\n") {
 				if !strings.Contains(s, "=") {
@@ -297,6 +354,26 @@ func (p TestCaseParser) GetActualObjects(t *testing.T, tc *TestCase) string {
 	for _, o := range tc.CompareObjects {
 		o = o.DeepCopyObject().(client.ObjectList)
 		require.NoError(t, tc.Client.List(context.Background(), o))
+
+		if p.MaskExpectedMetadata {
+			// objects created through an integration test environment
+			// need to have the metadata masked for the test output to
+			// be consistent between runs
+			items, err := meta.ExtractList(o)
+			require.NoError(t, err, "error masking yaml for object")
+			for i := range items {
+				obj := items[i].(metav1.ObjectMetaAccessor)
+				meta := obj.GetObjectMeta()
+				meta.SetUID("")
+				meta.SetManagedFields(nil)
+				meta.SetCreationTimestamp(metav1.Time{})
+				meta.SetResourceVersion("")
+			}
+			obj := o.(metav1.ListMetaAccessor)
+			meta := obj.GetListMeta()
+			meta.SetResourceVersion("")
+		}
+
 		b, err := yaml.Marshal(o)
 		require.NoError(t, err, "error marshaling yaml for object")
 		actual += "---\n" + string(b)
@@ -334,6 +411,14 @@ func (tc TestCase) UnmarshalInputsStrict(into map[string]interface{}) {
 		}
 		require.NoError(
 			tc.T, yaml.UnmarshalStrict([]byte(tc.Inputs[k]), v))
+	}
+}
+
+func (tc TestCase) CreateObjects() {
+	objs, _, err := tc.GetObjects(tc.Client.Scheme())
+	require.NoError(tc.T, err)
+	for _, o := range objs {
+		require.NoError(tc.T, tc.Client.Create(context.Background(), o))
 	}
 }
 
@@ -611,20 +696,22 @@ func (p TestCaseParser) GetTestCases() ([]TestCase, error) {
 			return err
 		}
 		testCases = append(testCases, TestCase{
-			Name:               name,
-			Inputs:             inputs,
-			Error:              string(errorValue),
-			ErrorFilepath:      errorFilepath,
-			Expected:           string(expected),
-			ExpectedFilepath:   expectedFilepath,
-			ClientInputsSuffix: p.ClientInputsSuffix,
-			ClearMeta:          p.ClearMeta,
-			ExpectedObjects:    string(expectedObjects),
-			ExpectedEvents:     string(expectedEvents),
-			ExpectedMetrics:    string(expectedMetrics),
-			CompareObjects:     p.CompareObjects,
-			CompareMetrics:     p.CompareMetrics,
-			ExpectedValues:     expectedValues,
+			EnvironmentFn:        p.EnvironmentFn,
+			MaskExpectedMetadata: p.MaskExpectedMetadata,
+			Name:                 name,
+			Inputs:               inputs,
+			Error:                string(errorValue),
+			ErrorFilepath:        errorFilepath,
+			Expected:             string(expected),
+			ExpectedFilepath:     expectedFilepath,
+			ClientInputsSuffix:   p.ClientInputsSuffix,
+			ClearMeta:            p.ClearMeta,
+			ExpectedObjects:      string(expectedObjects),
+			ExpectedEvents:       string(expectedEvents),
+			ExpectedMetrics:      string(expectedMetrics),
+			CompareObjects:       p.CompareObjects,
+			CompareMetrics:       p.CompareMetrics,
+			ExpectedValues:       expectedValues,
 		})
 		return nil
 	})
