@@ -34,12 +34,24 @@ import (
 	"github.com/stretchr/testify/require"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog/v2"
+	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
-	"sigs.k8s.io/usage-metrics-collector/pkg/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	quotamangementv1alpha1 "sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 )
+
+func init() {
+	logger := klog.Background()
+	// Use klog as the internal logger for this envtest environment.
+	log.SetLogger(logger)
+	_ = metricsv1beta1.AddToScheme(scheme.Scheme)
+	_ = quotamangementv1alpha1.AddToScheme(scheme.Scheme)
+}
 
 // IntegrationTestSuite is a test suite that configures a test environment
 type IntegrationTestSuite struct {
@@ -296,10 +308,7 @@ func (suite *IntegrationTestSuite) SetupTestSuite(t testing.TB) {
 	require.NoError(t, err)
 	suite.Config = cfg
 
-	c, err := client.New(suite.Config, client.Options{
-		// Use the Scheme with all the registered types
-		Scheme: scheme.Scheme,
-	})
+	c, err := client.New(suite.Config, client.Options{})
 	require.NoError(t, err)
 	suite.Client = c
 

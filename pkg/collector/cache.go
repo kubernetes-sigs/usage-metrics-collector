@@ -17,8 +17,9 @@ package collector
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 )
 
@@ -39,7 +40,7 @@ func GetNewCacheFunc(c collectorcontrollerv1alpha1.MetricsPrometheusCollector) c
 		// This is only safe if we don't modify the objects read from the cache
 		// We should never modify objects read from the cache in the collector.
 		// This reduces memory consumption by using a shallow copy of cached objects.
-		options.UnsafeDisableDeepCopyByObject = map[client.Object]bool{cache.ObjectAll{}: c.CacheOptions.UnsafeDisableDeepCopy}
+		options.DefaultUnsafeDisableDeepCopy = pointer.Bool(c.CacheOptions.UnsafeDisableDeepCopy)
 	}
 
 	if len(c.CacheOptions.DropAnnotations) > 0 {
@@ -61,5 +62,7 @@ func GetNewCacheFunc(c collectorcontrollerv1alpha1.MetricsPrometheusCollector) c
 			return i, nil
 		}
 	}
-	return cache.BuilderWithOptions(options)
+	return func(config *rest.Config, opts cache.Options) (cache.Cache, error) {
+		return cache.New(config, options)
+	}
 }

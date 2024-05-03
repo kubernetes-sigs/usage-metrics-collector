@@ -42,13 +42,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	sigsyaml "sigs.k8s.io/yaml"
 
+	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	quotamanagementv1alpha1 "sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 	collectorapi "sigs.k8s.io/usage-metrics-collector/pkg/collector/api"
 	"sigs.k8s.io/usage-metrics-collector/pkg/collector/utilization"
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler"
 	samplerapi "sigs.k8s.io/usage-metrics-collector/pkg/sampler/api"
-	"sigs.k8s.io/usage-metrics-collector/pkg/scheme"
 	"sigs.k8s.io/usage-metrics-collector/pkg/testutil"
 )
 
