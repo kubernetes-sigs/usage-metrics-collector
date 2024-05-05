@@ -39,10 +39,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/util/retry"
+	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
+	quotamangementv1alpha1 "sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -51,9 +54,13 @@ import (
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/collector"
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
-	"sigs.k8s.io/usage-metrics-collector/pkg/scheme"
 	versioncollector "sigs.k8s.io/usage-metrics-collector/pkg/version"
 )
+
+func init() {
+	_ = metricsv1beta1.AddToScheme(scheme.Scheme)
+	_ = quotamangementv1alpha1.AddToScheme(scheme.Scheme)
+}
 
 var (
 	version = "dev"
@@ -65,7 +72,7 @@ var (
 	leaseDuration, renewDeadline, retryPeriod time.Duration
 	exitAfterLeaderElectionLoss               bool
 
-	options = Options{Options: ctrl.Options{Scheme: scheme.Scheme}}
+	options = Options{Options: ctrl.Options{}}
 	RootCmd = &cobra.Command{
 		RunE: RunE,
 	}
@@ -107,7 +114,7 @@ func init() {
 	RootCmd.Flags().StringVar(&options.metricsPrometheusCollector, "collector-config-filepath", "", "Path to a MetricsPrometheusCollector json or yaml configuration file.")
 	_ = RootCmd.MarkFlagRequired("collector-config-filepath")
 
-	RootCmd.Flags().StringVar(&options.MetricsBindAddress, "internal-http-addr", "127.0.0.1:8099", "Bind address of the webservice exposing the metrics and other endpoints.")
+	RootCmd.Flags().StringVar(&options.Metrics.BindAddress, "internal-http-addr", "127.0.0.1:8099", "Bind address of the webservice exposing the metrics and other endpoints.")
 	RootCmd.Flags().MarkHidden("internal-http-addr") // this is scraped internally to create a cacheable response
 	RootCmd.Flags().StringVar(&options.externalBindAddress, "http-addr", ":8080", "Bind address to read the cached metrics.")
 
@@ -166,7 +173,7 @@ func RunE(_ *cobra.Command, _ []string) error {
 
 	log.Info("initializing with options",
 		"collector-config-filepath", options.metricsPrometheusCollector,
-		"internal-http-addr", options.MetricsBindAddress,
+		"internal-http-addr", options.Metrics.BindAddress,
 		"http-addr", options.externalBindAddress,
 		"leader-election", options.LeaderElection,
 		"leader-election-namespace", options.LeaderElectionNamespace,
@@ -195,15 +202,17 @@ func RunE(_ *cobra.Command, _ []string) error {
 	metrics.stop = stop
 	metrics.ctx = ctx
 
+	// register the newcache function
 	options.Options.NewCache = collector.GetNewCacheFunc(metrics.MetricsPrometheusCollector)
+
+	// register a simple ping health-check endpoint with the manager
+	options.Options.Metrics.ExtraHandlers = map[string]http.Handler{
+		"/healthz": healthz.CheckHandler{Checker: healthz.Ping},
+	}
 
 	log.Info("creating manager")
 	mgr, err := ctrl.NewManager(restConfig, options.Options)
 	checkError(log, err, "unable to create manager config")
-
-	// register a simple ping health-check endpoint with the manager
-	err = mgr.AddMetricsExtraHandler("/healthz", healthz.CheckHandler{Checker: healthz.Ping})
-	checkError(log, err, "unable to configure health-check endpoint")
 
 	metrics.Mgr = mgr
 	if err := mgr.Add(&metrics); err != nil {
@@ -350,7 +359,7 @@ func (ms *MetricsServer) continouslyCacheResponse() {
 			func(err error) bool { return true },
 			func() error {
 				client := &http.Client{}
-				req, err := http.NewRequest("GET", "http://"+options.MetricsBindAddress+"/metrics", nil)
+				req, err := http.NewRequest("GET", "http://"+options.Metrics.BindAddress+"/metrics", nil)
 				if err != nil {
 					log.Error(err, "unable to get cached metrics")
 					return err

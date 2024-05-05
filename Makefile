@@ -36,7 +36,7 @@ $(TOOLS_DIR):
 	mkdir -p $(TOOLS_DIR) && cd $(TOOLS_DIR) && go mod init tempmod
 
 # We are using Kubebuilder Test Assets for integration testing
-K8S_VERSION=1.22.0
+K8S_VERSION=1.28.3
 KUBEBUILDER := $(abspath $(TOOLS_DIR)/kubebuilder)
 export KUBEBUILDER_ASSETS := $(KUBEBUILDER)/bin
 
@@ -68,7 +68,7 @@ ifndef HAS_GOTESTSUM
 	go install gotest.tools/gotestsum@latest
 endif
 
-KUBE_JUNIT_REPORT_DIR ?= /logs/artifacts
+KUBE_JUNIT_REPORT_DIR ?= /tmp/logs/artifacts
 SORTABLE_DATE := $(shell date "+%Y%m%d-%H%M%S")
 JUNIT_FILENAME_PREFIX := $(KUBE_JUNIT_REPORT_DIR)/junit_$(SORTABLE_DATE)
 JUNIT_XML_FILENAME := $(JUNIT_FILENAME_PREFIX).xml
