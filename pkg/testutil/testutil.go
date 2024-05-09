@@ -609,13 +609,17 @@ func (tc TestCase) GetObjectsFromFile(js *sjson.Serializer, s *runtime.Scheme, f
 	return objs, objLists, nil
 }
 
+// TestCaseFakeClientBuilder is a function that can be used to modify the fake client builder
+// before building the client.
+type TestCaseFakeClientBuilder func(*fake.ClientBuilder) *fake.ClientBuilder
+
 // GetFakeClient returns a new client.Client populated with Kubernetes
 // parsed from the testdata input files.
 // Defaults to parsing objects from files with suffix
 // `_client_runtime_objects.yaml`
 //
 //nolint:gocognit
-func (tc *TestCase) GetFakeClient(s *runtime.Scheme) (client.Client, error) {
+func (tc *TestCase) GetFakeClient(s *runtime.Scheme, buildOpts ...TestCaseFakeClientBuilder) (client.Client, error) {
 	if tc.Client != nil {
 		return tc.Client, nil
 	}
@@ -623,10 +627,17 @@ func (tc *TestCase) GetFakeClient(s *runtime.Scheme) (client.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	tc.Client = fake.NewClientBuilder().
+
+	builder := fake.NewClientBuilder().
 		WithScheme(s).
 		WithObjects(objs...).
-		WithLists(objLists...).Build()
+		WithLists(objLists...)
+
+	for _, buildOpt := range buildOpts {
+		builder = buildOpt(builder)
+	}
+
+	tc.Client = builder.Build()
 	return tc.Client, nil
 }
 
