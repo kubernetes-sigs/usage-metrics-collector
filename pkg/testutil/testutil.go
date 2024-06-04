@@ -34,6 +34,7 @@ import (
 	admissionv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	sjson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -162,6 +163,9 @@ type TestCaseParser struct {
 	// CompareObjects is set to a lists' of objects to read from the apiserver and
 	// compare to the objects in expected_objects.yaml.
 	CompareObjects []client.ObjectList
+
+	// CompareListOptions are list options applied when comparing objects
+	CompareListOptions []client.ListOption
 
 	// CompareMetrics is set to a list of metrics to compare the results of
 	CompareMetrics []string
@@ -396,7 +400,7 @@ func (p TestCaseParser) GetActualObjects(t *testing.T, tc *TestCase) string {
 	var actual string
 	for _, o := range tc.CompareObjects {
 		o = o.DeepCopyObject().(client.ObjectList)
-		require.NoError(t, tc.Client.List(context.Background(), o))
+		require.NoError(t, tc.Client.List(context.Background(), o, p.CompareListOptions...))
 
 		if p.MaskExpectedMetadata {
 			// objects created through an integration test environment
@@ -405,16 +409,14 @@ func (p TestCaseParser) GetActualObjects(t *testing.T, tc *TestCase) string {
 			items, err := meta.ExtractList(o)
 			require.NoError(t, err, "error masking yaml for object")
 			for i := range items {
-				obj := items[i].(metav1.ObjectMetaAccessor)
-				meta := obj.GetObjectMeta()
-				meta.SetUID("")
-				meta.SetManagedFields(nil)
-				meta.SetCreationTimestamp(metav1.Time{})
-				meta.SetResourceVersion("")
+				obj := items[i].(metav1.Object)
+				obj.SetUID("")
+				obj.SetManagedFields(nil)
+				obj.SetCreationTimestamp(metav1.Time{})
+				obj.SetResourceVersion("")
 			}
-			obj := o.(metav1.ListMetaAccessor)
-			meta := obj.GetListMeta()
-			meta.SetResourceVersion("")
+			obj := o.(metav1.ListInterface)
+			obj.SetResourceVersion("")
 		}
 
 		b, err := yaml.Marshal(o)
@@ -566,9 +568,24 @@ func (tc TestCase) GetObjectsFromFile(js *sjson.Serializer, s *runtime.Scheme, f
 		}
 
 		// decode the object to a struct
-		out, _, err := js.Decode(b, nil, nil)
+		out, gvk, err := js.Decode(b, nil, nil)
 		if err != nil {
 			return nil, nil, err
+		}
+
+		if _, ok := out.(*unstructured.Unstructured); ok {
+			// special case unstructured because they implement both Object and ObjectList
+			if strings.HasSuffix(gvk.Kind, "List") {
+				// list object -- e.g. PodList
+				if objL, ok := out.(client.ObjectList); ok {
+					objLists = append(objLists, objL)
+				}
+				continue
+			}
+			if obj, ok := out.(client.Object); ok {
+				objs = append(objs, obj)
+				continue
+			}
 		}
 
 		// list object -- e.g. PodList
