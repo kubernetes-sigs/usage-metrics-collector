@@ -129,6 +129,9 @@ type TestCaseParser struct {
 	// EnvironmentFn if specified will create an integration test environment for the test
 	EnvironmentFn func(*TestCase) *envtest.Environment
 
+	// EnvironmentStopFn if specified will create an integration test environment for the test
+	EnvironmentStopFn func(*TestCase)
+
 	// MaskExpectedMetadata will drop all metadata fields except
 	// name, namespace, labels, and annotations when doing comparison.
 	MaskExpectedMetadata bool
@@ -276,6 +279,9 @@ func (p TestCaseParser) TestDir(t *testing.T, fn func(*TestCase) error) {
 			tc.T = t
 			cancel := p.SetupEnvTest(t, &tc)
 			defer cancel()
+			if p.EnvironmentStopFn != nil {
+				defer p.EnvironmentStopFn(&tc)
+			}
 			if tc.Error != "" {
 				err := fn(&tc)
 				require.Error(t, err, "expected an error to be returned")
@@ -329,6 +335,9 @@ func (p TestCaseParser) UpdateExpectedDir(t *testing.T, cases []TestCase, fn fun
 			tc.T = t
 			cancel := p.SetupEnvTest(t, &tc)
 			defer cancel()
+			if p.EnvironmentStopFn != nil {
+				defer p.EnvironmentStopFn(&tc)
+			}
 
 			err := fn(&tc)
 			if err != nil {
