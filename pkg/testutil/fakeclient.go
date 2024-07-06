@@ -148,7 +148,7 @@ func (fc FakeContainer) Info(context.Context, ...containerd.InfoOpts) (container
 	return fc.UnderlyingContainer, nil
 }
 
-// Task() returns the fake container task
+// Task returns the fake container task
 func (fc FakeContainer) Task(context.Context, cio.Attach) (containerd.Task, error) {
 	return &fc.FakeTask, nil
 }

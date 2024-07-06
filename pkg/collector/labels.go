@@ -68,7 +68,7 @@ func (l Labeler) SetLabelsForQuota(labels *LabelsValues,
 	l.Extension.SetLabelsForQuota(&labels.Extension, quota, rqd, namespace)
 }
 
-// SetLabelsForNamespace parses metric labels from a namespace
+// SetLabelsForNamespaces parses metric labels from a namespace
 func (l Labeler) SetLabelsForNamespaces(labels *LabelsValues, namespace *corev1.Namespace) {
 	l.BuiltIn.SetLabelsForNamespace(&labels.BuiltIn, namespace)
 	l.Extension.SetLabelsForNamespace(&labels.Extension, namespace)

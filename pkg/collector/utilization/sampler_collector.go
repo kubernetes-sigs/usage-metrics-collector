@@ -85,7 +85,7 @@ func init() {
 }
 
 type Server struct {
-	ResponseMutext sync.RWMutex
+	ResponseMutex sync.RWMutex
 
 	// Responses has the last response for each node keyed by the node name
 	Responses map[string]*api.ListMetricsResponse `json:"responses" yaml:"responses"`
@@ -106,7 +106,7 @@ type Server struct {
 	grpcServer *grpc.Server
 }
 
-func (c *Server) Collect(ch chan<- prometheus.Metric, metrics map[string]*api.ListMetricsResponse) {
+func (s *Server) Collect(ch chan<- prometheus.Metric, metrics map[string]*api.ListMetricsResponse) {
 	responseAgeSeconds.Reset()
 	for _, v := range metrics {
 		responseAgeSeconds.WithLabelValues(v.NodeName, v.PodName, v.Reason).Set(
@@ -246,7 +246,7 @@ func (s *Server) Check(ctx context.Context, _ *grpc_health_v1.HealthCheckRequest
 	return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_SERVING}, nil
 }
 
-// Ready returns success if the service should be accepting traffic
+// IsReady returns success if the service should be accepting traffic
 func (s *Server) IsReady(context.Context, *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
 	if !s.IsReadyResult.Load() {
 		return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_NOT_SERVING}, fmt.Errorf("not-ready")
@@ -317,7 +317,7 @@ func (s *Server) PushMetrics(req api.MetricsCollector_PushMetricsServer) error {
 
 // GetContainerUsageSummary maps containers to their cached metric values.  metrics are passed as an argument to
 // reduce lock contention.
-func (c *Server) GetContainerUsageSummary(metrics map[string]*api.ListMetricsResponse) map[sampler.ContainerKey]*api.ContainerMetrics {
+func (s *Server) GetContainerUsageSummary(metrics map[string]*api.ListMetricsResponse) map[sampler.ContainerKey]*api.ContainerMetrics {
 	// Transform map of node -> utilization to map of container -> utilization by pulling the containers
 	// out of each node response
 	var values = map[sampler.ContainerKey]*api.ContainerMetrics{}
@@ -373,8 +373,8 @@ func (s *Server) GetMetrics() map[string]*api.ListMetricsResponse {
 func (s *Server) GetNodeNames() sets.String {
 	nodes := sets.NewString()
 	func() {
-		s.ResponseMutext.Lock()
-		defer s.ResponseMutext.Unlock()
+		s.ResponseMutex.Lock()
+		defer s.ResponseMutex.Unlock()
 		for k, v := range s.Responses {
 			if time.Since(v.Timestamp.AsTime()) > s.ttl {
 				continue
@@ -389,8 +389,8 @@ func (s *Server) GetNodeNames() sets.String {
 func (s *Server) getMetrics(filterExpired bool) map[string]*api.ListMetricsResponse {
 	values := make(map[string]*api.ListMetricsResponse, len(s.Responses))
 	func() {
-		s.ResponseMutext.Lock()
-		defer s.ResponseMutext.Unlock()
+		s.ResponseMutex.Lock()
+		defer s.ResponseMutex.Unlock()
 		for k, v := range s.Responses {
 			values[k] = v
 		}
@@ -411,14 +411,14 @@ func (s *Server) getMetrics(filterExpired bool) map[string]*api.ListMetricsRespo
 
 // ClearMetrics deletes the metrics with the given key from the cache
 func (s *Server) ClearMetrics(key string) {
-	s.ResponseMutext.Lock()
-	defer s.ResponseMutext.Unlock()
+	s.ResponseMutex.Lock()
+	defer s.ResponseMutex.Unlock()
 	delete(s.Responses, key)
 }
 
 // CacheMetrics caches msg
 func (s *Server) CacheMetrics(msg *api.ListMetricsResponse) {
-	s.ResponseMutext.Lock()
-	defer s.ResponseMutext.Unlock()
+	s.ResponseMutex.Lock()
+	defer s.ResponseMutex.Unlock()
 	s.Responses[msg.NodeName] = msg
 }
