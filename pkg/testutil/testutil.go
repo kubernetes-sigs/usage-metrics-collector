@@ -549,7 +549,7 @@ func (tc TestCase) GetObjects(s *runtime.Scheme) ([]client.Object, []client.Obje
 	return objs, objList, nil
 }
 
-// GetObjects parses the input objects from the test case
+// GetObjectsFromFile parses the input objects from the test case
 func (tc TestCase) GetObjectsFromFile(js *sjson.Serializer, s *runtime.Scheme, filename, data string) ([]client.Object, []client.ObjectList, error) {
 	var objs []client.Object
 	var objLists []client.ObjectList
