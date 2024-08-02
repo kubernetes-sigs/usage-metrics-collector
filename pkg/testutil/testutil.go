@@ -182,9 +182,8 @@ type TestCaseParser struct {
 // for integration tests.Returns a function to stop the envtest.
 // Credentials and coordinates will be injected into each webhook.
 func (p TestCaseParser) SetupEnvTest(t *testing.T, tc *TestCase) func() {
-	ctx, cancel := context.WithCancel(context.Background())
 	if tc.EnvironmentFn == nil {
-		return cancel
+		return func() {}
 	}
 
 	// helpful error message for if envtest dependencies aren't installed
@@ -238,18 +237,14 @@ func (p TestCaseParser) SetupEnvTest(t *testing.T, tc *TestCase) func() {
 	_, err := et.Start()
 	require.NoError(t, err)
 
-	go func() {
-		// stop the server when the test is complete
-		<-ctx.Done()
-		require.NoError(t, et.Stop())
-	}()
-
 	// setup the client
 	client, err := client.New(et.Config, client.Options{})
 	require.NoError(t, err)
 	tc.Client = client
 
-	return cancel
+	return func() {
+		require.NoError(t, et.Stop())
+	}
 }
 
 // TestDir invokes fn for each TestCase for in a "testdata" directory
