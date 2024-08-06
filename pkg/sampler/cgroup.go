@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/samplerserverv1alpha1"
 )
 
-// metricsReader reads cgroup metrics from psuedo files
+// metricsReader reads cgroup metrics from pseudo files
 type metricsReader struct {
 	samplerserverv1alpha1.Reader `json:",inline" yaml:",inline"`
 
@@ -100,13 +100,19 @@ type ContainerCPUThrottlingMetrics struct {
 type containerMemoryMetrics struct {
 	// Time is the time that the sample was taken
 	Time time.Time
-	// RSS is the rss memory amount
+	// RSS is the rss memory amount. Only set on cgroupv1
 	RSS uint64
-	// Cache is the cache memory amount
+	// Cache is the cache memory amount. Only set on cgroupv1
 	Cache uint64
+	// Current is the total memory amount for the container. Only set on cgroupv2
+	Current uint64
 	// OOMKills is the number of times that the container has been killed by the oom killer
 	OOMKills uint64
 	OOMs     uint64
+}
+
+func (r *metricsReader) IsCgroupV2() bool {
+	return r.CGroupVersion == samplerserverv1alpha1.CGroupV2
 }
 
 // GetContainerCPUMetrics reads the current cpu metrics for all cached containers
@@ -121,7 +127,13 @@ func (r *metricsReader) GetContainerCPUMetrics() (cpuMetrics, error) {
 
 	knownPods := sets.NewString()
 	for container, files := range r.cpuFiles {
-		metrics, err := r.GetLevelCPUMetrics(files)
+		var metrics containerCPUMetrics
+		var err error
+		if r.IsCgroupV2() {
+			metrics, err = r.GetLevelCPUMetricsV2(files)
+		} else {
+			metrics, err = r.GetLevelCPUMetricsV1(files)
+		}
 		if err != nil {
 			return result, nil
 		}
@@ -133,8 +145,8 @@ func (r *metricsReader) GetContainerCPUMetrics() (cpuMetrics, error) {
 	return result, nil
 }
 
-// GetLevelCPUMetrics returns a set of cpu metrics given a specific set of cgroup metric filepaths
-func (r *metricsReader) GetLevelCPUMetrics(metricFilepaths map[ContainerMetricType]metricFilepath) (containerCPUMetrics, error) {
+// GetLevelCPUMetricsV1 returns a set of cpu metrics given a specific set of cgroup metric filepaths for cgroupv1
+func (r *metricsReader) GetLevelCPUMetricsV1(metricFilepaths map[ContainerMetricType]metricFilepath) (containerCPUMetrics, error) {
 	metrics := containerCPUMetrics{}
 	for metricType, filepath := range metricFilepaths {
 		readTime := r.readTimeFunc(string(filepath))
@@ -152,7 +164,7 @@ func (r *metricsReader) GetLevelCPUMetrics(metricFilepaths map[ContainerMetricTy
 				return metrics, err
 			}
 			metrics.usage.UsageNanoSec = value
-		case CPUThrottlingMetricType:
+		case CPUThrottlingMetricTypeV1:
 			scanner := bufio.NewScanner(b)
 			for scanner.Scan() {
 				fields := strings.Fields(scanner.Text())
@@ -176,6 +188,45 @@ func (r *metricsReader) GetLevelCPUMetrics(metricFilepaths map[ContainerMetricTy
 	return metrics, nil
 }
 
+// GetLevelCPUMetricsV2 returns a set of cpu metrics given a specific set of cgroup metric filepaths for cgroupv2
+func (r *metricsReader) GetLevelCPUMetricsV2(metricFilepaths map[ContainerMetricType]metricFilepath) (containerCPUMetrics, error) {
+	metrics := containerCPUMetrics{}
+	for metricType, filepath := range metricFilepaths {
+		readTime := r.readTimeFunc(string(filepath))
+		b, err := r.readFile(filepath)
+		if err != nil {
+			// cgroup may have been deleted since we populated the cache
+			continue
+		}
+
+		switch metricType { // only one CPU metric type on v2
+		case CPUUsageMetricType:
+			metrics.usage.Time = readTime
+			scanner := bufio.NewScanner(b)
+			for scanner.Scan() {
+				fields := strings.Fields(scanner.Text())
+				value, err := strconv.ParseUint(fields[1], 10, 64)
+				if err != nil {
+					return metrics, err
+				}
+
+				switch fields[0] {
+				case "usage_usec":
+					metrics.usage.UsageNanoSec = value * 1000 // cgroupv2 values are in microseconds
+				case "throttled_usec":
+					metrics.throttling.ThrottledNanoSec = value * 1000 // cgroupv2 values are in microseconds
+				case "nr_periods":
+					metrics.throttling.TotalPeriods = value
+				case "nr_throttled":
+					metrics.throttling.ThrottledPeriods = value
+				}
+			}
+		}
+	}
+
+	return metrics, nil
+}
+
 // GetMemoryMetrics reads the current memory metrics for all cached containers
 func (r *metricsReader) GetContainerMemoryMetrics() (memoryMetrics, error) {
 	result := memoryMetrics{}
@@ -186,7 +237,13 @@ func (r *metricsReader) GetContainerMemoryMetrics() (memoryMetrics, error) {
 	defer r.memoryFilesMutex.RUnlock()
 
 	for container, files := range r.memoryFiles {
-		metrics, err := r.GetLevelMemoryMetrics(files)
+		var metrics containerMemoryMetrics
+		var err error
+		if r.IsCgroupV2() {
+			metrics, err = r.GetLevelMemoryMetricsV2(files)
+		} else {
+			metrics, err = r.GetLevelMemoryMetricsV1(files)
+		}
 		if err != nil {
 			return result, err
 		}
@@ -196,7 +253,7 @@ func (r *metricsReader) GetContainerMemoryMetrics() (memoryMetrics, error) {
 	return result, nil
 }
 
-func (r *metricsReader) GetLevelMemoryMetrics(metricFilepaths map[ContainerMetricType]metricFilepath) (containerMemoryMetrics, error) {
+func (r *metricsReader) GetLevelMemoryMetricsV1(metricFilepaths map[ContainerMetricType]metricFilepath) (containerMemoryMetrics, error) {
 	metrics := containerMemoryMetrics{}
 
 	for metricType, filepath := range metricFilepaths {
@@ -221,7 +278,7 @@ func (r *metricsReader) GetLevelMemoryMetrics(metricFilepaths map[ContainerMetri
 				}
 
 				switch metricType {
-				case MemoryOMMMetricType:
+				case MemoryOOMMetricType:
 					metrics.OOMs = value
 				}
 
@@ -239,10 +296,63 @@ func (r *metricsReader) GetLevelMemoryMetrics(metricFilepaths map[ContainerMetri
 					case "total_cache":
 						metrics.Cache = value
 					}
-				case MemoryOOMKillMetricType:
+				case MemoryOOMKillMetricTypeV1:
 					switch fields[0] {
 					case "oom_kill":
 						metrics.OOMKills = value
+					}
+				}
+			} else {
+				continue
+			}
+
+		}
+	}
+	return metrics, nil
+}
+
+func (r *metricsReader) GetLevelMemoryMetricsV2(metricFilepaths map[ContainerMetricType]metricFilepath) (containerMemoryMetrics, error) {
+	metrics := containerMemoryMetrics{}
+
+	for metricType, filepath := range metricFilepaths {
+		metrics.Time = r.readTimeFunc(string(filepath)) // this is slightly inaccurate in the case of reading multiple files to gather stats for a single container
+
+		b, err := r.readFile(filepath)
+		if err != nil {
+			// cgroup may have been deleted since we populated the cache
+			continue
+		}
+
+		// parse the file contents into a struct
+		scanner := bufio.NewScanner(b)
+		for scanner.Scan() {
+			fields := strings.Fields(scanner.Text())
+
+			// files that contain only numbers
+			if len(fields) == 1 {
+				value, err := strconv.ParseUint(fields[0], 10, 64)
+				if err != nil {
+					return metrics, err
+				}
+
+				switch metricType {
+				case MemoryCurrentMetricsTypeV2:
+					metrics.Current = value
+				}
+
+			} else if len(fields) == 2 { // files that contain key value pairs
+				value, err := strconv.ParseUint(fields[1], 10, 64)
+				if err != nil {
+					return metrics, err
+				}
+
+				switch metricType {
+				case MemoryOOMMetricType:
+					switch fields[0] {
+					case "oom_kill":
+						metrics.OOMKills = value
+					case "oom":
+						metrics.OOMs = value
 					}
 				}
 			} else {
@@ -322,11 +432,27 @@ func (r *metricsReader) init() error {
 }
 
 func (r *metricsReader) loadNodeLevelMetricFilePaths() error {
-	cpuFilenames := map[ContainerMetricType]string{
-		CPUUsageMetricType: samplerserverv1alpha1.CPUUsageSourceFilename,
+	var cpuFilenames map[ContainerMetricType]string
+	var memoryFilenames map[ContainerMetricType]string
+
+	if r.IsCgroupV2() {
+		cpuFilenames = map[ContainerMetricType]string{
+			CPUUsageMetricType: samplerserverv1alpha1.CPUUsageSourceFilenameV2,
+		}
+	} else {
+		cpuFilenames = map[ContainerMetricType]string{
+			CPUUsageMetricType: samplerserverv1alpha1.CPUUsageSourceFilenameV1,
+		}
 	}
-	memoryFilenames := map[ContainerMetricType]string{
-		MemoryUsageMetricType: samplerserverv1alpha1.MemoryUsageSourceFilename,
+
+	if r.IsCgroupV2() {
+		memoryFilenames = map[ContainerMetricType]string{
+			MemoryCurrentMetricsTypeV2: samplerserverv1alpha1.MemoryCurrentFilenameV2,
+		}
+	} else {
+		memoryFilenames = map[ContainerMetricType]string{
+			MemoryUsageMetricType: samplerserverv1alpha1.MemoryUsageSourceFilenameV1,
+		}
 	}
 
 	cpuPaths, err := r.getNodeMetricFilePaths(r.NodeAggregationLevelGlobs, r.CPUPaths, cpuFilenames)
@@ -398,10 +524,14 @@ func (r *metricsReader) syncContainerCache() error {
 
 	// get list of containers with cpu metrics
 	if err := func() error {
-		filenames := map[ContainerMetricType]string{
-			CPUUsageMetricType:      samplerserverv1alpha1.CPUUsageSourceFilename,
-			CPUThrottlingMetricType: samplerserverv1alpha1.CPUThrottlingSourceFilename,
+		filenames := map[ContainerMetricType]string{}
+		if r.IsCgroupV2() {
+			filenames[CPUUsageMetricType] = samplerserverv1alpha1.CPUUsageSourceFilenameV2
+		} else {
+			filenames[CPUUsageMetricType] = samplerserverv1alpha1.CPUUsageSourceFilenameV1
+			filenames[CPUThrottlingMetricTypeV1] = samplerserverv1alpha1.CPUThrottlingSourceFilenameV1
 		}
+
 		r.cpuFilesMutex.Lock()
 		defer r.cpuFilesMutex.Unlock()
 		cpuFiles, err := r.getContainers(r.CPUPaths, filenames)
@@ -416,10 +546,14 @@ func (r *metricsReader) syncContainerCache() error {
 
 	// get list of containers with memory metrics.
 	if err := func() error {
-		filenames := map[ContainerMetricType]string{
-			MemoryOMMMetricType:     samplerserverv1alpha1.MemoryOOMFilename,
-			MemoryOOMKillMetricType: samplerserverv1alpha1.MemoryOOMKillFilename,
-			MemoryUsageMetricType:   samplerserverv1alpha1.MemoryUsageSourceFilename,
+		filenames := map[ContainerMetricType]string{}
+		if r.IsCgroupV2() {
+			filenames[MemoryOOMMetricType] = samplerserverv1alpha1.MemoryOOMEventsFilenameV2
+			filenames[MemoryCurrentMetricsTypeV2] = samplerserverv1alpha1.MemoryCurrentFilenameV2
+		} else {
+			filenames[MemoryOOMMetricType] = samplerserverv1alpha1.MemoryOOMFilenameV1
+			filenames[MemoryOOMKillMetricTypeV1] = samplerserverv1alpha1.MemoryOOMKillFilenameV1
+			filenames[MemoryUsageMetricType] = samplerserverv1alpha1.MemoryUsageSourceFilenameV1
 		}
 		r.memoryFilesMutex.Lock()
 		defer r.memoryFilesMutex.Unlock()
