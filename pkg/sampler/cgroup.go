@@ -221,7 +221,7 @@ func (r *metricsReader) GetLevelMemoryMetrics(metricFilepaths map[ContainerMetri
 				}
 
 				switch metricType {
-				case MemoryOMMMetricType:
+				case MemoryOOMMetricType:
 					metrics.OOMs = value
 				}
 
@@ -323,7 +323,7 @@ func (r *metricsReader) init() error {
 
 func (r *metricsReader) loadNodeLevelMetricFilePaths() error {
 	cpuFilenames := map[ContainerMetricType]string{
-		CPUUsageMetricType: samplerserverv1alpha1.CPUUsageSourceFilename,
+		CPUUsageMetricType: samplerserverv1alpha1.CPUUsageSourceFilenameV1,
 	}
 	memoryFilenames := map[ContainerMetricType]string{
 		MemoryUsageMetricType: samplerserverv1alpha1.MemoryUsageSourceFilename,
@@ -398,9 +398,10 @@ func (r *metricsReader) syncContainerCache() error {
 
 	// get list of containers with cpu metrics
 	if err := func() error {
+		// TODO: only works on v1
 		filenames := map[ContainerMetricType]string{
-			CPUUsageMetricType:      samplerserverv1alpha1.CPUUsageSourceFilename,
-			CPUThrottlingMetricType: samplerserverv1alpha1.CPUThrottlingSourceFilename,
+			CPUUsageMetricType:      samplerserverv1alpha1.CPUUsageSourceFilenameV1,
+			CPUThrottlingMetricType: samplerserverv1alpha1.CPUThrottlingSourceFilenameV1,
 		}
 		r.cpuFilesMutex.Lock()
 		defer r.cpuFilesMutex.Unlock()
@@ -416,9 +417,10 @@ func (r *metricsReader) syncContainerCache() error {
 
 	// get list of containers with memory metrics.
 	if err := func() error {
+		// TODO: only works on v1
 		filenames := map[ContainerMetricType]string{
-			MemoryOMMMetricType:     samplerserverv1alpha1.MemoryOOMFilename,
-			MemoryOOMKillMetricType: samplerserverv1alpha1.MemoryOOMKillFilename,
+			MemoryOOMMetricType:     samplerserverv1alpha1.MemoryOOMFilenameV1,
+			MemoryOOMKillMetricType: samplerserverv1alpha1.MemoryOOMKillFilenameV1,
 			MemoryUsageMetricType:   samplerserverv1alpha1.MemoryUsageSourceFilename,
 		}
 		r.memoryFilesMutex.Lock()

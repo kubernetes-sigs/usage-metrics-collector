@@ -124,7 +124,7 @@ type allSampleInstants struct {
 const (
 	MemoryUsageMetricType   ContainerMetricType = "memory-usage"
 	MemoryOOMKillMetricType ContainerMetricType = "oom-kill"
-	MemoryOMMMetricType     ContainerMetricType = "oom"
+	MemoryOOMMetricType     ContainerMetricType = "oom"
 	CPUUsageMetricType      ContainerMetricType = "cpu-usage"
 	CPUThrottlingMetricType ContainerMetricType = "cpu-throttling"
 )
