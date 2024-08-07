@@ -313,7 +313,13 @@ func (s *sampleCache) fetchSample() error {
 	// Node level metrics
 	nodeCPUMetrics := map[samplerserverv1alpha1.NodeAggregationLevel]containerCPUMetrics{}
 	for level, files := range s.metricsReader.nodeCPUFiles {
-		metrics, err := s.metricsReader.GetLevelCPUMetrics(files)
+		var metrics containerCPUMetrics
+		var err error
+		if s.metricsReader.IsCgroupV2() {
+			metrics, err = s.metricsReader.GetLevelCPUMetricsV2(files)
+		} else {
+			metrics, err = s.metricsReader.GetLevelCPUMetricsV1(files)
+		}
 		if err != nil {
 			return err
 		}
@@ -322,7 +328,13 @@ func (s *sampleCache) fetchSample() error {
 
 	nodeMemoryMetrics := map[samplerserverv1alpha1.NodeAggregationLevel]containerMemoryMetrics{}
 	for level, files := range s.metricsReader.nodeMemoryFiles {
-		metrics, err := s.metricsReader.GetLevelMemoryMetrics(files)
+		var metrics containerMemoryMetrics
+		var err error
+		if s.metricsReader.IsCgroupV2() {
+			metrics, err = s.metricsReader.GetLevelMemoryMetricsV2(files)
+		} else {
+			metrics, err = s.metricsReader.GetLevelMemoryMetricsV1(files)
+		}
 		if err != nil {
 			return err
 		}
@@ -423,13 +435,20 @@ func (s *sampleCache) metricToSample(
 	cpu containerCPUMetrics,
 	memory containerMemoryMetrics) sampleInstant {
 
+	var memoryBytes uint64
+	if s.metricsReader.IsCgroupV2() {
+		memoryBytes = memory.Current
+	} else {
+		memoryBytes = memory.RSS + memory.Cache
+	}
+
 	sample := sampleInstant{
 		Time:                          cpu.usage.Time,
 		CumulativeCPUUsec:             cpu.usage.UsageNanoSec,
 		CumulativeCPUThrottlingUsec:   cpu.throttling.ThrottledNanoSec,
 		CumulativeCPUPeriods:          cpu.throttling.TotalPeriods,
 		CumulativeCPUThrottledPeriods: cpu.throttling.ThrottledPeriods,
-		MemoryBytes:                   memory.RSS + memory.Cache,
+		MemoryBytes:                   memoryBytes,
 		CumulativeMemoryOOMKill:       memory.OOMKills,
 		CumulativeMemoryOOM:           memory.OOMs,
 	}
