@@ -192,12 +192,13 @@ const (
 
 	CPUUsageSourceFilenameV1      = "cpuacct.usage"
 	CPUThrottlingSourceFilenameV1 = "cpu.stat"
-	CPUStatSourceFilenameV2       = "cpu.stat"
-	MemoryUsageSourceFilename     = "memory.stat"
+	MemoryUsageSourceFilenameV1   = "memory.stat"
 	MemoryOOMKillFilenameV1       = "memory.oom_control"
 	MemoryOOMFilenameV1           = "memory.failcnt"
-	MemoryOOMEventsFilenameV2     = "memory.events"
-	MemoryUsageCurrentFilenameV2  = "memory.current"
+
+	CPUUsageSourceFilenameV2  = "cpu.stat"
+	MemoryOOMEventsFilenameV2 = "memory.events"
+	MemoryCurrentFilenameV2   = "memory.current"
 )
 
 var (

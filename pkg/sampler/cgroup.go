@@ -100,11 +100,11 @@ type ContainerCPUThrottlingMetrics struct {
 type containerMemoryMetrics struct {
 	// Time is the time that the sample was taken
 	Time time.Time
-	// RSS is the rss memory amount
+	// RSS is the rss memory amount. Only set on cgroupv1
 	RSS uint64
-	// Cache is the cache memory amount
+	// Cache is the cache memory amount. Only set on cgroupv1
 	Cache uint64
-	// Current is the total memory amount for the container (RSS+Cache)
+	// Current is the total memory amount for the container. Only set on cgroupv2
 	Current uint64
 	// OOMKills is the number of times that the container has been killed by the oom killer
 	OOMKills uint64
@@ -347,11 +347,6 @@ func (r *metricsReader) GetLevelMemoryMetricsV2(metricFilepaths map[ContainerMet
 				}
 
 				switch metricType {
-				case MemoryUsageMetricType:
-					switch fields[0] {
-					case "anon":
-						metrics.RSS = value
-					}
 				case MemoryOOMMetricType:
 					switch fields[0] {
 					case "oom_kill":
@@ -442,7 +437,7 @@ func (r *metricsReader) loadNodeLevelMetricFilePaths() error {
 
 	if r.IsCgroupV2() {
 		cpuFilenames = map[ContainerMetricType]string{
-			CPUUsageMetricType: samplerserverv1alpha1.CPUStatSourceFilenameV2,
+			CPUUsageMetricType: samplerserverv1alpha1.CPUUsageSourceFilenameV2,
 		}
 	} else {
 		cpuFilenames = map[ContainerMetricType]string{
@@ -452,11 +447,11 @@ func (r *metricsReader) loadNodeLevelMetricFilePaths() error {
 
 	if r.IsCgroupV2() {
 		memoryFilenames = map[ContainerMetricType]string{
-			MemoryCurrentMetricsTypeV2: samplerserverv1alpha1.MemoryUsageCurrentFilenameV2,
+			MemoryCurrentMetricsTypeV2: samplerserverv1alpha1.MemoryCurrentFilenameV2,
 		}
 	} else {
 		memoryFilenames = map[ContainerMetricType]string{
-			MemoryUsageMetricType: samplerserverv1alpha1.MemoryUsageSourceFilename,
+			MemoryUsageMetricType: samplerserverv1alpha1.MemoryUsageSourceFilenameV1,
 		}
 	}
 
@@ -531,7 +526,7 @@ func (r *metricsReader) syncContainerCache() error {
 	if err := func() error {
 		filenames := map[ContainerMetricType]string{}
 		if r.IsCgroupV2() {
-			filenames[CPUUsageMetricType] = samplerserverv1alpha1.CPUStatSourceFilenameV2
+			filenames[CPUUsageMetricType] = samplerserverv1alpha1.CPUUsageSourceFilenameV2
 		} else {
 			filenames[CPUUsageMetricType] = samplerserverv1alpha1.CPUUsageSourceFilenameV1
 			filenames[CPUThrottlingMetricTypeV1] = samplerserverv1alpha1.CPUThrottlingSourceFilenameV1
@@ -553,13 +548,12 @@ func (r *metricsReader) syncContainerCache() error {
 	if err := func() error {
 		filenames := map[ContainerMetricType]string{}
 		if r.IsCgroupV2() {
-			filenames[MemoryUsageMetricType] = samplerserverv1alpha1.MemoryUsageSourceFilename
 			filenames[MemoryOOMMetricType] = samplerserverv1alpha1.MemoryOOMEventsFilenameV2
-			filenames[MemoryCurrentMetricsTypeV2] = samplerserverv1alpha1.MemoryUsageCurrentFilenameV2
+			filenames[MemoryCurrentMetricsTypeV2] = samplerserverv1alpha1.MemoryCurrentFilenameV2
 		} else {
 			filenames[MemoryOOMMetricType] = samplerserverv1alpha1.MemoryOOMFilenameV1
 			filenames[MemoryOOMKillMetricTypeV1] = samplerserverv1alpha1.MemoryOOMKillFilenameV1
-			filenames[MemoryUsageMetricType] = samplerserverv1alpha1.MemoryUsageSourceFilename
+			filenames[MemoryUsageMetricType] = samplerserverv1alpha1.MemoryUsageSourceFilenameV1
 		}
 		r.memoryFilesMutex.Lock()
 		defer r.memoryFilesMutex.Unlock()
