@@ -1,0 +1,232 @@
+{
+	"containers": [
+		{
+			"containerID": "abcdef",
+			"podUID": "pod12345",
+			"containerName": "",
+			"podName": "",
+			"namespaceName": "",
+			"cpuCoresNanoSec": [
+				"200000",
+				"250000",
+				"300000",
+				"400000",
+				"800000"
+			],
+			"memoryBytes": [
+				"210",
+				"250",
+				"320",
+				"340",
+				"430"
+			],
+			"cpuThrottledNanoSec": [
+				"0",
+				"0",
+				"50000",
+				"100000",
+				"200000"
+			],
+			"cpuPercentPeriodsThrottled": [
+				0,
+				0,
+				0.05,
+				0.1,
+				0.5
+			],
+			"cpuPeriodsSec": [
+				"0",
+				"1000",
+				"1000",
+				"1000",
+				"1000"
+			],
+			"cpuThrottledPeriodsSec": [
+				"0",
+				"0",
+				"50",
+				"100",
+				"500"
+			],
+			"nodeName": "",
+			"avgCPUCoresNanoSec": "390000",
+			"avgMemoryBytes": "310",
+			"oomCount": "28",
+			"oomKillCount": "7",
+			"avgCPUPercentPeriodsThrottled": 0.1625,
+			"avgCPUThrottledNanoSec": "70000",
+			"avgCPUPeriodsSec": "800",
+			"avgCPUThrottledPeriodsSec": "130",
+			"networkRxBytes": [],
+			"networkRxPackets": [],
+			"networkRxErrors": [],
+			"networkRxDropped": [],
+			"networkTxBytes": [],
+			"networkTxPackets": [],
+			"networkTxErrors": [],
+			"networkTxDropped": [],
+			"avgNetworkRxBytes": "0",
+			"avgNetworkRxPackets": "0",
+			"avgNetworkRxErrors": "0",
+			"avgNetworkRxDropped": "0",
+			"avgNetworkTxBytes": "0",
+			"avgNetworkTxPackets": "0",
+			"avgNetworkTxErrors": "0",
+			"avgNetworkTxDropped": "0"
+		}
+	],
+	"node": {
+		"aggregatedMetrics": [
+			{
+				"aggregationLevel": "",
+				"cpuCoresNanoSec": [
+					"2000000",
+					"3000000",
+					"4000000",
+					"8000000",
+					"8000000"
+				],
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "5000000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "kubelet",
+				"cpuCoresNanoSec": [
+					"2000000",
+					"2000000",
+					"3000000",
+					"4000000",
+					"4000000"
+				],
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "3000000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "kubelet/kubepods",
+				"cpuCoresNanoSec": [
+					"1000000",
+					"1000000",
+					"1000000",
+					"1000000",
+					"2000000"
+				],
+				"memoryBytes": [
+					"150",
+					"300",
+					"600",
+					"800",
+					"1000"
+				],
+				"avgCPUCoresNanoSec": "1200000",
+				"avgMemoryBytes": "570"
+			},
+			{
+				"aggregationLevel": "kubelet/kubepods/guaranteed",
+				"cpuCoresNanoSec": [
+					"200000",
+					"500000",
+					"1000000",
+					"2000000",
+					"10000000"
+				],
+				"memoryBytes": [
+					"100",
+					"100",
+					"150",
+					"170",
+					"300"
+				],
+				"avgCPUCoresNanoSec": "2740000",
+				"avgMemoryBytes": "164"
+			},
+			{
+				"aggregationLevel": "max.slice",
+				"cpuCoresNanoSec": [
+					"2000000",
+					"2000000"
+				],
+				"memoryBytes": [
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "2000000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "min.slice",
+				"cpuCoresNanoSec": [
+					"0",
+					"0",
+					"0",
+					"1000000",
+					"1000000"
+				],
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "400000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "system.slice",
+				"cpuCoresNanoSec": [
+					"2000000",
+					"2000000",
+					"3000000",
+					"3000000",
+					"4000000"
+				],
+				"memoryBytes": [
+					"0",
+					"0",
+					"0",
+					"0",
+					"0"
+				],
+				"avgCPUCoresNanoSec": "2800000",
+				"avgMemoryBytes": "0"
+			},
+			{
+				"aggregationLevel": "system.slice/kubelet.service",
+				"cpuCoresNanoSec": [
+					"1000000",
+					"1000000",
+					"1000000",
+					"1000000",
+					"2000000"
+				],
+				"memoryBytes": [
+					"150",
+					"300",
+					"600",
+					"800",
+					"1000"
+				],
+				"avgCPUCoresNanoSec": "1200000",
+				"avgMemoryBytes": "570"
+			}
+		]
+	},
+	"nodeName": "",
+	"podName": "",
+	"timestamp": null,
+	"reason": "pull"
+}
