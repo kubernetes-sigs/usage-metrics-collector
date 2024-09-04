@@ -20,6 +20,7 @@ import (
 	"time"
 
 	v1 "github.com/containerd/containerd/metrics/types/v1"
+	v2 "github.com/containerd/containerd/metrics/types/v2"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/usage-metrics-collector/pkg/ctrstats"
 )
@@ -45,15 +46,27 @@ func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, e
 	log.V(9).Info("found containers", "count", len(containers))
 
 	for _, c := range containers {
-		// TODO: is this a reasonable key for the metric read time?
 		readTime := s.metricsReader.readTimeFunc(c.PodID + "/" + c.ContainerID)
-		stats, err := ctrstats.GetContainerStats(context.Background(), c)
+		var statsV1 *v1.Metrics
+		var statsV2 *v2.Metrics
+		var err error
+		if s.metricsReader.IsCgroupV2() {
+			statsV2, err = ctrstats.GetContainerStatsV2(context.Background(), c)
+		} else {
+			statsV1, err = ctrstats.GetContainerStatsV1(context.Background(), c)
+		}
+
 		if err != nil {
 			log.V(10).WithValues(
 				"container", c.ContainerID,
 			).Info("failed to get container stats - likely an issue with non-running containers being tracked in containerd state", "err", err)
-		} else if stats != nil {
-			cpu, err := cmStatsToCPUResult(stats, readTime)
+		} else if statsV1 != nil || statsV2 != nil {
+			var cpu containerCPUMetrics
+			if statsV1 != nil {
+				cpu, err = cmStatsToCPUResultV1(statsV1, readTime)
+			} else if statsV2 != nil {
+				cpu, err = cmStatsToCPUResultV2(statsV2, readTime)
+			}
 			if err != nil {
 				log.Error(err, "no cpu stats available for container",
 					"namespace", c.NamespaceName,
@@ -61,7 +74,14 @@ func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, e
 					"container", c.ContainerName,
 				)
 			}
-			mem, err := cmStatsToMemoryResult(stats, readTime)
+
+			var mem containerMemoryMetrics
+			if statsV1 != nil {
+				mem, err = cmStatsToMemoryResultV1(statsV1, readTime)
+
+			} else if statsV2 != nil {
+				mem, err = cmStatsToMemoryResultV2(statsV2, readTime)
+			}
 			if err != nil {
 				log.Error(err, "no memory stats available for container",
 					"namespace", c.NamespaceName,
@@ -87,8 +107,8 @@ func (s *sampleCache) getContainerCPUAndMemoryCM() (cpuMetrics, memoryMetrics, e
 	return cpuResult, memResult, nil
 }
 
-// cmStatsToCPUResult converts cpu stats read from containerd into a compatible type.
-func cmStatsToCPUResult(stats *v1.Metrics, readTime time.Time) (containerCPUMetrics, error) {
+// cmStatsToCPUResultV1 converts cpu stats read from containerd into a compatible type.
+func cmStatsToCPUResultV1(stats *v1.Metrics, readTime time.Time) (containerCPUMetrics, error) {
 	metrics := containerCPUMetrics{}
 	if stats.CPU == nil {
 		err := errors.New("no cpu stats available")
@@ -96,7 +116,6 @@ func cmStatsToCPUResult(stats *v1.Metrics, readTime time.Time) (containerCPUMetr
 	}
 
 	metrics.usage.Time = readTime
-	// TODO: I assume we want usage.total but kernel/user breakouts are also available
 	metrics.usage.UsageNanoSec = stats.CPU.Usage.Total
 
 	metrics.throttling.Time = readTime
@@ -107,8 +126,27 @@ func cmStatsToCPUResult(stats *v1.Metrics, readTime time.Time) (containerCPUMetr
 	return metrics, nil
 }
 
-// cmStatsToMemoryResult converts memory stats read from containerd into a compatible type.
-func cmStatsToMemoryResult(stats *v1.Metrics, readTime time.Time) (containerMemoryMetrics, error) {
+// cmStatsToCPUResultV2 converts cpu stats read from containerd into a compatible type.
+func cmStatsToCPUResultV2(stats *v2.Metrics, readTime time.Time) (containerCPUMetrics, error) {
+	metrics := containerCPUMetrics{}
+	if stats.CPU == nil {
+		err := errors.New("no cpu stats available")
+		return metrics, err
+	}
+
+	metrics.usage.Time = readTime
+	metrics.usage.UsageNanoSec = stats.CPU.UsageUsec * 1000 // convert usec to nanosec
+
+	metrics.throttling.Time = readTime
+	metrics.throttling.ThrottledNanoSec = stats.CPU.ThrottledUsec * 1000 // convert usec to nanosec
+	metrics.throttling.ThrottledPeriods = stats.CPU.NrThrottled
+	metrics.throttling.TotalPeriods = stats.CPU.NrPeriods
+
+	return metrics, nil
+}
+
+// cmStatsToMemoryResultV1 converts memory stats read from containerd into a compatible type.
+func cmStatsToMemoryResultV1(stats *v1.Metrics, readTime time.Time) (containerMemoryMetrics, error) {
 	metrics := containerMemoryMetrics{}
 	if stats.Memory == nil {
 		err := errors.New("no memory stats available")
@@ -116,15 +154,33 @@ func cmStatsToMemoryResult(stats *v1.Metrics, readTime time.Time) (containerMemo
 	}
 
 	metrics.Time = readTime
-	// NOTE: RSSHuge, MappedFiles, pgfaults, (in)active anon, etc. also available
-	// TODO: should this be Total{RSS,Cache} or is this fine?
 	metrics.RSS = stats.Memory.RSS
 	metrics.Cache = stats.Memory.Cache
 
 	if stats.MemoryOomControl != nil {
-		// TODO: not sure if these are the right metrics?
 		metrics.OOMKills = stats.MemoryOomControl.OomKill
 		metrics.OOMs = stats.MemoryOomControl.UnderOom
+	} else {
+		log.V(10).Info("no OOM stats available")
+	}
+
+	return metrics, nil
+}
+
+// cmStatsToMemoryResultV2 converts memory stats read from containerd into a compatible type.
+func cmStatsToMemoryResultV2(stats *v2.Metrics, readTime time.Time) (containerMemoryMetrics, error) {
+	metrics := containerMemoryMetrics{}
+	if stats.Memory == nil {
+		err := errors.New("no memory stats available")
+		return metrics, err
+	}
+
+	metrics.Time = readTime
+	metrics.Current = stats.Memory.Usage
+
+	if stats.MemoryEvents != nil {
+		metrics.OOMKills = stats.MemoryEvents.OomKill
+		metrics.OOMs = stats.MemoryEvents.Oom
 	} else {
 		log.V(10).Info("no OOM stats available")
 	}

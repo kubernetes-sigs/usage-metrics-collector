@@ -124,7 +124,8 @@ func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
 		wg.Add(1)
 
 		go func(c ctrstats.Container, results chan<- prometheus.Metric) {
-			stats, err := ctrstats.GetContainerStats(context.Background(), c)
+			// TODO: should we add cgroupv2 support here too?
+			stats, err := ctrstats.GetContainerStatsV1(context.Background(), c)
 			if err != nil {
 				monitorLog.WithFields(logrus.Fields{
 					"container": c.ContainerID,

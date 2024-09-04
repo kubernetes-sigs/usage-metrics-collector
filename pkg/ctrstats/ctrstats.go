@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	v1 "github.com/containerd/cgroups/stats/v1"
+	v2 "github.com/containerd/cgroups/v2/stats"
 	"github.com/containerd/containerd"
 	"github.com/containerd/typeurl"
 	"github.com/sirupsen/logrus"
@@ -75,7 +76,7 @@ func GetContainers(client *containerd.Client) ([]Container, error) {
 	return cids, nil
 }
 
-func GetContainerStats(ctx context.Context, c Container) (*v1.Metrics, error) {
+func GetContainerStatsV1(ctx context.Context, c Container) (*v1.Metrics, error) {
 	task, err := c.Container.Task(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -93,6 +94,33 @@ func GetContainerStats(ctx context.Context, c Container) (*v1.Metrics, error) {
 		}
 
 		stats, ok := s.(*v1.Metrics)
+		if !ok {
+			return nil, fmt.Errorf("type assertion failure for task.Metrics' Data field")
+		}
+		return stats, nil
+	}
+
+	return nil, fmt.Errorf("no stats obtained for container: %s", c.ContainerID)
+}
+
+func GetContainerStatsV2(ctx context.Context, c Container) (*v2.Metrics, error) {
+	task, err := c.Container.Task(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := task.Metrics(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.Data != nil {
+		s, err := typeurl.UnmarshalAny(r.Data)
+		if err != nil {
+			return nil, err
+		}
+
+		stats, ok := s.(*v2.Metrics)
 		if !ok {
 			return nil, fmt.Errorf("type assertion failure for task.Metrics' Data field")
 		}

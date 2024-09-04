@@ -127,7 +127,7 @@ func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
 		wg.Add(1)
 
 		go func(c ctrstats.Container, results chan<- prometheus.Metric) {
-			stats, err := ctrstats.GetContainerStats(context.Background(), c)
+			stats, err := ctrstats.GetContainerStatsV1(context.Background(), c)
 			if err != nil {
 				monitorLog.WithFields(log.Fields{
 					"container": c.ContainerID,
