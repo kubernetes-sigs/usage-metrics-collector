@@ -1,0 +1,8 @@
+sampleSize: 6
+minContainerSamples: 5
+config:
+  reader:
+    cGroupVersion: v2
+    minCPUCoresNanoSec: 0
+    maxCPUCoresNanoSec: 1e9 # 1e9
+    dropFirstValue: true # make the average values match

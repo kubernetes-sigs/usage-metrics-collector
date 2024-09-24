@@ -1,0 +1,227 @@
+cpuSamplesV2:
+  "sys/fs/cgroup/cpu.stat":
+  - usage_usec: 8000
+    throttled_usec: 0
+    nr_periods: 1000
+    nr_throttled: 0
+  - usage_usec: 8000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 4000
+    throttled_usec: 100
+    nr_periods: 1000
+    nr_throttled: 100
+  - usage_usec: 2000
+    throttled_usec: 50
+    nr_periods: 1000
+    nr_throttled: 50
+  - usage_usec: 3000
+    throttled_usec: 200
+    nr_periods: 1000
+    nr_throttled: 500
+  "sys/fs/cgroup/kubelet/cpu.stat":
+  - usage_usec: 4000
+    throttled_usec: 0
+    nr_periods: 1000
+    nr_throttled: 0
+  - usage_usec: 4000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 2000
+    throttled_usec: 100
+    nr_periods: 1000
+    nr_throttled: 100
+  - usage_usec: 2000
+    throttled_usec: 50
+    nr_periods: 1000
+    nr_throttled: 50
+  - usage_usec: 3000
+    throttled_usec: 200
+    nr_periods: 1000
+    nr_throttled: 500
+  "sys/fs/cgroup/max.slice/cpu.stat":
+  - usage_usec: 1000000000000000
+    throttled_usec: 0
+    nr_periods: 1000
+    nr_throttled: 0
+  - usage_usec: 1000000000000000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 2000
+    throttled_usec: 100
+    nr_periods: 1000
+    nr_throttled: 100
+  - usage_usec: 2000
+    throttled_usec: 50
+    nr_periods: 1000
+    nr_throttled: 50
+  - usage_usec: 1000000000000000
+    throttled_usec: 200
+    nr_periods: 1000
+    nr_throttled: 500
+  "sys/fs/cgroup/min.slice/cpu.stat":
+  - usage_usec: 0
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 0
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 1000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 1000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 0
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  "sys/fs/cgroup/system.slice/cpu.stat":
+  - usage_usec: 3000
+    throttled_usec: 0
+    nr_periods: 1000
+    nr_throttled: 0
+  - usage_usec: 4000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 2000
+    throttled_usec: 100
+    nr_periods: 1000
+    nr_throttled: 100
+  - usage_usec: 2000
+    throttled_usec: 50
+    nr_periods: 1000
+    nr_throttled: 50
+  - usage_usec: 3000
+    throttled_usec: 200
+    nr_periods: 1000
+    nr_throttled: 500
+  "sys/fs/cgroup/system.slice/kubelet.service/cpu.stat":
+  - usage_usec: 1000
+    throttled_usec: 0
+    nr_periods: 1000
+    nr_throttled: 0
+  - usage_usec: 1000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 1000
+    throttled_usec: 100
+    nr_periods: 1000
+    nr_throttled: 100
+  - usage_usec: 2000
+    throttled_usec: 50
+    nr_periods: 1000
+    nr_throttled: 50
+  - usage_usec: 1000
+    throttled_usec: 200
+    nr_periods: 1000
+    nr_throttled: 500
+  "sys/fs/cgroup/kubelet/kubepods/cpu.stat":
+  - usage_usec: 1000
+    throttled_usec: 0
+    nr_periods: 1000
+    nr_throttled: 0
+  - usage_usec: 1000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 1000
+    throttled_usec: 100
+    nr_periods: 1000
+    nr_throttled: 100
+  - usage_usec: 2000
+    throttled_usec: 50
+    nr_periods: 1000
+    nr_throttled: 50
+  - usage_usec: 1000
+    throttled_usec: 200
+    nr_periods: 1000
+    nr_throttled: 500
+  "sys/fs/cgroup/kubelet/kubepods/guaranteed/cpu.stat":
+  - usage_usec: 500
+    throttled_usec: 0
+    nr_periods: 1000
+    nr_throttled: 0
+  - usage_usec: 1000
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 200
+    throttled_usec: 100
+    nr_periods: 1000
+    nr_throttled: 100
+  - usage_usec: 2000
+    throttled_usec: 50
+    nr_periods: 1000
+    nr_throttled: 50
+  - usage_usec: 10000
+    throttled_usec: 200
+    nr_periods: 1000
+    nr_throttled: 500
+  "sys/fs/cgroup/kubelet/kubepods/burstable/podpod12345/abcdef/cpu.stat":
+  - usage_usec: 200
+    throttled_usec: 0
+    nr_periods: 1000
+    nr_throttled: 0
+  - usage_usec: 250
+    throttled_usec: 0
+    nr_periods: 0
+    nr_throttled: 0
+  - usage_usec: 300
+    throttled_usec: 100
+    nr_periods: 1000
+    nr_throttled: 100
+  - usage_usec: 400
+    throttled_usec: 50
+    nr_periods: 1000
+    nr_throttled: 50
+  - usage_usec: 800
+    throttled_usec: 200
+    nr_periods: 1000
+    nr_throttled: 500
+memorySamplesV2:
+  "sys/fs/cgroup/system.slice/kubelet.service/memory.current":
+  - usage: 150
+  - usage: 300
+  - usage: 600
+  - usage: 800
+  - usage: 1000
+  "sys/fs/cgroup/kubelet/kubepods/memory.current":
+  - usage: 150
+  - usage: 300
+  - usage: 600
+  - usage: 800
+  - usage: 1000
+  "sys/fs/cgroup/kubelet/kubepods/guaranteed/memory.current":
+  - usage: 100
+  - usage: 100
+  - usage: 150
+  - usage: 170
+  - usage: 300
+  "sys/fs/cgroup/kubelet/kubepods/burstable/podpod12345/abcdef/memory.current":
+  - usage: 210
+  - usage: 250
+  - usage: 320
+  - usage: 340
+  - usage: 430
+oomSamplesV2:
+  "sys/fs/cgroup/kubelet/kubepods/burstable/podpod12345/abcdef/memory.events":
+  - "oom_kill": 0
+    oom: 0
+  - "oom_kill": 0
+    oom: 1
+  - "oom_kill": 1
+    oom: 2
+  - "oom_kill": 2
+    oom: 4
+  - "oom_kill": 4
+    oom: 21

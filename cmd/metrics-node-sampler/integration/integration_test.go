@@ -99,11 +99,13 @@ func setupTests(t *testing.T, f func([]int) string) {
 		func(tc *testutil.TestCase) error {
 			t := tc.T
 			// create a new container client
-			var samples samples
+			var v1samples samplesV1
+			var v2samples samplesV2
 			var cfg testConfig
 			tc.UnmarshalInputsStrict(map[string]interface{}{
-				"input_samples.yaml": &samples,
-				"input_test.yaml":    &cfg,
+				"input_samples.yaml":    &v1samples,
+				"input_samples_v2.yaml": &v2samples,
+				"input_test.yaml":       &cfg,
 			})
 
 			// setup the testdata by copying it to a tmp directory
@@ -129,17 +131,35 @@ func setupTests(t *testing.T, f func([]int) string) {
 				require.NoError(t, os.WriteFile(filepath.Join(testdataCopy, rel), b, 0600))
 				return nil
 			})
+
 			fs := &fakeFS{
-				FS:      os.DirFS(testdataCopy),
-				root:    testdataCopy,
-				samples: samples,
-				index:   make(map[string]int),
-				time:    make(map[string]time.Time),
+				FS:        os.DirFS(testdataCopy),
+				root:      testdataCopy,
+				samplesV1: v1samples,
+				samplesV2: v2samples,
+				index:     make(map[string]int),
+				time:      make(map[string]time.Time),
 			}
 
 			// get 2 free ports
 			ports, err := testutil.GetFreePorts(2)
 			require.NoError(t, err)
+
+			var cpuPaths []samplerserverv1alpha1.MetricsFilepath
+			var memoryPaths []samplerserverv1alpha1.MetricsFilepath
+			if cfg.Config.Reader.CGroupVersion == samplerserverv1alpha1.CGroupV2 {
+				cpuPaths = []samplerserverv1alpha1.MetricsFilepath{
+					samplerserverv1alpha1.MetricsFilepath(filepath.Join("sys", "fs", "cgroup"))}
+				memoryPaths = []samplerserverv1alpha1.MetricsFilepath{
+					samplerserverv1alpha1.MetricsFilepath(filepath.Join("sys", "fs", "cgroup"))}
+			} else {
+				cpuPaths = []samplerserverv1alpha1.MetricsFilepath{
+					samplerserverv1alpha1.MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "cpu")),
+					samplerserverv1alpha1.MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "cpuacct")),
+				}
+				memoryPaths = []samplerserverv1alpha1.MetricsFilepath{
+					samplerserverv1alpha1.MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "memory"))}
+			}
 
 			server := sampler.Server{
 				SortResults: true, // so the test results are consistent
@@ -149,12 +169,9 @@ func setupTests(t *testing.T, f func([]int) string) {
 						Size:           cfg.SampleSize,
 					},
 					Reader: samplerserverv1alpha1.Reader{
-						CPUPaths: []samplerserverv1alpha1.MetricsFilepath{
-							samplerserverv1alpha1.MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "cpu")),
-							samplerserverv1alpha1.MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "cpuacct")),
-						},
-						MemoryPaths: []samplerserverv1alpha1.MetricsFilepath{
-							samplerserverv1alpha1.MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "memory"))},
+						CGroupVersion: cfg.Config.Reader.CGroupVersion,
+						CPUPaths:      cpuPaths,
+						MemoryPaths:   memoryPaths,
 						NodeAggregationLevelGlobs: append(samplerserverv1alpha1.DefaultNodeAggregationLevels,
 							samplerserverv1alpha1.NodeAggregationLevel("system.slice/*"),
 							samplerserverv1alpha1.NodeAggregationLevel("*"),
@@ -221,39 +238,62 @@ func setupTests(t *testing.T, f func([]int) string) {
 		})
 }
 
-type samples struct {
-	MemorySamples        map[string][]MemorySample        `yaml:"memorySamples" json:"memorySamples"`
-	MemoryOOMKillSamples map[string][]MemoryOOMKillSample `yaml:"oomSamples" json:"oomSamples"`
-	MemoryOOMSamples     map[string][]MemoryOOMSample     `yaml:"oomKillSamples" json:"oomKillSamples"`
-	CPUUsageSamples      map[string][]CPUUsageSample      `yaml:"cpuUsageSamples" json:"cpuUsageSamples"`
-	CPUThrottlingSamples map[string][]CPUThrottlingSample `yaml:"cpuThrottlingSamples" json:"cpuThrottlingSamples"`
+type samplesV1 struct {
+	MemorySamplesV1        map[string][]MemorySampleV1        `yaml:"memorySamples" json:"memorySamples"`
+	MemoryOOMKillSamplesV1 map[string][]MemoryOOMKillSampleV1 `yaml:"oomSamples" json:"oomSamples"`
+	MemoryOOMSamplesV1     map[string][]MemoryOOMSampleV1     `yaml:"oomKillSamples" json:"oomKillSamples"`
+	CPUUsageSamplesV1      map[string][]CPUUsageSampleV1      `yaml:"cpuUsageSamples" json:"cpuUsageSamples"`
+	CPUThrottlingSamplesV1 map[string][]CPUThrottlingSampleV1 `yaml:"cpuThrottlingSamples" json:"cpuThrottlingSamples"`
+}
+
+type samplesV2 struct {
+	MemorySamplesV2    map[string][]MemorySampleV2    `yaml:"memorySamples" json:"memorySamplesV2"`
+	MemoryOOMSamplesV2 map[string][]MemoryOOMSampleV2 `yaml:"memorySamples" json:"oomSamplesV2"`
+	CPUSamplesV2       map[string][]CPUSampleV2       `yaml:"memorySamples" json:"cpuSamplesV2"`
 }
 
 type fakeFS struct {
-	samples
+	samplesV1
+	samplesV2
 	index map[string]int
 	time  map[string]time.Time
 	root  string
 	fs.FS
 }
 
-type MemorySample struct {
+type MemorySampleV1 struct {
 	RSS   int `yaml:"total_rss" json:"total_rss"`
 	Cache int `yaml:"total_cache" json:"total_cache"`
 }
 
-type MemoryOOMKillSample struct {
+type MemoryOOMKillSampleV1 struct {
 	OOMKill int `yaml:"oom_kill" json:"oom_kill"`
 }
 
-type MemoryOOMSample int
+type MemoryOOMSampleV1 int
 
-type CPUUsageSample struct {
+type CPUUsageSampleV1 struct {
 	Usage int `yaml:"usage" json:"usage"`
 }
 
-type CPUThrottlingSample struct {
+type CPUThrottlingSampleV1 struct {
 	ThrottledTime    int `yaml:"throttled_time" json:"throttled_time"`
+	Periods          int `yaml:"nr_periods" json:"nr_periods"`
+	ThrottledPeriods int `yaml:"nr_throttled" json:"nr_throttled"`
+}
+
+type MemorySampleV2 struct {
+	Current int `yaml:"total_rss" json:"usage"`
+}
+
+type MemoryOOMSampleV2 struct {
+	OOMKill int `yaml:"oom_kill" json:"oom_kill"`
+	OOM     int `yaml:"oom_kill" json:"oom"`
+}
+
+type CPUSampleV2 struct {
+	Usage            int `yaml:"usage" json:"usage_usec"`
+	ThrottledTime    int `yaml:"throttled_time" json:"throttled_usec"`
 	Periods          int `yaml:"nr_periods" json:"nr_periods"`
 	ThrottledPeriods int `yaml:"nr_throttled" json:"nr_throttled"`
 }
@@ -270,7 +310,7 @@ func (fakeFS *fakeFS) Time(name string) time.Time {
 }
 
 func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
-	if val, ok := fakeFS.MemorySamples[name]; ok {
+	if val, ok := fakeFS.MemorySamplesV1[name]; ok {
 		// update the file value by setting its value
 		index := fakeFS.index[name] % len(val)
 		fakeFS.index[name] = (index + 1)
@@ -280,7 +320,7 @@ func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else if val, ok := fakeFS.CPUUsageSamples[name]; ok {
+	} else if val, ok := fakeFS.CPUUsageSamplesV1[name]; ok {
 		var i int
 		// update the file value by incrementing it
 		index := fakeFS.index[name] % len(val)
@@ -300,7 +340,7 @@ func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else if val, ok := fakeFS.CPUThrottlingSamples[name]; ok {
+	} else if val, ok := fakeFS.CPUThrottlingSamplesV1[name]; ok {
 		var throttledTime, periods, periodsThrottled int
 		// update the file value by incrementing it
 		index := fakeFS.index[name] % len(val)
@@ -339,7 +379,7 @@ func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else if val, ok := fakeFS.MemoryOOMKillSamples[name]; ok {
+	} else if val, ok := fakeFS.MemoryOOMKillSamplesV1[name]; ok {
 		// update the file value by setting its value
 		index := fakeFS.index[name] % len(val)
 		fakeFS.index[name] = (index + 1)
@@ -359,7 +399,7 @@ func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else if val, ok := fakeFS.MemoryOOMSamples[name]; ok {
+	} else if val, ok := fakeFS.MemoryOOMSamplesV1[name]; ok {
 		// update the file value by setting its value
 		index := fakeFS.index[name] % len(val)
 		fakeFS.index[name] = (index + 1)
@@ -377,6 +417,92 @@ func (fakeFS *fakeFS) Open(name string) (fs.File, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else if val, ok := fakeFS.MemorySamplesV2[name]; ok {
+		// update the file value by setting its value
+		index := fakeFS.index[name] % len(val)
+		fakeFS.index[name] = (index + 1)
+		newVal := val[index]
+		b := fmt.Sprintf("%d\n", newVal.Current)
+		err := os.WriteFile(filepath.Join(fakeFS.root, name), []byte(b), 0600)
+		if err != nil {
+			return nil, err
+		}
+	} else if val, ok := fakeFS.CPUSamplesV2[name]; ok {
+		var usage, throttledTime, periods, periodsThrottled int
+		// update the file value by incrementing it
+		index := fakeFS.index[name] % len(val)
+		fakeFS.index[name] = (index + 1)
+		inc := val[index]
+
+		b, err := os.ReadFile(filepath.Join(fakeFS.root, name))
+		if err != nil {
+			return nil, err
+		}
+		// parse the value out
+		for _, line := range strings.Split(string(b), "\n") {
+			fields := strings.Fields(line)
+			value, err := strconv.ParseUint(fields[1], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+
+			switch fields[0] {
+			case "usage_usec":
+				usage = int(value)
+			case "throttled_usec":
+				throttledTime = int(value)
+			case "nr_periods":
+				periods = int(value)
+			case "nr_throttled":
+				periodsThrottled = int(value)
+			}
+		}
+
+		usage += inc.Usage
+		throttledTime += inc.ThrottledTime
+		periods += inc.Periods
+		periodsThrottled += inc.ThrottledPeriods
+
+		err = os.WriteFile(filepath.Join(fakeFS.root, name), []byte(fmt.Sprintf(
+			"usage_usec %d\nthrottled_usec %d\nnr_periods %d\nnr_throttled %d", usage, throttledTime, periods, periodsThrottled)), 0600)
+		if err != nil {
+			return nil, err
+		}
+	} else if val, ok := fakeFS.MemoryOOMSamplesV2[name]; ok {
+		var oom, oomKill int
+		// update the file value by setting its value
+		index := fakeFS.index[name] % len(val)
+		fakeFS.index[name] = (index + 1)
+		newVal := val[index]
+
+		b, err := os.ReadFile(filepath.Join(fakeFS.root, name))
+		if err != nil {
+			return nil, err
+		}
+		// parse the value out
+		for _, line := range strings.Split(string(b), "\n") {
+			fields := strings.Fields(line)
+			value, err := strconv.ParseUint(fields[1], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+
+			switch fields[0] {
+			case "oom":
+				oom = int(value)
+			case "oom_kill":
+				oomKill = int(value)
+			}
+		}
+
+		oom += newVal.OOM
+		oomKill += newVal.OOMKill
+
+		err = os.WriteFile(filepath.Join(fakeFS.root, name), []byte(fmt.Sprintf("oom %d\noom_kill %d", oom, oomKill)), 0600)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return fakeFS.FS.Open(name)
 }

@@ -148,16 +148,22 @@ type MetricsFilepath string
 type CGroupVersion string
 
 var (
-	// DefaultMetricsReaderCPUPaths is the default paths for reading cpu metrics
-	DefaultMetricsReaderCPUPaths = []MetricsFilepath{
+	// DefaultMetricsReaderCPUPathsV1 is the default paths for reading cpu metrics on cgroupv1
+	DefaultMetricsReaderCPUPathsV1 = []MetricsFilepath{
 		MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "cpu,cpuacct")),
 		MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "cpuacct")),
 		MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "cpu")),
 	}
 
-	// DefaultCPUPaths is the default paths for reading memory metrics
-	DefaultMetricsReaderMemoryPaths = []MetricsFilepath{
+	// DefaultMetricsReaderMemoryPathsV1 is the default paths for reading memory metrics on cgroupv1
+	DefaultMetricsReaderMemoryPathsV1 = []MetricsFilepath{
 		MetricsFilepath(filepath.Join("sys", "fs", "cgroup", "memory")),
+	}
+
+	// DefaultMetricsReaderUnifiedPathV2 is the single unified path for reading all metrics on cgroupv2
+	// On v2, the file tree is unified and we do not need to look for cpu/memory in subdirectories
+	DefaultMetricsReaderUnifiedPathV2 = []MetricsFilepath{
+		MetricsFilepath(filepath.Join("sys", "fs", "cgroup")),
 	}
 
 	// DefaultContainerCacheSyncInterval is how frequently to sync the list of known containers.
@@ -167,6 +173,9 @@ var (
 const (
 	// CGroupV1 is set for cgroups v1.
 	CGroupV1 CGroupVersion = "v1"
+
+	// CGroupV2 is set for cgroups v2.
+	CGroupV2 CGroupVersion = "v2"
 
 	// DefaultPollsPerMinute is the default number polls to perform per minute.
 	DefaultPollsPerMinute = 60
@@ -181,11 +190,15 @@ const (
 	DefaultPushFrequency            = "1m"
 	DefaultCheckCreatedPodFrequency = "6s"
 
-	CPUUsageSourceFilename      = "cpuacct.usage"
-	CPUThrottlingSourceFilename = "cpu.stat"
-	MemoryUsageSourceFilename   = "memory.stat"
-	MemoryOOMKillFilename       = "memory.oom_control"
-	MemoryOOMFilename           = "memory.failcnt"
+	CPUUsageSourceFilenameV1      = "cpuacct.usage"
+	CPUThrottlingSourceFilenameV1 = "cpu.stat"
+	MemoryUsageSourceFilenameV1   = "memory.stat"
+	MemoryOOMKillFilenameV1       = "memory.oom_control"
+	MemoryOOMFilenameV1           = "memory.failcnt"
+
+	CPUUsageSourceFilenameV2  = "cpu.stat"
+	MemoryOOMEventsFilenameV2 = "memory.events"
+	MemoryCurrentFilenameV2   = "memory.current"
 )
 
 var (
@@ -242,14 +255,20 @@ func (s *MetricsNodeSampler) Default() {
 	if s.Reader.ContainerCacheSyncIntervalSeconds == nil {
 		s.Reader.ContainerCacheSyncIntervalSeconds = pointer.Float32(1)
 	}
-	if s.Reader.CPUPaths == nil {
-		s.Reader.CPUPaths = DefaultMetricsReaderCPUPaths
-	}
-	if s.Reader.MemoryPaths == nil {
-		s.Reader.MemoryPaths = DefaultMetricsReaderMemoryPaths
-	}
 	if s.Reader.CGroupVersion == "" {
 		s.Reader.CGroupVersion = CGroupV1
+	}
+	if s.Reader.CPUPaths == nil && s.Reader.CGroupVersion == CGroupV1 {
+		s.Reader.CPUPaths = DefaultMetricsReaderCPUPathsV1
+	}
+	if s.Reader.MemoryPaths == nil && s.Reader.CGroupVersion == CGroupV1 {
+		s.Reader.MemoryPaths = DefaultMetricsReaderMemoryPathsV1
+	}
+	if s.Reader.CPUPaths == nil && s.Reader.CGroupVersion == CGroupV2 {
+		s.Reader.CPUPaths = DefaultMetricsReaderUnifiedPathV2
+	}
+	if s.Reader.MemoryPaths == nil && s.Reader.CGroupVersion == CGroupV2 {
+		s.Reader.MemoryPaths = DefaultMetricsReaderUnifiedPathV2
 	}
 
 	if s.Reader.ContainerCacheSyncIntervalSeconds == nil {
