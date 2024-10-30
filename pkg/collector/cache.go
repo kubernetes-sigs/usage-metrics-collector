@@ -52,6 +52,10 @@ func GetNewCacheFunc(c collectorcontrollerv1alpha1.MetricsPrometheusCollector) c
 				return i, nil
 			}
 
+			if c.CacheOptions.DropManagedFields {
+				m.SetManagedFields(nil)
+			}
+
 			// Annotations can be potentially very large, and we don't need to store them
 			// if we aren't using them in the collector
 			an := m.GetAnnotations()

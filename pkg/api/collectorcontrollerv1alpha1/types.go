@@ -17,6 +17,7 @@ package collectorcontrollerv1alpha1
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -146,6 +147,7 @@ type PreComputeMetrics struct {
 
 type CacheOptions struct {
 	DropAnnotations       []string `json:"dropAnnotations" yaml:"dropAnnotations"`
+	DropManagedFields     bool     `json:"dropManagedFields" yaml:"dropManagedFields"`
 	UnsafeDisableDeepCopy bool     `json:"unsafeDisableDeepCopy" yaml:"unsafeDisableDeepCopy"`
 }
 
@@ -1159,6 +1161,9 @@ type Extensions struct {
 
 	// nodeTaints are labels applied to metrics by reading node taints
 	NodeTaints []NodeTaint `json:"nodeTaints,omitempty" yaml:"nodeTaints,omitempty"`
+
+	// resourceEntries are labels applied to metrics by extracting resources following specified criteria
+	ResourceEntries []ResourceEntry `json:"resourceEntries,omitempty" yaml:"resourceEntries,omitempty"`
 }
 
 // ExtensionLabel configures a user defined label.
@@ -1229,6 +1234,85 @@ const (
 	NodeTaintOperatorOpIn NodeTaintOperator = "In"
 	// NodeTaintOperatorOpNotIn will match if the value is NOT found
 	NodeTaintOperatorOpNotIn NodeTaintOperator = "NotIn"
+)
+
+// ResourceEntry define how extension labels are derived from container resources.
+type ResourceEntry struct {
+	// LabelName is the name of the prometheus metric label
+	LabelName LabelName `json:"name,omitempty" yaml:"name,omitempty"`
+
+	// LabelValue is the value used if the resource entry is matched.
+	// This can use regexp grouped index if `MatchKey' is used.
+	LabelValue string `json:"labelValue,omitempty" yaml:"labelValue,omitempty"`
+
+	// LabelNegativeValue is the value used if the resource entry is not matched.
+	// In case this is empty the label is omitted in case of no match.
+	LabelNegativeValue string `json:"labelNegativeValue,omitempty" yaml:"labelNegativeValue,omitempty"`
+
+	// LabelInconsistentValue is the value used if the resource entry is matched but `condition' is violated.
+	// In case this is empty the label is omitted in case of condition violation.
+	LabelInconsistentValue string `json:"labelInconsistentValue,omitempty" yaml:"labelInconsistentValue,omitempty"`
+
+	// Condition is the criteria used to validate a match in resources.
+	Condition ResourceEntryCondition `json:"condition,omitempty" yaml:"condition,omitempty"`
+
+	// Key is the resource name to look for extracting label, if present an exact match is required,
+	// this has greater precendence over `matchKey' being more restrictive.
+	Key string `json:"key,omitempty" yaml:"key,omitempty"`
+
+	// MatchKey is a regexp matching a resource name to look for extracting label, if `key' is empty this
+	// regular expression is used to find a match against any of the resource names.
+	// In case the regexp contain grouping expression the numbered matches can be use to populate the labelValue
+	MatchKey string `json:"matchKey,omitempty" yaml:"matchKey,omitempty"`
+
+	// Value is the resource value to look for extracting label, if present an exact match is required,
+	// this has greater precendence over `matchValue' being more restrictive.
+	// An empty string mean any resource value can be valid, it can be empty only in case `*AnyValue'
+	// conditions are used, in such case the resource entry value is used as label value where requests has precedence
+	// in case of `BothAnyValue' condition.
+	// In case the resource key is matched but not the value the inconsistency is detected, we managed two scenarios:
+	// - `lableInconsistentValue' is not empty: it is used as label value
+	// - `lableInconsistentValue' is empty: the label is omitted.
+	Value string `json:"value,omitempty" yaml:"value,omitempty"`
+
+	// MatchValue is a regexp matching the resource value to look for extracting label, if `value' is empty this
+	// regular expression is used to find a match against the value of the matched resource name.
+	// An empty string mean any resource value can be valid, it can be empty only in case `*AnyValue'
+	// conditions are used
+	// In case the resource key is matched but not the value the inconsistency is detected, we managed two scenarios:
+	// - `lableInconsistentValue' is not empty: it is used as label value
+	// - `lableInconsistentValue' is empty: the label is omitted.
+	MatchValue string `json:"matchValue,omitempty" yaml:"matchValue,omitempty"`
+
+	// ConsistentAcrossContainers is a boolean that lead to inconsistency in case different label values
+	// across different containers in the same pod would be extracted.
+	ConsistentAcrossContainers bool `json:"consistentAcrossContainers,omitempty" yaml:"consistentAcrossContainers,omitempty"`
+
+	// ID is internal
+	ID LabelId `json:"-" yaml:"-"`
+}
+
+type ResourceEntryCondition string
+
+const (
+	// ResourcesEntryConditionBothSameValue is validated if resources entry is present
+	// in both limits and requests with the same value.
+	ResourceEntryConditionBothSameValue ResourceEntryCondition = "BothSameValue"
+
+	// ResourcesEntryConditionBothAnyValue is validated if resources entry is present
+	// in both limits and requests regardless the value.
+	ResourceEntryConditionBothAnyValue ResourceEntryCondition = "BothAnyValue"
+
+	// ResourcesEntryConditionAtLeastAnyValue is validated if resources entry is present
+	// in at least on of limits or requests regardless the value,
+	// a match on requests has precedence over a match on limits.
+	ResourceEntryConditionAtLeastOneAnyValue ResourceEntryCondition = "AtLeastOneAnyValue"
+
+	// ResourcesEntryConditionRequestsAnyValue  is validated if resources entry is present in requests.
+	ResourceEntryConditionInRequestsAnyValue ResourceEntryCondition = "InRequestsAnyValue"
+
+	// ResourcesEntryConditionLimitsAnyValue  is validated if resources entry is present in limits.
+	ResourceEntryConditionInLimitsAnyValue ResourceEntryCondition = "InLimitsAnyValue"
 )
 
 // AnnotationKey is a kubernetes object metadata annotation name
@@ -1327,9 +1411,32 @@ func ValidateCollectorSpecAndApplyDefaults(spec *MetricsPrometheusCollector) err
 	totalExtensionLabels += len(spec.Extensions.PVCs)
 	totalExtensionLabels += len(spec.Extensions.PVs)
 	totalExtensionLabels += len(spec.Extensions.NodeTaints)
+	totalExtensionLabels += len(spec.Extensions.ResourceEntries)
 
 	if s, m := totalExtensionLabels, MaxExtensionLabels; s > m {
 		return fmt.Errorf("collector config specifies %v extension labels which exceed the max (%v)", s, m)
+	}
+
+	// validate ResourceEntries regexps
+	for i, re := range spec.Extensions.ResourceEntries {
+		if re.MatchKey != "" {
+			// ensure we have a valid regexp
+			if _, err := regexp.Compile(re.MatchKey); err != nil {
+				return fmt.Errorf("collector config specifies a resource entry with invalid matchKey regexp; resourceEntries[%d].matchKey %q is not valid regular expression: %w", i, re.MatchKey, err)
+			}
+
+		}
+		if re.MatchValue != "" {
+			// ensure we have a valid regexp
+			if _, err := regexp.Compile(re.MatchValue); err != nil {
+				return fmt.Errorf("collector config specifies a resource entry with invalid matchValue regexp; resourceEntries[%d].matchKey %q is not valid regular expression: %w", i, re.MatchValue, err)
+			}
+
+		}
+
+		if re.Value == "" && re.MatchValue == "" && re.Condition == ResourceEntryConditionBothSameValue {
+			return fmt.Errorf("collector config specifies `BothSameValue' condition by no `value' or `matchValue'; resourceEntries[%d] is %v", i, re)
+		}
 	}
 
 	if spec.BuiltIn.EnableResourceQuotaDescriptor {

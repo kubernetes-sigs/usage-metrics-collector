@@ -66,12 +66,13 @@ type Collector struct {
 	UtilizationServer utilization.Server
 	*collectorcontrollerv1alpha1.MetricsPrometheusCollector
 
-	nextId                 int
-	labelNamesByIds        map[collectorcontrollerv1alpha1.LabelId]collectorcontrollerv1alpha1.LabelName
-	labelIdsByNames        map[collectorcontrollerv1alpha1.LabelName]collectorcontrollerv1alpha1.LabelId
-	labelsById             map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.ExtensionLabel
-	taintLabelsById        map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.NodeTaint
-	extensionLabelMaskById map[collectorcontrollerv1alpha1.LabelsMaskId]*extensionLabelsMask
+	nextId                  int
+	labelNamesByIds         map[collectorcontrollerv1alpha1.LabelId]collectorcontrollerv1alpha1.LabelName
+	labelIdsByNames         map[collectorcontrollerv1alpha1.LabelName]collectorcontrollerv1alpha1.LabelId
+	labelsById              map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.ExtensionLabel
+	taintLabelsById         map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.NodeTaint
+	resourceEntryLabelsById map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.ResourceEntry
+	extensionLabelMaskById  map[collectorcontrollerv1alpha1.LabelsMaskId]*extensionLabelsMask
 
 	startTime          time.Time
 	sideCarConfigs     []*collectorcontrollerv1alpha1.SideCarConfig

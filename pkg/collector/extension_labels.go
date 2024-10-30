@@ -15,6 +15,9 @@
 package collector
 
 import (
+	"regexp"
+	"strconv"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/usage-metrics-collector/pkg/api/collectorcontrollerv1alpha1"
@@ -2765,6 +2768,7 @@ func (l extensionLabler) SetLabelsForPod(
 
 	if pod != nil {
 		l.SetLabelsForMetadata(labels, l.Extensions.Pods, &pod.ObjectMeta)
+		l.SetLabelsForResourceEntries(labels, &pod.Spec)
 	}
 
 	l.SetLabelsForQuota(labels, nil, nil, namespace)
@@ -2829,6 +2833,18 @@ func (l extensionLabler) SetLabelsForSideCars(labels *extensionLabelsValues) {
 	}
 }
 
+func (l extensionLabler) SetLabelsForResourceEntries(labels *extensionLabelsValues, podSpec *corev1.PodSpec) {
+	if podSpec == nil {
+		return
+	}
+	// get the labels for the resource entries
+	for _, v := range l.Extensions.ResourceEntries {
+		if labelValue := getLabelValueForResourceEntry(v, podSpec); labelValue != "" {
+			labels.SetValue(v.ID, labelValue)
+		}
+	}
+}
+
 // IsMatch returns true if value meets all of the TaintRequirements
 func isMatchNodeTaintRequirements(t collectorcontrollerv1alpha1.NodeTaintRequirements, value string) bool {
 	for _, r := range t {
@@ -2887,6 +2903,763 @@ func getLabelValueForNodeTaint(t collectorcontrollerv1alpha1.NodeTaint, node *co
 	return t.LabelNegativeValue
 }
 
+// getLabelValueForResourceEntry returns the label value for the resource entries in the pod,
+// in case it returns the empty string the label shhould be omitted.
+func getLabelValueForResourceEntry(re collectorcontrollerv1alpha1.ResourceEntry, podSpec *corev1.PodSpec) string {
+	if re.Key == "" && re.MatchKey == "" {
+		return ""
+	}
+
+	var keyRE, valRE *regexp.Regexp
+	var exactMatches, regexpMatches map[string]map[string]map[string]string
+
+	if re.MatchKey != "" {
+		// we ignore regexp compile errors as those are already validated
+		keyRE, _ = regexp.Compile(re.MatchKey)
+	}
+	if re.MatchValue != "" {
+		// we ignore regexp compile errors as those are already validated
+		valRE, _ = regexp.Compile(re.MatchValue)
+	}
+
+	// collect matches
+
+	if re.Key != "" {
+		exactMatches = make(map[string]map[string]map[string]string)
+		for _, ctr := range append(podSpec.InitContainers, podSpec.Containers...) {
+			if v, ok := ctr.Resources.Requests[corev1.ResourceName(re.Key)]; ok {
+				if exactMatches[ctr.Name] == nil {
+					exactMatches[ctr.Name] = make(map[string]map[string]string)
+					exactMatches[ctr.Name]["requests"] = make(map[string]string)
+				}
+				exactMatches[ctr.Name]["requests"][re.Key] = v.String()
+			}
+			if v, ok := ctr.Resources.Limits[corev1.ResourceName(re.Key)]; ok {
+				if exactMatches[ctr.Name] == nil {
+					exactMatches[ctr.Name] = make(map[string]map[string]string)
+				}
+				if regexpMatches[ctr.Name]["limits"] == nil {
+					regexpMatches[ctr.Name]["limits"] = make(map[string]string)
+				}
+				exactMatches[ctr.Name]["limits"][re.Key] = v.String()
+			}
+		}
+	} else {
+		regexpMatches = make(map[string]map[string]map[string]string)
+		for _, ctr := range append(podSpec.InitContainers, podSpec.Containers...) {
+			for rn, rv := range ctr.Resources.Requests {
+				if keyRE.MatchString(string(rn)) {
+					if regexpMatches[ctr.Name] == nil {
+						regexpMatches[ctr.Name] = make(map[string]map[string]string)
+						regexpMatches[ctr.Name]["requests"] = make(map[string]string)
+					}
+					regexpMatches[ctr.Name]["requests"][string(rn)] = rv.String()
+				}
+			}
+			for rn, rv := range ctr.Resources.Limits {
+				if keyRE.MatchString(string(rn)) {
+					if regexpMatches[ctr.Name] == nil {
+						regexpMatches[ctr.Name] = make(map[string]map[string]string)
+					}
+					if regexpMatches[ctr.Name]["limits"] == nil {
+						regexpMatches[ctr.Name]["limits"] = make(map[string]string)
+					}
+					regexpMatches[ctr.Name]["limits"][string(rn)] = rv.String()
+				}
+			}
+		}
+	}
+
+	// analyze and validate matches
+
+	var inconsistent bool
+	var extractedVal string
+	if exactMatches != nil {
+		switch re.Condition {
+		case collectorcontrollerv1alpha1.ResourceEntryConditionBothSameValue:
+			var rval, lval string
+			for _, resources := range exactMatches {
+				// keep requests as first value, it has precedence
+				rval_, rok := resources["requests"][re.Key]
+				lval_, lok := resources["limits"][re.Key]
+				if rok != lok || rval_ != lval_ {
+					inconsistent = true
+					break
+				}
+
+				if re.Value != "" {
+					if re.Value != rval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(rval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if rval == "" && rok {
+						rval = rval_
+					} else if rval != rval_ && rok {
+						inconsistent = true
+						break
+					}
+					if lval == "" && lok {
+						lval = lval_
+					} else if lval != lval_ && lok {
+						inconsistent = true
+						break
+					}
+				}
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					}
+					// we do not need to check for the case where both re.Value and re.MatchValue are empty
+					// as it is a not valid configuration already validated
+				} else if extractedVal == "" {
+					extractedVal = re.LabelValue
+				}
+			}
+		case collectorcontrollerv1alpha1.ResourceEntryConditionBothAnyValue:
+			var rval, lval string
+			for _, resources := range exactMatches {
+				// keep requests as first value, it has precedence
+				rval_, rok := resources["requests"][re.Key]
+				lval_, lok := resources["limits"][re.Key]
+				if rok != lok {
+					inconsistent = true
+					break
+				}
+
+				if re.Value != "" {
+					if re.Value != rval_ && re.Value != lval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(rval_) && !valRE.MatchString(lval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if rval == "" && rok {
+						rval = rval_
+					} else if rval != rval_ && rok {
+						inconsistent = true
+						break
+					}
+					if lval == "" && lok {
+						lval = lval_
+					} else if lval != lval_ && lok {
+						inconsistent = true
+						break
+					}
+				}
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					} else if rok {
+						// for *AnyValue condition and LabelValue, Value and MatchValue all empty
+						// we have to pick the real resource value, prefferring requests
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					} else if lok {
+						extractedVal = lval_
+					}
+				} else if extractedVal == "" {
+					extractedVal = re.LabelValue
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		case collectorcontrollerv1alpha1.ResourceEntryConditionAtLeastOneAnyValue:
+			var rval, lval string
+			for _, resources := range exactMatches {
+				// keep requests as first value, it has precedence
+				rval_, rok := resources["requests"][re.Key]
+				lval_, lok := resources["limits"][re.Key]
+				if !(rok || lok) {
+					continue
+				}
+				if re.Value != "" {
+					if re.Value != rval_ && re.Value != lval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(rval_) && !valRE.MatchString(lval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if rval == "" {
+						rval = rval_
+					} else if rval != rval_ && rok {
+						inconsistent = true
+						break
+					}
+					if lval == "" {
+						lval = lval_
+					} else if lval != lval_ && lok {
+						inconsistent = true
+						break
+					}
+				}
+
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						if rok && valRE.MatchString(rval_) {
+							extractedVal = rval_ // use rval_ because eventually rval is not set
+						} else if lok && valRE.MatchString(lval_) {
+							extractedVal = lval_
+						}
+					} else if rok {
+						// for *AnyValue condition and LabelValue, Value and MatchValue all empty
+						// we have to pick the real resource value, prefferring requests
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					} else if lok {
+						extractedVal = lval_
+					}
+				} else if extractedVal == "" {
+					extractedVal = re.LabelValue
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		case collectorcontrollerv1alpha1.ResourceEntryConditionInRequestsAnyValue:
+			var rval string
+			for _, resources := range exactMatches {
+				rval_, rok := resources["requests"][re.Key]
+				if !rok {
+					continue
+				}
+				if re.Value != "" {
+					if re.Value != rval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(rval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if rval == "" {
+						rval = rval_
+					} else if rval != rval_ && rok {
+						inconsistent = true
+						break
+					}
+				}
+
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						if rok && valRE.MatchString(rval_) {
+							extractedVal = rval_ // use rval_ because eventually rval is not set
+						}
+					} else if rok {
+						// for *AnyValue condition and LabelValue, Value and MatchValue all empty
+						// we have to pick the real resource value, prefferring requests
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					}
+				} else if extractedVal == "" {
+					extractedVal = re.LabelValue
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		case collectorcontrollerv1alpha1.ResourceEntryConditionInLimitsAnyValue:
+			var lval string
+			for _, resources := range exactMatches {
+				lval_, lok := resources["limits"][re.Key]
+				if lok {
+					continue
+				}
+				if re.Value != "" {
+					if re.Value != lval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(lval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if lval == "" {
+						lval = lval_
+					} else if lval != lval_ && lok {
+						inconsistent = true
+						break
+					}
+				}
+
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						if lok && valRE.MatchString(lval_) {
+							extractedVal = lval_
+						}
+					} else if lok {
+						// for *AnyValue condition and LabelValue, Value and MatchValue all empty
+						// we have to pick the real resource value, prefferring requests
+						extractedVal = lval_
+					}
+				} else if extractedVal == "" {
+					extractedVal = re.LabelValue
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		}
+	} else if regexpMatches != nil {
+		switch re.Condition {
+		case collectorcontrollerv1alpha1.ResourceEntryConditionBothSameValue:
+			var rval, lval string
+			for _, resources := range regexpMatches {
+				// keep requests as first value, it has precedence
+				var rval_, lval_, rn, ln string
+				for rn_ := range resources["requests"] {
+					rn = rn_
+				}
+				for ln_ := range resources["limits"] {
+					ln = ln_
+				}
+
+				rval_, rok := resources["requests"][rn]
+				lval_, lok := resources["limits"][ln]
+				if rok != lok || rval_ != lval_ || rn != ln {
+					inconsistent = true
+					break
+				}
+
+				if re.Value != "" {
+					if re.Value != rval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(rval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if rval == "" && rok {
+						rval = rval_
+					} else if rval != rval_ && rok {
+						inconsistent = true
+						break
+					}
+					if lval == "" && lok {
+						lval = lval_
+					} else if lval != lval_ && lok {
+						inconsistent = true
+						break
+					}
+				}
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					}
+					// we do not need to check for the case where both re.Value and re.MatchValue are empty
+					// as it is a not valid configuration already validated
+				} else if extractedVal == "" {
+					if re.MatchKey != "" && keyRE.NumSubexp() > 0 && (re.LabelValue[0] == '\\' || re.LabelValue[0] == '$') {
+						idx, isDigitErr := strconv.Atoi(re.LabelValue[1:])
+						if isDigitErr != nil {
+							idx = -1
+							if re.LabelValue[:2] == "${" && re.LabelValue[len(re.LabelValue)-1] == '}' {
+								// assume this is a named group reference
+								name := re.LabelValue[2 : len(re.LabelValue)-1]
+								idx = keyRE.SubexpIndex(name)
+							}
+						}
+						if idx == -1 {
+							extractedVal = re.LabelValue
+						} else {
+							loc := keyRE.FindStringSubmatchIndex(rn)
+							if loc == nil || len(loc) < idx*2 {
+								// this is not a real match, so skip this container
+								continue
+							}
+							extractedVal = rn[loc[idx*2]:loc[(idx*2)+1]]
+						}
+					} else {
+						extractedVal = re.LabelValue
+					}
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		case collectorcontrollerv1alpha1.ResourceEntryConditionBothAnyValue:
+			var rval, lval, rn, ln string
+			for _, resources := range regexpMatches {
+				for rn_ := range resources["requests"] {
+					rn = rn_
+				}
+				for ln_ := range resources["limits"] {
+					ln = ln_
+				}
+				// keep requests as first value, it has precedence
+				rval_, rok := resources["requests"][rn]
+				lval_, lok := resources["limits"][ln]
+				if rok != lok {
+					inconsistent = true
+					break
+				}
+
+				if re.Value != "" {
+					if re.Value != rval_ && re.Value != lval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(rval_) && !valRE.MatchString(lval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if rval == "" && rok {
+						rval = rval_
+					} else if rval != rval_ && rok {
+						inconsistent = true
+						break
+					}
+					if lval == "" && lok {
+						lval = lval_
+					} else if lval != lval_ && lok {
+						inconsistent = true
+						break
+					}
+				}
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					} else if rok {
+						// for *AnyValue condition and LabelValue, Value and MatchValue all empty
+						// we have to pick the real resource value, preferring requests
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					} else if lok {
+						extractedVal = lval_
+					}
+				} else if extractedVal == "" {
+					if re.MatchKey != "" && keyRE.NumSubexp() > 0 && (re.LabelValue[0] == '\\' || re.LabelValue[0] == '$') {
+						idx, isDigitErr := strconv.Atoi(re.LabelValue[1:])
+						if isDigitErr != nil {
+							idx = -1
+							if re.LabelValue[:2] == "${" && re.LabelValue[len(re.LabelValue)-1] == '}' {
+								// assume this is a named group reference
+								name := re.LabelValue[2 : len(re.LabelValue)-1]
+								idx = keyRE.SubexpIndex(name)
+							}
+						}
+						if idx == -1 {
+							extractedVal = re.LabelValue
+						} else {
+							loc := keyRE.FindStringSubmatchIndex(rn)
+							if loc == nil {
+								// this is not a real match, so skip this container
+								continue
+							}
+							extractedVal = rn[loc[0]:loc[1]]
+						}
+					} else {
+						extractedVal = re.LabelValue
+					}
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		case collectorcontrollerv1alpha1.ResourceEntryConditionAtLeastOneAnyValue:
+			var rval, lval, rn, ln string
+			for _, resources := range regexpMatches {
+				for rn_ := range resources["requests"] {
+					rn = rn_
+				}
+				for ln_ := range resources["limits"] {
+					ln = ln_
+				}
+				// keep requests as first value, it has precedence
+				rval_, rok := resources["requests"][rn]
+				lval_, lok := resources["limits"][ln]
+				if !(rok || lok) {
+					continue
+				}
+				if re.Value != "" {
+					if re.Value != rval_ && re.Value != lval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(rval_) && !valRE.MatchString(lval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if rval == "" {
+						rval = rval_
+					} else if rval != rval_ && rok {
+						inconsistent = true
+						break
+					}
+					if lval == "" {
+						lval = lval_
+					} else if lval != lval_ && lok {
+						inconsistent = true
+						break
+					}
+				}
+
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						if rok && valRE.MatchString(rval_) {
+							extractedVal = rval_ // use rval_ because eventually rval is not set
+						} else if lok && valRE.MatchString(lval_) {
+							extractedVal = lval_
+						}
+					} else if rok {
+						// for *AnyValue condition and LabelValue, Value and MatchValue all empty
+						// we have to pick the real resource value, prefferring requests
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					} else if lok {
+						extractedVal = lval_
+					}
+				} else if extractedVal == "" {
+					if re.MatchKey != "" && keyRE.NumSubexp() > 0 && (re.LabelValue[0] == '\\' || re.LabelValue[0] == '$') {
+						idx, isDigitErr := strconv.Atoi(re.LabelValue[1:])
+						if isDigitErr != nil {
+							idx = -1
+							if re.LabelValue[:2] == "${" && re.LabelValue[len(re.LabelValue)-1] == '}' {
+								// assume this is a named group reference
+								name := re.LabelValue[2 : len(re.LabelValue)-1]
+								idx = keyRE.SubexpIndex(name)
+							}
+						}
+						if idx == -1 {
+							extractedVal = re.LabelValue
+						} else {
+							extractFrom := rn
+							if !rok && lok {
+								extractFrom = ln
+							}
+							loc := keyRE.FindStringSubmatchIndex(extractFrom)
+							if loc == nil {
+								// this is not a real match, so skip this container
+								continue
+							}
+							extractedVal = extractFrom[loc[0]:loc[1]]
+						}
+					} else {
+						extractedVal = re.LabelValue
+					}
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		case collectorcontrollerv1alpha1.ResourceEntryConditionInRequestsAnyValue:
+			var rval, rn string
+			for _, resources := range regexpMatches {
+				for rn_ := range resources["requests"] {
+					rn = rn_
+				}
+				rval_, rok := resources["requests"][rn]
+				if !rok {
+					continue
+				}
+				if re.Value != "" {
+					if re.Value != rval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(rval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if rval == "" {
+						rval = rval_
+					} else if rval != rval_ && rok {
+						inconsistent = true
+						break
+					}
+				}
+
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						if rok && valRE.MatchString(rval_) {
+							extractedVal = rval_ // use rval_ because eventually rval is not set
+						}
+					} else if rok {
+						// for *AnyValue condition and LabelValue, Value and MatchValue all empty
+						// we have to pick the real resource value, prefferring requests
+						extractedVal = rval_ // use rval_ because eventually rval is not set
+					}
+				} else if extractedVal == "" {
+					if re.MatchKey != "" && keyRE.NumSubexp() > 0 && (re.LabelValue[0] == '\\' || re.LabelValue[0] == '$') {
+						idx, isDigitErr := strconv.Atoi(re.LabelValue[1:])
+						if isDigitErr != nil {
+							idx = -1
+							if re.LabelValue[:2] == "${" && re.LabelValue[len(re.LabelValue)-1] == '}' {
+								// assume this is a named group reference
+								name := re.LabelValue[2 : len(re.LabelValue)-1]
+								idx = keyRE.SubexpIndex(name)
+							}
+						}
+						if idx == -1 {
+							extractedVal = re.LabelValue
+						} else {
+							loc := keyRE.FindStringSubmatchIndex(rn)
+							if loc == nil {
+								// this is not a real match, so skip this container
+								continue
+							}
+							extractedVal = rn[loc[0]:loc[1]]
+						}
+					} else {
+						extractedVal = re.LabelValue
+					}
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		case collectorcontrollerv1alpha1.ResourceEntryConditionInLimitsAnyValue:
+			var lval, ln string
+			for _, resources := range regexpMatches {
+				for ln_ := range resources["limits"] {
+					ln = ln_
+				}
+				lval_, lok := resources["limits"][ln]
+				if lok {
+					continue
+				}
+				if re.Value != "" {
+					if re.Value != lval_ {
+						// this is not a real match, so skip this container
+						continue
+					}
+				} else if re.MatchValue != "" {
+					if !valRE.MatchString(lval_) {
+						// this is not a real match, so skip this container
+						continue
+					}
+				}
+
+				if re.ConsistentAcrossContainers {
+					if lval == "" {
+						lval = lval_
+					} else if lval != lval_ && lok {
+						inconsistent = true
+						break
+					}
+				}
+
+				if re.LabelValue == "" {
+					if re.Value != "" {
+						extractedVal = re.Value
+					} else if re.MatchValue != "" {
+						if lok && valRE.MatchString(lval_) {
+							extractedVal = lval_
+						}
+					} else if lok {
+						// for *AnyValue condition and LabelValue, Value and MatchValue all empty
+						// we have to pick the real resource value
+						extractedVal = lval_
+					}
+				} else if extractedVal == "" {
+					if re.MatchKey != "" && keyRE.NumSubexp() > 0 && (re.LabelValue[0] == '\\' || re.LabelValue[0] == '$') {
+						idx, isDigitErr := strconv.Atoi(re.LabelValue[1:])
+						if isDigitErr != nil {
+							idx = -1
+							if re.LabelValue[:2] == "${" && re.LabelValue[len(re.LabelValue)-1] == '}' {
+								// assume this is a named group reference
+								name := re.LabelValue[2 : len(re.LabelValue)-1]
+								idx = keyRE.SubexpIndex(name)
+							}
+						}
+						if idx == -1 {
+							extractedVal = re.LabelValue
+						} else {
+							loc := keyRE.FindStringSubmatchIndex(ln)
+							if loc == nil {
+								// this is not a real match, so skip this container
+								continue
+							}
+							extractedVal = ln[loc[0]:loc[1]]
+						}
+					} else {
+						extractedVal = re.LabelValue
+					}
+				}
+				if !re.ConsistentAcrossContainers && extractedVal != "" {
+					// we are done
+					break
+				}
+			}
+		}
+	} else {
+		return re.LabelNegativeValue
+	}
+	if inconsistent {
+		return re.LabelInconsistentValue
+	}
+	if extractedVal == "" && re.LabelNegativeValue != "" {
+		return re.LabelNegativeValue
+	}
+	return extractedVal
+}
+
 // initExtensionLabelIndexes creates an id for each extension label and indexes it
 // in the collector
 func (c *Collector) initExtensionLabelIndexes() {
@@ -2894,6 +3667,7 @@ func (c *Collector) initExtensionLabelIndexes() {
 	c.labelNamesByIds = make(map[collectorcontrollerv1alpha1.LabelId]collectorcontrollerv1alpha1.LabelName)
 	c.labelsById = make(map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.ExtensionLabel)
 	c.taintLabelsById = make(map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.NodeTaint)
+	c.resourceEntryLabelsById = make(map[collectorcontrollerv1alpha1.LabelId]*collectorcontrollerv1alpha1.ResourceEntry)
 	e := &c.Extensions
 
 	// initialize each of the extension label ids (indexes)
@@ -2902,6 +3676,12 @@ func (c *Collector) initExtensionLabelIndexes() {
 		c.labelIdsByNames[e.Pods[i].LabelName] = id
 		c.labelNamesByIds[id] = e.Pods[i].LabelName
 		c.labelsById[id] = &e.Pods[i]
+	}
+	for i := range e.ResourceEntries {
+		id := e.ResourceEntries[i].ID
+		c.labelIdsByNames[e.ResourceEntries[i].LabelName] = id
+		c.labelNamesByIds[id] = e.ResourceEntries[i].LabelName
+		c.resourceEntryLabelsById[id] = &e.ResourceEntries[i]
 	}
 	for i := range e.Namespaces {
 		id := e.Namespaces[i].ID
