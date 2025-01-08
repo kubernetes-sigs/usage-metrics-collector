@@ -18,8 +18,10 @@ package ctrstats
 
 import (
 	"fmt"
+	"time"
+
 	// nolint: typecheck
-	v1 "github.com/containerd/containerd/metrics/types/v1"
+	v2 "github.com/containerd/cgroups/v2/stats"
 	metrics "github.com/docker/go-metrics"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -31,7 +33,7 @@ type Metric struct {
 	Vt     prometheus.ValueType
 	labels []string
 	// getvalues returns the value and labels for the data
-	GetValues func(stats *v1.Metrics) value
+	GetValues func(stats *v2.Metrics) value
 }
 
 type value struct {
@@ -44,362 +46,177 @@ func (m *Metric) Desc() *prometheus.Desc {
 	if m.unit != "" {
 		name = fmt.Sprintf("%s_%s", m.name, m.unit)
 	}
-	return prometheus.NewDesc(name, m.help, append([]string{"container", "namespace", "pod"}, m.labels...), make(map[string]string))
+	return prometheus.NewDesc(name, m.help, append([]string{"container", "id", "image", "namespace", "pod"}, m.labels...), make(map[string]string))
 }
 
 var CpuMetrics = []*Metric{
 	{
-		name: "cpu_total",
-		help: "The total cpu time",
-		unit: metrics.Nanoseconds,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.CPU == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.CPU.Usage.Total),
-			}
-		},
-	},
-	{
-		name: "cpu_kernel",
-		help: "The total kernel cpu time",
-		unit: metrics.Nanoseconds,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.CPU == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.CPU.Usage.Kernel),
-			}
-		},
-	},
-	{
-		name: "cpu_user",
-		help: "The total user cpu time",
-		unit: metrics.Nanoseconds,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.CPU == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.CPU.Usage.User),
-			}
-		},
-	},
-	{
-		name: "cpu_throttle_periods",
-		help: "The total cpu throttle periods",
-		unit: metrics.Total,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.CPU == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.CPU.Throttling.Periods),
-			}
-		},
-	},
-	{
-		name: "container_cpu_cfs_throttled_periods_total",
-		help: "Number of throttled period intervals.",
-		unit: metrics.Total,
+		name: "container_cpu_usage_seconds_total",
+		help: "Cumulative cpu time consumed in seconds.",
 		Vt:   prometheus.CounterValue,
-		GetValues: func(stats *v1.Metrics) value {
+		GetValues: func(stats *v2.Metrics) value {
 			if stats.CPU == nil {
 				return value{}
 			}
+
 			return value{
-				V: float64(stats.CPU.Throttling.ThrottledPeriods),
+				V: (float64(stats.CPU.UsageUsec) * float64(time.Microsecond)) / float64(time.Second),
 			}
 		},
 	},
 	{
-
-		name: "cpu_throttled_time",
-		help: "The total cpu throttled time",
-		unit: metrics.Nanoseconds,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
+		name: "container_cpu_user_seconds_total",
+		help: "Cumulative user cpu time consumed in seconds.",
+		Vt:   prometheus.CounterValue,
+		GetValues: func(stats *v2.Metrics) value {
 			if stats.CPU == nil {
 				return value{}
 			}
+
 			return value{
-				V: float64(stats.CPU.Throttling.ThrottledTime),
+				V: (float64(stats.CPU.UserUsec) * float64(time.Microsecond)) / float64(time.Second),
+			}
+		},
+	},
+	{
+		name: "container_cpu_system_seconds_total",
+		help: "Cumulative system cpu time consumed in seconds.",
+		Vt:   prometheus.CounterValue,
+		GetValues: func(stats *v2.Metrics) value {
+			if stats.CPU == nil {
+				return value{}
+			}
+
+			return value{
+				V: (float64(stats.CPU.SystemUsec) * float64(time.Microsecond)) / float64(time.Second),
+			}
+		},
+	},
+	{
+		name: "container_cpu_cfs_periods_total",
+		help: "Number of throttled period intervals.",
+		Vt:   prometheus.CounterValue,
+		GetValues: func(stats *v2.Metrics) value {
+			if stats.CPU == nil {
+				return value{}
+			}
+
+			return value{
+				V: float64(stats.CPU.NrThrottled),
+			}
+		},
+	},
+	{
+		name: "container_cpu_cfs_throttled_seconds_total",
+		help: "Total time duration the container has been throttled.",
+		Vt:   prometheus.CounterValue,
+		GetValues: func(stats *v2.Metrics) value {
+			if stats.CPU == nil {
+				return value{}
+			}
+
+			return value{
+				V: (float64(stats.CPU.ThrottledUsec) * float64(time.Microsecond)) / float64(time.Second),
 			}
 		},
 	},
 }
 
 var MemoryMetrics = []*Metric{
+
 	{
-		name: "memory_cache",
-		help: "The cache amount used",
-		unit: metrics.Bytes,
+		name: "container_memory_cache",
+		help: "Number of bytes of page cache memory.",
 		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
+		GetValues: func(stats *v2.Metrics) value {
 			if stats.Memory == nil {
 				return value{}
 			}
 			return value{
-				V: float64(stats.Memory.Cache),
+				V: float64(stats.Memory.File),
 			}
 		},
 	},
 	{
-		name: "memory_rss",
-		help: "The rss amount used",
-		unit: metrics.Bytes,
+		name: "container_memory_rss",
+		help: "Size of RSS in bytes.",
 		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
+		GetValues: func(stats *v2.Metrics) value {
+			if stats.Memory == nil {
+				return value{}
+			}
+			// add anon + file = rss
+			return value{
+				V: float64(stats.Memory.Anon + stats.Memory.File),
+			}
+
+		},
+	},
+	{
+		name: "container_memory_swap",
+		help: "Container swap usage in bytes.",
+		Vt:   prometheus.GaugeValue,
+		GetValues: func(stats *v2.Metrics) value {
 			if stats.Memory == nil {
 				return value{}
 			}
 			return value{
-				V: float64(stats.Memory.RSS),
+				V: float64(stats.Memory.SwapUsage),
 			}
 		},
 	},
 	{
-		name: "memory_rss_huge",
-		help: "The rss_huge amount used",
-		unit: metrics.Bytes,
+		name: "container_memory_usage_bytes",
+		help: "Current memory usage in bytes, including all memory regardless of when it was accessed",
 		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
+		GetValues: func(stats *v2.Metrics) value {
 			if stats.Memory == nil {
 				return value{}
 			}
 			return value{
-				V: float64(stats.Memory.RSSHuge),
+				V: float64(stats.Memory.Usage),
 			}
 		},
 	},
 	{
-		name: "memory_mapped_file",
-		help: "The mapped_file amount used",
-		unit: metrics.Bytes,
+		name: "container_memory_working_set_bytes",
+		help: "Current working set in bytes.",
 		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
+		GetValues: func(stats *v2.Metrics) value {
 			if stats.Memory == nil {
 				return value{}
 			}
+			var workingSet uint64
+			if stats.Memory.Usage > stats.Memory.InactiveFile {
+				workingSet = stats.Memory.Usage - stats.Memory.InactiveFile
+			} else {
+				workingSet = 0
+			}
+
 			return value{
-				V: float64(stats.Memory.MappedFile),
+				V: float64(workingSet),
 			}
 		},
 	},
+}
+
+var FileSystemMetrics = []*Metric{
+
+	/*container_fs_limit_bytes
 	{
-		name: "memory_pgmajfault",
-		help: "The pgmajfault amount",
-		unit: metrics.Bytes,
+
+		name: "container_fs_limit_bytes",
+		help: "Number of bytes that can be consumed by the container on this filesystem.",
 		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
+		GetValues: func(stats *v2.Metrics) value {
+			if stats.Filesystem == nil {
 				return value{}
 			}
 			return value{
-				V: float64(stats.Memory.PgMajFault),
+				V: float64(stats.Filesystem.Limit),
 			}
+
 		},
 	},
-	{
-		name: "memory_inactive_anon",
-		help: "The inactive_anon amount",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.InactiveAnon),
-			}
-		},
-	},
-	{
-		name: "memory_active_anon",
-		help: "The active_anon amount",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.ActiveAnon),
-			}
-		},
-	},
-	{
-		name: "memory_inactive_file",
-		help: "The inactive_file amount",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.InactiveFile),
-			}
-		},
-	},
-	{
-		name: "memory_active_file",
-		help: "The active_file amount",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.ActiveFile),
-			}
-		},
-	},
-	{
-		name: "memory_total_cache",
-		help: "The total_cache amount used",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.TotalCache),
-			}
-		},
-	},
-	{
-		name: "memory_total_rss",
-		help: "The total_rss amount used",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.TotalRSS),
-			}
-		},
-	},
-	{
-		name: "memory_total_mapped_file",
-		help: "The total_mapped_file amount used",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.TotalMappedFile),
-			}
-		},
-	},
-	{
-		name: "memory_usage_failcnt",
-		help: "The usage failcnt",
-		unit: metrics.Total,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.Usage.Failcnt),
-			}
-		},
-	},
-	{
-		name: "memory_usage_limit",
-		help: "The memory limit",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.Usage.Limit),
-			}
-		},
-	},
-	{
-		name: "memory_usage_max",
-		help: "The memory maximum usage",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.Usage.Max),
-			}
-		},
-	},
-	{
-		name: "memory_usage_usage",
-		help: "The memory usage",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.Usage.Usage),
-			}
-		},
-	},
-	{
-		name: "memory_kernel_failcnt",
-		help: "The kernel failcnt",
-		unit: metrics.Total,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.Kernel.Failcnt),
-			}
-		},
-	},
-	{
-		name: "memory_kernel_limit",
-		help: "The kernel limit",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.Kernel.Limit),
-			}
-		},
-	},
-	{
-		name: "memory_kernel_usage",
-		help: "The kernel usage",
-		unit: metrics.Bytes,
-		Vt:   prometheus.GaugeValue,
-		GetValues: func(stats *v1.Metrics) value {
-			if stats.Memory == nil {
-				return value{}
-			}
-			return value{
-				V: float64(stats.Memory.Kernel.Usage),
-			}
-		},
-	},
+	*/
 }

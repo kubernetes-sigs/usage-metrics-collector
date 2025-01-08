@@ -127,7 +127,7 @@ func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
 		wg.Add(1)
 
 		go func(c ctrstats.Container, results chan<- prometheus.Metric) {
-			stats, err := ctrstats.GetContainerStatsV1(context.Background(), c)
+			stats, err := ctrstats.GetContainerStatsV2(context.Background(), c)
 			if err != nil {
 				monitorLog.WithFields(log.Fields{
 					"container": c.ContainerID,
@@ -135,8 +135,9 @@ func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
 			} else if stats != nil {
 				for _, m := range collector.metrics {
 					metric := m.GetValues(stats)
+					image, _ := c.Container.Image(context.TODO())
 					results <- prometheus.MustNewConstMetric(
-						m.Desc(), m.Vt, metric.V, append([]string{c.ContainerName, c.SandboxNamespace, c.PodName}, metric.L...)...)
+						m.Desc(), m.Vt, metric.V, append([]string{c.ContainerName, c.ContainerID, image.Name(), c.SandboxNamespace, c.PodName}, metric.L...)...)
 				}
 			}
 			wg.Done()
