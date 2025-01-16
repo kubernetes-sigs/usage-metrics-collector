@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
+	runtimelog "sigs.k8s.io/controller-runtime/pkg/log"
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 	"sigs.k8s.io/usage-metrics-collector/pkg/sampler"
 	"sigs.k8s.io/usage-metrics-collector/pkg/watchconfig"
@@ -122,6 +123,9 @@ func init() {
 	RootCmd.Flags().IntVar(&terminationSeconds, "termination-seconds", 10, "time to wait for shutdown before os.Exit is called")
 	RootCmd.Flags().StringVar(&S.hostNameFilepath, "host-name-filepath", "", "DNS resolvable kubelet host name if different from the NODE_NAME")
 	RootCmd.Flags().AddGoFlagSet(flag.CommandLine)
+
+	// initialize controller runtime logger
+	runtimelog.SetLogger(log)
 
 	initContainerMonitor(RootCmd)
 }
