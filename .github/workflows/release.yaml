@@ -31,6 +31,8 @@ jobs:
           go build .
 
       - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         id: create_release
         uses: actions/create-release@v1
         with:
