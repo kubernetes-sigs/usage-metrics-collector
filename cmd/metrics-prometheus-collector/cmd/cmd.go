@@ -45,6 +45,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/util/retry"
 	metricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
+	runtimelog "sigs.k8s.io/controller-runtime/pkg/log"
 	quotamangementv1alpha1 "sigs.k8s.io/usage-metrics-collector/pkg/api/quotamanagementv1alpha1"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -60,6 +61,9 @@ import (
 func init() {
 	_ = metricsv1beta1.AddToScheme(scheme.Scheme)
 	_ = quotamangementv1alpha1.AddToScheme(scheme.Scheme)
+
+	// initialize controller runtime logger
+	runtimelog.SetLogger(log)
 }
 
 var (

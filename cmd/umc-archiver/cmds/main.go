@@ -36,6 +36,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
 	"k8s.io/apimachinery/pkg/util/sets"
+	runtimelog "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/usage-metrics-collector/pkg/collector"
 	commonlog "sigs.k8s.io/usage-metrics-collector/pkg/log"
 )
@@ -74,6 +75,9 @@ func init() {
 	RootCmd.Flags().IntSliceVar(&options.gcsKeepFolderParts, "gcs-keep-folder-parts", []int{}, "keep these parts of the file directory.")
 	RootCmd.Flags().StringVar(&options.gcsFolder, "gcs-folder", "", "gcs folder to put files into.  note: may be templatized with the time.")
 	RootCmd.Flags().StringVar(&options.gcsBucket, "gcs-bucket", "", "gcs bucket.")
+
+	// initialize controller runtime logger
+	runtimelog.SetLogger(log)
 }
 
 var (
