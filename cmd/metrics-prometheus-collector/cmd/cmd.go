@@ -433,7 +433,6 @@ func (ms *MetricsServer) serveMetricsFromCache() {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
 	})
 	if err := http.ListenAndServe(options.externalBindAddress, nil); err != nil {
 		log.Error(err, "failed to listen on cached metrics address")
