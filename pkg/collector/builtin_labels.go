@@ -455,17 +455,20 @@ func (l builtInLabler) SetLabelsForQuota(
 		// set from scope selector -- note this is error prone since there
 		// can be multiple MatchExpressions with different PriorityClasses
 		for _, s := range quota.Spec.ScopeSelector.MatchExpressions {
-			// check if this scope specifies exactly 1 priority classes
 			if s.ScopeName == corev1.ResourceQuotaScopePriorityClass &&
-				len(s.Values) == 1 &&
 				s.Operator == corev1.ScopeSelectorOpIn {
+				// if more than one priority-class is associated
+				// with the ResourceQuota object, join them using the '|'
+				// separator. This enables to do join with other kube-state-metrics metrics
+				// such as kube_pod_info
+				priorityClasses := strings.Join(s.Values, "|")
 				// conflicting priority classes -- mark as undefined and break out of loop
-				if labels.PriorityClass != s.Values[0] && labels.PriorityClass != "" {
+				if labels.PriorityClass != priorityClasses && labels.PriorityClass != "" {
 					labels.PriorityClass = "undefined"
 					return
 				}
-				// set the priority class
-				labels.PriorityClass = s.Values[0]
+				// set the priority class label value
+				labels.PriorityClass = priorityClasses
 			}
 		}
 	}
