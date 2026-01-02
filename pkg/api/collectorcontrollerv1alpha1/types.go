@@ -1041,7 +1041,8 @@ type Filter struct {
 
 // BuiltIn configures built in metrics and labels.
 type BuiltIn struct {
-	UseQuotaNameForPriorityClass bool `json:"useQuotaNameForPriorityClass,omitempty" yaml:"useQuotaNameForPriorityClass,omitempty"`
+	UseQuotaNameForPriorityClass            bool `json:"useQuotaNameForPriorityClass,omitempty" yaml:"useQuotaNameForPriorityClass,omitempty"`
+	AllowMultiplePriorityClassScopeSelector bool `json:"allowMultiplePriorityClassScopeSelector,omitempty" yaml:"allowMultiplePriorityClassScopeSelector,omitempty"`
 
 	// EnableResourceQuotaDescriptor enables features that require the
 	// ResourceQuotaDescriptor (RQD) resource. If this flag is set, the

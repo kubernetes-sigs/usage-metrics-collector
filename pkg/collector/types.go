@@ -98,6 +98,7 @@ func (c *Collector) init() error {
 	}
 
 	c.Labeler.BuiltIn.UseQuotaNameForPriorityClass = c.BuiltIn.UseQuotaNameForPriorityClass
+	c.Labeler.BuiltIn.AllowMultiplePriorityClassScopeSelector = c.BuiltIn.AllowMultiplePriorityClassScopeSelector
 	c.Labeler.Extension.Extensions = c.Extensions
 	return nil
 }

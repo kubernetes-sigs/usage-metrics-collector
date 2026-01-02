@@ -521,7 +521,8 @@ func TestLabels(t *testing.T) {
 
 		instance := Labeler{
 			BuiltIn: builtInLabler{
-				UseQuotaNameForPriorityClass: inputs.Spec.BuiltIn.UseQuotaNameForPriorityClass},
+				UseQuotaNameForPriorityClass:            inputs.Spec.BuiltIn.UseQuotaNameForPriorityClass,
+				AllowMultiplePriorityClassScopeSelector: inputs.Spec.BuiltIn.AllowMultiplePriorityClassScopeSelector},
 			Extension: extensionLabler{Extensions: inputs.Spec.Extensions},
 		}
 

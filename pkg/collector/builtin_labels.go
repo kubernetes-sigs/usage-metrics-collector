@@ -372,7 +372,8 @@ func getOverrideBuiltInLabelValues(m builtInLabelsValues, overrides map[string]s
 }
 
 type builtInLabler struct {
-	UseQuotaNameForPriorityClass bool
+	UseQuotaNameForPriorityClass            bool
+	AllowMultiplePriorityClassScopeSelector bool
 }
 
 func (l builtInLabler) SetLabelsForContainer(labels *builtInLabelsValues, c *corev1.Container) {
@@ -451,23 +452,62 @@ func (l builtInLabler) SetLabelsForQuota(
 		return
 	}
 
-	if quota.Spec.ScopeSelector != nil {
-		// set from scope selector -- note this is error prone since there
-		// can be multiple MatchExpressions with different PriorityClasses
-		for _, s := range quota.Spec.ScopeSelector.MatchExpressions {
-			// check if this scope specifies exactly 1 priority classes
-			if s.ScopeName == corev1.ResourceQuotaScopePriorityClass &&
-				len(s.Values) == 1 &&
-				s.Operator == corev1.ScopeSelectorOpIn {
-				// conflicting priority classes -- mark as undefined and break out of loop
-				if labels.PriorityClass != s.Values[0] && labels.PriorityClass != "" {
-					labels.PriorityClass = "undefined"
-					return
-				}
-				// set the priority class
-				labels.PriorityClass = s.Values[0]
+	if l.AllowMultiplePriorityClassScopeSelector {
+		l.setPriorityClassFromScopes(labels, quota)
+		return
+	}
+
+	l.setLegacyPriorityClass(labels, quota)
+}
+
+// setLegacyPriorityClass keeps the pre-change behavior for priority class selection from scopes.
+// It only considers scope selectors with a single value and marks conflicts as undefined.
+func (l builtInLabler) setLegacyPriorityClass(labels *builtInLabelsValues, quota *corev1.ResourceQuota) {
+	if quota.Spec.ScopeSelector == nil {
+		labels.PriorityClass = ""
+		return
+	}
+
+	for _, s := range quota.Spec.ScopeSelector.MatchExpressions {
+		if s.ScopeName == corev1.ResourceQuotaScopePriorityClass &&
+			len(s.Values) == 1 &&
+			s.Operator == corev1.ScopeSelectorOpIn {
+			if labels.PriorityClass != s.Values[0] && labels.PriorityClass != "" {
+				labels.PriorityClass = "undefined"
+				return
 			}
+			labels.PriorityClass = s.Values[0]
 		}
+	}
+}
+
+// setPriorityClassFromScopes applies the new behavior that uses the scope selector to derive priority class.
+func (l builtInLabler) setPriorityClassFromScopes(labels *builtInLabelsValues, quota *corev1.ResourceQuota) {
+	if quota.Spec.ScopeSelector == nil {
+		labels.PriorityClass = ""
+		return
+	}
+
+	priorityClasses := map[string]struct{}{}
+	for _, s := range quota.Spec.ScopeSelector.MatchExpressions {
+		if s.ScopeName != corev1.ResourceQuotaScopePriorityClass ||
+			s.Operator != corev1.ScopeSelectorOpIn {
+			continue
+		}
+		for _, value := range s.Values {
+			priorityClasses[value] = struct{}{}
+		}
+	}
+
+	switch {
+	case len(priorityClasses) == 1:
+		for value := range priorityClasses {
+			labels.PriorityClass = value
+		}
+	case len(priorityClasses) > 1:
+		labels.PriorityClass = quota.Name
+	default:
+		labels.PriorityClass = ""
 	}
 }
 
