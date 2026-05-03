@@ -36,9 +36,9 @@ $(TOOLS_DIR):
 	mkdir -p $(TOOLS_DIR) && cd $(TOOLS_DIR) && go mod init tempmod
 
 # We are using Kubebuilder Test Assets for integration testing
-K8S_VERSION=1.28.3
+K8S_VERSION=1.32.0
 KUBEBUILDER := $(abspath $(TOOLS_DIR)/kubebuilder)
-export KUBEBUILDER_ASSETS := $(KUBEBUILDER)/bin
+export KUBEBUILDER_ASSETS := $(KUBEBUILDER)/envtest
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= crd
@@ -116,7 +116,7 @@ proto: protoc
 
 
 $(KUBEBUILDER_ASSETS):
-	curl -sSLo envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-$(K8S_VERSION)-$(GOOS)-amd64.tar.gz"
+	curl -sSLo envtest-bins.tar.gz "https://github.com/kubernetes-sigs/controller-tools/releases/download/envtest-v$(K8S_VERSION)/envtest-v$(K8S_VERSION)-$(GOOS)-amd64.tar.gz"
 	mkdir -p $(KUBEBUILDER)
 	tar -C $(KUBEBUILDER) --strip-components=1 -zvxf envtest-bins.tar.gz
 	rm envtest-bins.tar.gz
